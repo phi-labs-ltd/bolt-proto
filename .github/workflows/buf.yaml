@@ -5,7 +5,7 @@ on:
     types: [opened, synchronize, reopened, labeled, unlabeled]
   delete:
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 jobs:
   buf:
@@ -13,3 +13,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-action@v1
+        with:
+          push: false
