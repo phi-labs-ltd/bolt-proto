@@ -1,21 +1,21 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-
 package bolt.outpost.v1;
+
+import "google/protobuf/timestamp.proto";
 
 // Service 1: OracleService
 service OracleService {
-    // Endpoint to post prices to the oracle
-    rpc PostPrices(PostPricesRequest) returns (PostPricesResponse);
-    // Endpoint to get the information about the network the oracle is running on
-    rpc Info(InfoRequest) returns (InfoResponse);
+  // Endpoint to post prices to the oracle
+  rpc PostPrices(PostPricesRequest) returns (PostPricesResponse);
+  // Endpoint to get the information about the network the oracle is running on
+  rpc Info(InfoRequest) returns (InfoResponse);
 }
 
 // PostPricesRequest: Request to given prices to the oracle. Should be invoked by pricefeeder
 message PostPricesRequest {
-    // price_updates: List of price updates to be posted to the oracle
-    repeated PriceUpdate price_updates = 1;
+  // price_updates: List of price updates to be posted to the oracle
+  repeated PriceUpdate price_updates = 1;
 }
 
 // PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
@@ -26,26 +26,26 @@ message InfoRequest {}
 
 // InfoResponse: Response to the InfoRequest. Contains information about which chain the oracle is running on and the address of the signer.
 message InfoResponse {
-    // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1
-    string chain_id = 1;
-    // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm
-    string whoami = 2;
+  // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1
+  string chain_id = 1;
+  // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  string whoami = 2;
 }
 
 // PriceUpdate: Price update for a given pair
 message PriceUpdate {
-    // pair: The pair for which the price is being updated. e.g. ATOM/USDT
-    Pair pair = 1;
-    // price: The price of the pair. e.g. 10.0
-    string price = 2;
-    // timestamp: The timestamp of the price update. e.g. 2023-10-01T00:00:00Z
-    google.protobuf.Timestamp timestamp = 3;
+  // pair: The pair for which the price is being updated. e.g. ATOM/USDT
+  Pair pair = 1;
+  // price: The price of the pair. e.g. 10.0
+  string price = 2;
+  // timestamp: The timestamp of the price update. e.g. 2023-10-01T00:00:00Z
+  google.protobuf.Timestamp timestamp = 3;
 }
 
 // Pair: The pair for which the price is being updated. e.g. ATOM/USDT
 message Pair {
-    // base: The base asset of the pair. e.g. ATOM
-    string base = 1;
-    // quote: The quote asset of the pair. e.g. USDT
-    string quote = 2;
+  // base: The base asset of the pair. e.g. ATOM
+  string base = 1;
+  // quote: The quote asset of the pair. e.g. USDT
+  string quote = 2;
 }
