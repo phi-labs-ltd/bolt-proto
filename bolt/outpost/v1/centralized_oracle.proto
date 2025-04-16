@@ -18,7 +18,7 @@ message PostPricesRequest {
     repeated PriceUpdate price_updates = 1;
 }
 
-// PostPricesResponse: Response to the PostPricesRequest. Doesnt respond anything on success.
+// PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
 message PostPricesResponse {}
 
 // InfoRequest: Request to get information about the oracle. Should be invoked by pricefeeder
