@@ -1,0 +1,20 @@
+version: v2
+plugins:
+  - remote: buf.build/community/neoeinstein-prost
+    out: ./rust/grpc/types
+    opt:
+      - enable_type_names
+      - bytes=.
+      - compile_well_known_types
+      - extern_path=.google.protobuf=::pbjson_types
+      - file_descriptor_set
+
+  - remote: buf.build/community/neoeinstein-tonic
+    out: ./rust/grpc/types
+    opt:
+      - compile_well_known_types
+      - no_server=false
+      - no_client=false
+
+inputs:
+  - proto_file: ../bolt/outpost/v1/centralized_oracle.proto

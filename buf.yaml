@@ -1,0 +1,11 @@
+version: v2
+name: github.com/phi-labs-ltd/bolt-proto
+
+lint:
+  use:
+    - STANDARD
+    - COMMENTS
+    - FILE_LOWER_SNAKE_CASE
+breaking:
+  use:
+    - FILE
