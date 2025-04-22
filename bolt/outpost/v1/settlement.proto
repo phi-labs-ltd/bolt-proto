@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package bolt.outpost.v1;
+
+// Service 2: SettlementService
+service SettlementService {
+    // Endpoint to swap assets. Should be invoked by the user to swap assets.
+    rpc SwapExactIn(SwapExactInRequest) returns (SwapExactInResponse);
+    // Endpoint to withdraw quotes. Should be invoked by the liquidity provider to withdraw quotes.
+    rpc WithdrawQuotes(WithdrawQuotesRequest) returns (WithdrawQuotesResponse);
+    // Endpoint to withdraw all quotes. Should be invoked by the liquidity provider to withdraw all quotes.
+    rpc WithdrawAllQuotes(WithdrawAllQuotesRequest) returns (WithdrawAllQuotesResponse);
+    // Endpoint to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
+    rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
+    // Endpoint to withdraw base asset. Should be invoked by the liquidity provider to withdraw base asset.
+    rpc WithdrawBase(WithdrawBaseRequest) returns (WithdrawBaseResponse);
+    // Endpoint to withdraw all base asset. Should be invoked by the liquidity provider to withdraw all base asset.
+    rpc WithdrawAllBase(WithdrawAllBaseRequest) returns (WithdrawAllBaseResponse);
+    // Endpoint to get the information about the network the oracle is running on
+    rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// SwapExactInRequest: Request to swap assets. Should be invoked by the user to swap assets.
+message SwapExactInRequest {
+    // want_out: The asset the user wants to receive. e.g. USDT
+    string want_out = 1;
+    // input: The amount of asset the user wants to sell. e.g. ATOM
+    Asset input = 2;
+    // min_base_out: The minimum amount of base asset the user wants to receive, after fees. in rational values e.g 5/3
+    string min_base_out = 3;
+    // receiver: The address of the user who will receive the swapped asset. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+    string receiver = 4;
+}
+
+// SwapExactInResponse: Response to the SwapExactInRequest. Contains information about the swap.
+message SwapExactInResponse {
+    // base_out: The amount of base asset the user received.
+    Asset base_out = 1;
+    // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
+    string spot_price = 2;
+    // fee: The fee charged for the swap. includes protocol fees and lp fees
+    Asset fee = 3;
+    // trade_id: The id of the trade. e.g. tx hash
+    string trade_id = 4;
+}
+
+// WithdrawQuotesRequest: Request to withdraw quotes. Should be invoked by the liquidity provider to withdraw quotes.
+message WithdrawQuotesRequest {
+    // base_asset: The base asset against which the accumulated quotes that the user wants to withdraw. e.g. USDT pool
+    string base_asset = 1;
+}
+
+// WithdrawQuotesResponse: Response to the WithdrawQuotesRequest. Contains information about the withdrawn quotes.
+message WithdrawQuotesResponse {
+    // withdrawn: The amount of assets withdrawn. e.g. BTC, ETH
+    repeated Asset withdrawn = 1;
+    // tx_id: The hash of the transaction.
+    string tx_id = 2;
+}
+
+// WithdrawAllQuotesRequest: Request to withdraw all quotes. Should be invoked by the liquidity provider to withdraw all quotes.
+message WithdrawAllQuotesRequest {
+}
+
+// WithdrawAllQuotesResponse: Response to the WithdrawAllQuotesRequest. Contains information about the withdrawn quotes.
+message WithdrawAllQuotesResponse {
+    // withdrawn: The amount of quotes assets withdrawn. e.g. BTC, ETH
+    repeated Asset withdrawn = 1;
+    // tx_id: The hash of the transaction.
+    string tx_id = 2;
+}
+
+// DepositBaseRequest: Request to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
+message DepositBaseRequest {
+    // amount: The amount of base asset the user wants to deposit. e.g. 1000 USDT
+    Asset amount = 1;
+}
+
+// DepositBaseResponse: Response to the DepositBaseRequest. Contains information about the deposit.
+message DepositBaseResponse {
+    // amount: The amount of base asset the user deposited. e.g. 1000 USDT
+    Asset amount = 1;
+    // tx_id: The hash of the transaction.
+    string tx_id = 2;
+}
+
+// WithdrawBaseRequest: Request to withdraw base asset. Should be invoked by the liquidity provider to withdraw base asset.
+message WithdrawBaseRequest {
+    // base_asset: The base asset the user wants to withdraw. e.g. USDT
+    string base_asset = 1;
+}
+
+// WithdrawBaseResponse: Response to the WithdrawBaseRequest. Contains information about the withdrawn base asset.
+message WithdrawBaseResponse {
+    // withdrawn: The amount of base asset withdrawn. e.g. 1000 USDT
+    Asset withdrawn = 1;
+    // tx_id: The hash of the transaction.
+    string tx_id = 2;
+}
+
+// WithdrawAllBaseRequest: Request to withdraw all base asset. Should be invoked by the liquidity provider to withdraw all base asset.
+message WithdrawAllBaseRequest {
+}
+
+// WithdrawAllBaseResponse: Response to the WithdrawAllBaseRequest. Contains information about the withdrawn base asset.
+message WithdrawAllBaseResponse {
+    // withdrawn: The amount of base assets withdrawn. e.g. 1000 USDT
+    repeated Asset withdrawn = 1;
+    // tx_id: The hash of the transaction.
+    string tx_id = 2;
+}
+
+// InfoRequest: Request to get information about the settlement.
+message InfoRequest {
+}
+
+// InfoResponse: Response to the InfoRequest. Contains information about which chain the settlement service is running on and the address of the signer.
+message InfoResponse {
+    // network_id: The chain id of the chain the settlement service is running on. e.g. archway-1
+    string network_id = 1;
+    // whoami: The address of the signer who will be submitting the transactions. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+    string whoami = 2;
+}
+
+// Asset: The asset being traded. e.g. BTC, ETH
+message Asset {
+    // denom: The denomination of the asset. e.g. ARCH, USDT
+    string denom = 1;
+    // amount: The amount of the asset in rational values e.g. 5/3
+    string amount = 2;
+}
