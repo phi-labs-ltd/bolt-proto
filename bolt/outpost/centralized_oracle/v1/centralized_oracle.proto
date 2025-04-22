@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.outpost.v1;
+package bolt.outpost.centralized_oracle.v1;
 
 import "google/protobuf/timestamp.proto";
 
