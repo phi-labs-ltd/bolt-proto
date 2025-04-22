@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.outpost.v1;
+package bolt.outpost.settlement.v1;
 
 // Service 2: SettlementService
 service SettlementService {
