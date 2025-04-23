@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package bolt.prices.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
+
+// PricesService: Prices venue service....
+service PricesService {
+  // Endpoint to fetch the price of the pair.
+  rpc GetPrice(GetPriceRequest) returns (GetPriceResponse);
+
+  // Endpoint to fetch multiple pairs prices in batch.
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+
+  // Endpoint to subscribe on the price changes.
+  rpc StreamPrice(StreamPriceRequest) returns (stream StreamPriceResponse);
+
+  // Endpoint to subscribe on mutiple pairs price changes.
+  rpc StreamPrices(StreamPricesRequest) returns (stream StreamPricesResponse);
+
+  // Endpoint to query for price venue information.
+  rpc GetPriceVenueInfo(GetPriceVenueInfoRequest) returns (GetPriceVenueInfoResponse);
+
+  // Endpoint to query for available price pairs.
+  rpc GetPricePairs(GetPricePairsRequest) returns (GetPricePairsResponse);
+}
+
+// GetPriceRequest: Request fetching the pair price.
+message GetPriceRequest {
+  // pair: The specific market pair. e.g. ATOM/USDT
+  bolt.assets.v1.Pair pair = 1;
+}
+
+// GetPriceResponse: Response to GetPriceRequest.
+message GetPriceResponse {
+  // pair: The pair associated with the price. e.g. ATOM/USDT
+  bolt.assets.v1.Pair pair = 1;
+  // price: The price of the pair. e.g. 10.0
+  string price = 2;
+  // last_updated: The timestamp when the price was updated for the last time, optional.
+  google.protobuf.Timestamp last_updated = 3;
+}
+
+// GetPricesRequest: Request fetching multiple pairs prices.
+message GetPricesRequest {
+  // pairs: List of pairs to fetch prices for. If empty should return all the prices.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}
+
+// GetPricesResponse: Response to GetPricesRequest.
+message GetPricesResponse {
+  // prices: List of prices information for requested pairs. Every item is a
+  // GetPriceResponse as it would be returned if price was requested individualy
+  // with GetPrice.
+  repeated GetPriceResponse prices = 1;
+}
+
+// StreamPriceRequest: Subscribes to price changes.
+message StreamPriceRequest {
+  // pair: The specific market pair. e.g. ATOM/USDT
+  bolt.assets.v1.Pair pair = 1;
+}
+
+// StreamPriceResponse: Response to StreamPriceRequest.
+message StreamPriceResponse {
+  // pair: The pair associated with the price. e.g. ATOM/USDT
+  bolt.assets.v1.Pair pair = 1;
+  // price: The price of the pair. e.g. 10.0
+  string price = 2;
+  // last_updated: The timestamp when the price was updated for the last time, optional.
+  google.protobuf.Timestamp last_updated = 3;
+}
+
+// StreamPricesRequest: Subscribes to price changes on multiple pairs.
+message StreamPricesRequest {
+  // pairs: List of pairs to fetch prices for. If empty should return all the prices.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}
+
+// StreamPricesResponse: Response to StreamPricesRequest.
+message StreamPricesResponse {
+  // updates: List of price updates.
+  repeated StreamPriceResponse updates = 1;
+}
+
+// GetPriceVenueInfoRequest: Queries for the price venue information.
+message GetPriceVenueInfoRequest {}
+
+// GetPriceVenueInfoResponse: Response to GetPriceVenueInfoRequest.
+message GetPriceVenueInfoResponse {
+  // identifier: Price venue identifier. e. g. Bybit, Binance, CoinGecko
+  string identifier = 1;
+  // network_identifier: Blockchain network identifier, or empty if the price venue
+  // is not a blockchain.
+  string network_identifier = 2;
+}
+
+// GetPricePairsRequest: Queries for the available price pairs.
+message GetPricePairsRequest {}
+
+// GetPricePairsResponse: Response to GetPricePairsRequest.
+message GetPricePairsResponse {
+  // pairs: List of price pairs supported by this price venue.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}

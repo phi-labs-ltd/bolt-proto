@@ -6,18 +6,24 @@ plugins:
     out: ./go
     opt:
       - paths=source_relative
+      - Mbolt/assets/v1/assets.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/assets/v1
       - Mbolt/outpost/centralized_oracle/v1/centralized_oracle.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/centralized_oracle/v1
       - Mbolt/outpost/settlement/v1/settlement.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/settlement/v1
+      - Mbolt/prices/v1/prices.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/prices/v1
 
   # Generate Go gRPC code
   - remote: buf.build/grpc/go:v1.2.0
     out: ./go
     opt:
       - paths=source_relative
+      - Mbolt/assets/v1/assets.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/assets/v1
       - Mbolt/outpost/centralized_oracle/v1/centralized_oracle.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/centralized_oracle/v1
       - Mbolt/outpost/settlement/v1/settlement.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/settlement/v1
+      - Mbolt/prices/v1/prices.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/prices/v1
       - require_unimplemented_servers=false
 
 inputs:
+  - proto_file: ../bolt/assets/v1/assets.proto
   - proto_file: ../bolt/outpost/centralized_oracle/v1/centralized_oracle.proto
   - proto_file: ../bolt/outpost/settlement/v1/settlement.proto
+  - proto_file: ../bolt/prices/v1/prices.proto
