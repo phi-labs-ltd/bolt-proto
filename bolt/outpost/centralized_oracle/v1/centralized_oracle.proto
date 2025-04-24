@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bolt.outpost.centralized_oracle.v1;
 
+import "bolt/assets/v1/assets.proto";
 import "google/protobuf/timestamp.proto";
 
 // Service 1: OracleService
@@ -35,17 +36,9 @@ message InfoResponse {
 // PriceUpdate: Price update for a given pair
 message PriceUpdate {
   // pair: The pair for which the price is being updated. e.g. ATOM/USDT
-  Pair pair = 1;
+  bolt.assets.v1.Pair pair = 1;
   // price: The price of the pair. e.g. 10.0
   string price = 2;
   // timestamp: The timestamp of the price update. e.g. 2023-10-01T00:00:00Z
   google.protobuf.Timestamp timestamp = 3;
-}
-
-// Pair: The pair for which the price is being updated. e.g. ATOM/USDT
-message Pair {
-  // base: The base asset of the pair. e.g. ATOM
-  string base = 1;
-  // quote: The quote asset of the pair. e.g. USDT
-  string quote = 2;
 }

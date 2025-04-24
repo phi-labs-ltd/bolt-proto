@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package bolt.assets.v1;
+
+// Pair: The pair for which the price is being updated. e.g. ATOM/USDT
+message Pair {
+  // base: The base asset of the pair. e.g. ATOM
+  string base = 1;
+  // quote: The quote asset of the pair. e.g. USDT
+  string quote = 2;
+}
