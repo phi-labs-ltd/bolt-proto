@@ -36,7 +36,7 @@ message GetPriceRequest {
 message GetPriceResponse {
   // pair: The pair associated with the price. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
-  // price: The price of the pair. e.g. 10.0
+  // price: The price of the pair, in rational values. e.g. 1250/13
   string price = 2;
   // last_updated: The timestamp when the price was updated for the last time, optional.
   google.protobuf.Timestamp last_updated = 3;
@@ -66,7 +66,7 @@ message StreamPriceRequest {
 message StreamPriceResponse {
   // pair: The pair associated with the price. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
-  // price: The price of the pair. e.g. 10.0
+  // price: The price of the pair, in rational values. e.g. 1250/13
   string price = 2;
   // last_updated: The timestamp when the price was updated for the last time, optional.
   google.protobuf.Timestamp last_updated = 3;
