@@ -17,4 +17,7 @@ plugins:
       - no_client=false
 
 inputs:
-  - proto_file: ../bolt/outpost/v1/centralized_oracle.proto
+  - proto_file: ../bolt/assets/v1/assets.proto
+  - proto_file: ../bolt/outpost/centralized_oracle/v1/centralized_oracle.proto
+  - proto_file: ../bolt/outpost/settlement/v1/settlement.proto
+  - proto_file: ../bolt/prices/v1/prices.proto
