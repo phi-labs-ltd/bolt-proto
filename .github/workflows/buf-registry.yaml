@@ -1,0 +1,17 @@
+name: Publish to Buf Schema Registry
+on:
+  push:
+    branches: [bolt-63-add-bsr-push-action]
+    tags: [v*]
+    paths:
+      - bolt/**/**.proto'
+      - 'buf.yaml'
+      - 'buf.lock'
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-action@v1
+        with:
+          token: ${{ secrets.BUF_TOKEN }}
