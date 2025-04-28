@@ -2,8 +2,199 @@ syntax = "proto3";
 
 package bolt.outpost.settlement.v1;
 
-// Service 2: SettlementService
-service SettlementService {
+import "bolt/assets/v1/assets.proto";
+
+// Service 1: PublicSettlementService
+service PublicSettlementService {
+  // Endpoint to fetch the pool info.
+  rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
+  // Endpoint to fetch the pool by asset.
+  rpc GetPoolByBaseAsset(GetPoolByBaseAssetRequest) returns (GetPoolByBaseAssetResponse);
+  // Endpoint to query available pools.
+  rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
+  // Endpoint to fetch balances.
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Endpoint to fetch the trade details.
+  rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
+  // Endpoint to subscribe to trades.
+  rpc SubscribeTrades(SubscribeTradesRequest) returns (stream SubscribeTradesResponse);
+  // Endpoint to subscribe to balance changes.
+  rpc SubscribeBalanceUpdates(SubscribeBalanceUpdatesRequest) returns (stream SubscribeBalanceUpdatesResponse);
+  // Endpoint to fetch the user contribution to the pool.
+  rpc GetSupplyContribution(GetSupplyContributionRequest) returns (GetSupplyContributionResponse);
+  // Endpoint to query the settlement info.
+  rpc SettlementInfo(SettlementInfoRequest) returns (SettlementInfoResponse);
+}
+
+// GetPoolRequest: Request to fetch info about a specific pool.
+message GetPoolRequest {
+  // pool_identifier: The pool to fetch.
+  string pool_identifier = 1;
+}
+
+// GetPoolResponse: Response to the GetPoolRequest.
+message GetPoolResponse {
+  // pool: Description of the pool.
+  Pool pool = 1;
+}
+
+// GetPoolByBaseAssetRequest: Request to fetch a liquidity pool managing particular
+// asset.
+message GetPoolByBaseAssetRequest {
+  // base_asset: BASE asset we want the fetched pool to manage.
+  string base_asset = 1;
+}
+
+// GetPoolByBaseAssetResponse: Response to the GetPoolByBaseAssetRequest.
+message GetPoolByBaseAssetResponse {
+  // pool: Description of the pool.
+  Pool pool = 1;
+}
+
+// GetPoolsRequest: Request to query pools managed by this service.
+message GetPoolsRequest {}
+
+// GetPoolsResponse: Response to the GetPoolsRequest.
+message GetPoolsResponse {
+  // pools: Description of pools managed by this service.
+  repeated Pool pools = 1;
+}
+
+// GetBalancesRequest: Request fetching BASE balance on all the pools, and all the
+// QUERY balances on pools with particular BASE asset.
+message GetBalancesRequest {
+  // user: Unique user identifier.
+  string user = 1;
+  // base_asset: BASE asset for which balances are fetched.
+  string base_asset = 2;
+}
+
+// GetBalancesResponse: Response for GetBalancesRequest.
+message GetBalancesResponse {
+  // base: BASE asset balance.
+  bolt.assets.v1.Balance base = 1;
+  // quotes: QUOTE assets balances.
+  repeated bolt.assets.v1.Balance quotes = 2;
+}
+
+// GetTradeRequest: Request fetching specific trade details..
+message GetTradeRequest {
+  // id: Trade unique identifier
+  string id = 1;
+}
+
+// GetTradeResponse: Response for GetTradeRequest.
+message GetTradeResponse {
+  // trade: Fetched trade details.
+  Trade trade = 1;
+}
+
+// SubscribeTradesRequest: Request starting trades subscription.
+message SubscribeTradesRequest {}
+
+// SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
+message SubscribeTradesResponse {
+  // trade: Details of trade that happened.
+  Trade trade = 1;
+}
+
+// Trade: Single trade details.
+message Trade {
+  // id: Trade unique identifier
+  string id = 1;
+  // input: Balance added to the pool by the trade.
+  bolt.assets.v1.Balance input = 2;
+  // output: Balance drained from the pool by the trade.
+  bolt.assets.v1.Balance output = 3;
+  // source: The source of the trade. Source could be the Sui pool ID, or the EVM
+  // address.
+  string source = 4;
+  // fee: Total fees of the trade.
+  bolt.assets.v1.Balance fee = 5;
+  // sender: Trade sender identifier, for example the sender address.
+  string sender = 6;
+  // height: Height at which the trade happened.
+  uint64 heigh = 7;
+  // transaction_id: Identifier of the transaction including the trade - hash, digest,
+  // etc.
+  string transaction_id = 8;
+}
+
+// Pool: Description of the single liquidity pool.
+message Pool {
+  // base_asset: Pool BASE asset.
+  string base_asset = 1;
+  // base_amount: Amount of BASE asset int he pool.
+  string base_amount = 2;
+  // qute_assets: Asset that can be used as QUOTE to acqire BASE asset from this pool.
+  repeated string quote_assets = 3;
+  // lp_fee_ratio: Transaction fee to be distributed among liquidity providers according
+  // to their shares.
+  string lp_fee_ratio = 4;
+  // protocol_fee_ratio: Transaction fee to be collected for the protocol.
+  string protocol_fee_ratio = 5;
+  // min_base_out: Minimum BASE amount that can be transared out per to avoid too low
+  // quantity transaction as it could make MMM too difficult/impossible. Basically
+  // defensive mechanism about DoS attacks against MMs.
+  string min_base_out = 6;
+}
+
+// SubscribeBalanceUpdatesRequest: Request starting balance updates subscription.
+message SubscribeBalanceUpdatesRequest {}
+
+// SubscribeBalanceUpdatesResponse: Streamed response for SubscribeBalanceUpdatesRequest.
+message SubscribeBalanceUpdatesResponse {
+  // update: Pool update details.
+  BalanceUpdate update = 1;
+}
+
+// BalanceUpdate: Single balance update event details.
+message BalanceUpdate {
+  // epoch: Epoch index which supply balance has changed.
+  uint64 epoch = 1;
+  // base_out: BASE asset balance drained from the supply to be used in a trade.
+  bolt.assets.v1.Balance base_out = 2;
+  // quote_out: QUOTE asset balance put in the pool with this trade.
+  bolt.assets.v1.Balance quote_out = 3;
+  // sender: The sender if the tx hat indicated the event.
+  string sender = 4;
+  // transaction_id: Unique id of transaction that triggered the update.
+  string transactin_id = 5;
+}
+
+// GetSupplyContributionRequest: Request fetching users supply contribution in the pool.
+message GetSupplyContributionRequest {
+  // base_asset: BASE asset of the pool.
+  string base_asset = 1;
+  // epoch: Intex of the epoch to get the contribution info for.
+  uint64 epoch = 2;
+  // user: Unique user identifier to get contribution for.
+  string user = 3;
+}
+
+// GetSupplyContributionResponse: Response for GetSupplyContributionRequest.
+message GetSupplyContributionResponse {
+  // base: Total BASE asset balance in that specific supply.
+  bolt.assets.v1.Balance base = 1;
+  // total_supply: Total amount of LP shares minted in that specific supply.
+  string total_supply = 2;
+  // user_base: Specific user BASE asset balance in that specific supply.
+  bolt.assets.v1.Balance user_base = 3;
+  // user_shares: LP sharees in that specific supply owned by the user.
+  string user_shares = 4;
+}
+
+// SettlementInfoRequest: Queries for settlement info.
+message SettlementInfoRequest {}
+
+// SettlementInfoResponse: Response for SettlementInfoRequest.
+message SettlementInfoResponse {
+  // network_id: Network identifier where the settlement sync is deployed.
+  string nework_id = 1;
+}
+
+// Service 2: PrivateSettlementService
+service PrivateSettlementService {
   // Endpoint to swap assets. Should be invoked by the user to swap assets.
   rpc SwapExactIn(SwapExactInRequest) returns (SwapExactInResponse);
   // Endpoint to withdraw quotes. Should be invoked by the liquidity provider to withdraw quotes.
@@ -15,7 +206,7 @@ service SettlementService {
   // Endpoint to withdraw base asset. Should be invoked by the liquidity provider to withdraw base asset.
   rpc WithdrawBase(WithdrawBaseRequest) returns (WithdrawBaseResponse);
   // Endpoint to withdraw all base asset. Should be invoked by the liquidity provider to withdraw all base asset.
-  rpc WithdrawAllBase(WithdrawAllBaseRequest) returns (WithdrawAllBaseResponse);
+  rpc WithdrawAllBases(WithdrawAllBasesRequest) returns (WithdrawAllBasesResponse);
   // Endpoint to get the information about the network the oracle is running on
   rpc Info(InfoRequest) returns (InfoResponse);
 }
@@ -97,11 +288,11 @@ message WithdrawBaseResponse {
   string tx_id = 2;
 }
 
-// WithdrawAllBaseRequest: Request to withdraw all base asset. Should be invoked by the liquidity provider to withdraw all base asset.
-message WithdrawAllBaseRequest {}
+// WithdrawAllBasesRequest: Request to withdraw all base asset. Should be invoked by the liquidity provider to withdraw all base asset.
+message WithdrawAllBasesRequest {}
 
-// WithdrawAllBaseResponse: Response to the WithdrawAllBaseRequest. Contains information about the withdrawn base asset.
-message WithdrawAllBaseResponse {
+// WithdrawAllBasesResponse: Response to the WithdrawAllBasesRequest. Contains information about the withdrawn base asset.
+message WithdrawAllBasesResponse {
   // withdrawn: The amount of base assets withdrawn. e.g. 1000 USDT
   repeated Asset withdrawn = 1;
   // tx_id: The hash of the transaction.

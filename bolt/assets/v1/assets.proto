@@ -9,3 +9,11 @@ message Pair {
   // quote: The quote asset of the pair. e.g. USDT
   string quote = 2;
 }
+
+// Balance: Specific asset balance.
+message Balance {
+  // asset: Asset name
+  string asset = 1;
+  // amount: Amount of the asset
+  string amount = 2;
+}
