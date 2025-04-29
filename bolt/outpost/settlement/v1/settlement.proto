@@ -12,7 +12,7 @@ service PublicSettlementService {
   rpc GetPoolByBaseAsset(GetPoolByBaseAssetRequest) returns (GetPoolByBaseAssetResponse);
   // Endpoint to query available pools.
   rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
-  // Endpoint to fetch balances.
+  // Endpoint to fetch balances of BASE asset and all QUOTE assets.
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
   // Endpoint to fetch the trade details.
   rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
@@ -61,7 +61,7 @@ message GetPoolsResponse {
 }
 
 // GetBalancesRequest: Request fetching BASE balance on all the pools, and all the
-// QUERY balances on pools with particular BASE asset.
+// QUOTE balances on pools with particular BASE asset.
 message GetBalancesRequest {
   // user: Unique user identifier.
   string user = 1;
@@ -114,7 +114,7 @@ message Trade {
   // sender: Trade sender identifier, for example the sender address.
   string sender = 6;
   // height: Height at which the trade happened.
-  uint64 heigh = 7;
+  uint64 height = 7;
   // transaction_id: Identifier of the transaction including the trade - hash, digest,
   // etc.
   string transaction_id = 8;
@@ -190,7 +190,7 @@ message SettlementInfoRequest {}
 // SettlementInfoResponse: Response for SettlementInfoRequest.
 message SettlementInfoResponse {
   // network_id: Network identifier where the settlement sync is deployed.
-  string nework_id = 1;
+  string network_id = 1;
 }
 
 // Service 2: PrivateSettlementService
