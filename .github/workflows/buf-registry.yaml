@@ -1,10 +1,10 @@
 name: Publish to Buf Schema Registry
 on:
   push:
-    branches: [bolt-63-add-bsr-push-action]
+    branches: [main]
     tags: [v*]
     paths:
-      - bolt/**/**.proto'
+      - 'bolt/**/**.proto'
       - 'buf.yaml'
       - 'buf.lock'
 jobs:
