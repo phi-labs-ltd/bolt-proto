@@ -1,5 +1,5 @@
 version: v2
-name: github.com/phi-labs-ltd/bolt-proto
+name: buf.build/philabs/bolt-proto
 
 lint:
   use:
