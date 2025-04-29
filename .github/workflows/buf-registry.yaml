@@ -1,8 +1,8 @@
 name: Publish to Buf Schema Registry
 on:
   push:
-    branches: [main]
-    tags: [v*]
+    tags:
+      - '*'
     paths:
       - 'bolt/**/**.proto'
       - 'buf.yaml'
