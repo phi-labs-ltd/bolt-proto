@@ -338,6 +338,8 @@ message InfoResponse {
   string network_id = 1;
   // whoami: The address of the signer who will be submitting the transactions. e.g. archway1qwertyuiopasdfghjklzxcvbnm
   string whoami = 2;
+  // epochs: Idicates if the settlement supports multiple epochs
+  bool epochs = 3;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
