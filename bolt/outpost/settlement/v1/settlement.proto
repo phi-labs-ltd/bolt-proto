@@ -67,6 +67,10 @@ message GetBalancesRequest {
   string user = 1;
   // base_asset: BASE asset for which balances are fetched.
   string base_asset = 2;
+  // height: Blockchain height at which we want the balance info. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp. It's optional - if missing, the most recent balance should be returned.
+  optional uint64 height = 3;
 }
 
 // GetBalancesResponse: Response for GetBalancesRequest.
@@ -75,6 +79,10 @@ message GetBalancesResponse {
   bolt.assets.v1.Balance base = 1;
   // quotes: QUOTE assets balances.
   repeated bolt.assets.v1.Balance quotes = 2;
+  // height: Blockchain height at which we want the balance info. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp.
+  uint64 height = 3;
 }
 
 // GetTradeRequest: Request fetching specific trade details..
@@ -150,8 +158,9 @@ message SubscribeBalanceUpdatesResponse {
 
 // BalanceUpdate: Single balance update event details.
 message BalanceUpdate {
-  // epoch: Epoch index which supply balance has changed.
-  uint64 epoch = 1;
+  // epoch: Epoch index which supply balance has changed. Optional as it would be missing
+  // for pools with only a single epoch (e. g. CW).
+  optional uint64 epoch = 1;
   // base_out: BASE asset balance drained from the supply to be used in a trade.
   bolt.assets.v1.Balance base_out = 2;
   // quote_out: QUOTE asset balance put in the pool with this trade.
@@ -160,16 +169,27 @@ message BalanceUpdate {
   string sender = 4;
   // transaction_id: Unique id of transaction that triggered the update.
   string transactin_id = 5;
+  // height: Blockchain height at which we want the balance info. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp.
+  uint64 height = 6;
+  // total_shares: Total amount of LP shares minted in the supply of the updated pool.
+  string total_shares = 7;
 }
 
 // GetSupplyContributionRequest: Request fetching users supply contribution in the pool.
 message GetSupplyContributionRequest {
   // base_asset: BASE asset of the pool.
   string base_asset = 1;
-  // epoch: Intex of the epoch to get the contribution info for.
-  uint64 epoch = 2;
+  // epoch: Intex of the epoch to get the contribution info for. It is optional, but it
+  // should always be set if the pool supports more than a single epoch, and should
+  // (e. g. Sui) always be empty for single epoch pools (e. g. CW).
+  optional uint64 epoch = 2;
   // user: Unique user identifier to get contribution for.
   string user = 3;
+  // height: Height on which the contribution is fetched. Optional, last state if height
+  // is not provided.
+  optional uint64 height = 4;
 }
 
 // GetSupplyContributionResponse: Response for GetSupplyContributionRequest.
@@ -182,6 +202,9 @@ message GetSupplyContributionResponse {
   bolt.assets.v1.Balance user_base = 3;
   // user_shares: LP sharees in that specific supply owned by the user.
   string user_shares = 4;
+  // height: Height on which the most recent shares were minted. Note that if
+  // height was provied, it is the last shares minting before the queried height.
+  optional uint64 height = 5;
 }
 
 // SettlementInfoRequest: Queries for settlement info.
@@ -272,6 +295,13 @@ message DepositBaseResponse {
   Asset amount = 1;
   // tx_id: The hash of the transaction.
   string tx_id = 2;
+  // epoch: Epoch to which balance was added, and in which new shares were minted. It would be missing if the pool is not
+  // supporting epochs (e. g. CW).
+  optional uint64 epoch = 3;
+  // shares: The amount of LP the user owns in the epoch the balance was added to. e.g. 1000 shares
+  string shares = 4;
+  // height: Blockchain height on which the shares were minted.
+  uint64 height = 5;
 }
 
 // WithdrawBaseRequest: Request to withdraw base asset. Should be invoked by the liquidity provider to withdraw base asset.
@@ -308,6 +338,8 @@ message InfoResponse {
   string network_id = 1;
   // whoami: The address of the signer who will be submitting the transactions. e.g. archway1qwertyuiopasdfghjklzxcvbnm
   string whoami = 2;
+  // epochs: Idicates if the settlement supports multiple epochs
+  bool epochs = 3;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
