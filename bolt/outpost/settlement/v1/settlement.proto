@@ -164,7 +164,7 @@ message BalanceUpdate {
   // base_out: BASE asset balance drained from the supply to be used in a trade.
   bolt.assets.v1.Balance base_out = 2;
   // quote_out: QUOTE asset balance put in the pool with this trade.
-  bolt.assets.v1.Balance quote_out = 3;
+  bolt.assets.v1.Balance quote_in = 3;
   // sender: The sender if the tx hat indicated the event.
   string sender = 4;
   // transaction_id: Unique id of transaction that triggered the update.
