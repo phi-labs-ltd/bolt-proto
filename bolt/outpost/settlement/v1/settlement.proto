@@ -148,7 +148,10 @@ message Pool {
 }
 
 // SubscribeBalanceUpdatesRequest: Request starting balance updates subscription.
-message SubscribeBalanceUpdatesRequest {}
+message SubscribeBalanceUpdatesRequest {
+  // assets: List of assets to subscribe. Empty subscribes to all updates on this settlement.
+  repeated string assets = 1;
+}
 
 // SubscribeBalanceUpdatesResponse: Streamed response for SubscribeBalanceUpdatesRequest.
 message SubscribeBalanceUpdatesResponse {
@@ -163,7 +166,7 @@ message BalanceUpdate {
   optional uint64 epoch = 1;
   // base_out: BASE asset balance drained from the supply to be used in a trade.
   bolt.assets.v1.Balance base_out = 2;
-  // quote_out: QUOTE asset balance put in the pool with this trade.
+  // quote_in: QUOTE asset balance put in the pool with this trade.
   bolt.assets.v1.Balance quote_in = 3;
   // sender: The sender if the tx hat indicated the event.
   string sender = 4;
