@@ -20,7 +20,10 @@ message PostPricesRequest {
 }
 
 // PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
-message PostPricesResponse {}
+message PostPricesResponse {
+  // tx_id: The hash of the transaction.
+  string tx_id = 1;
+}
 
 // InfoRequest: Request to get information about the oracle. Should be invoked by pricefeeder
 message InfoRequest {}
