@@ -79,7 +79,7 @@ message GetBalancesResponse {
   bolt.assets.v1.Balance base = 1;
   // quotes: QUOTE assets balances.
   repeated bolt.assets.v1.Balance quotes = 2;
-  // height: Blockchain height at which we want the balance info. If SettlementService
+  // height: Blockchain height this balance info is accurate for. If SettlementService
   // is not running on Blockchain, this is the atomic point in time identifier - e. g.
   // timestamp.
   uint64 height = 3;
@@ -265,25 +265,29 @@ message SwapExactInResponse {
 message WithdrawQuotesRequest {
   // base_asset: The base asset against which the accumulated quotes that the user wants to withdraw. e.g. USDT pool
   string base_asset = 1;
+  // receiver: The address where withdrawn quotes should be deposited. If not provided, the default sender address
+  // would be used.
+  optional string receiver = 2;
+  // quotes: Quotes to withdraw - if empty, all quotes for this base would be withdrawn.
+  repeated string quotes = 3;
 }
 
-// WithdrawQuotesResponse: Response to the WithdrawQuotesRequest. Contains information about the withdrawn quotes.
+// WithdrawQuotesResponse: Response to the WithdrawQuotesRequest.
 message WithdrawQuotesResponse {
   // withdrawn: The amount of assets withdrawn. e.g. BTC, ETH
   repeated Asset withdrawn = 1;
-  // tx_id: The hash of the transaction.
-  string tx_id = 2;
 }
 
 // WithdrawAllQuotesRequest: Request to withdraw all quotes. Should be invoked by the liquidity provider to withdraw all quotes.
-message WithdrawAllQuotesRequest {}
+message WithdrawAllQuotesRequest {
+  // receiver: Address where withdrawn quotes should be deposited. If not provided, the default sender address would be used.
+  optional string receiver = 1;
+}
 
-// WithdrawAllQuotesResponse: Response to the WithdrawAllQuotesRequest. Contains information about the withdrawn quotes.
+// WithdrawAllQuotesResponse: Response to the WithdrawAllQuotesRequest.
 message WithdrawAllQuotesResponse {
   // withdrawn: The amount of quotes assets withdrawn. e.g. BTC, ETH
   repeated Asset withdrawn = 1;
-  // tx_id: The hash of the transaction.
-  string tx_id = 2;
 }
 
 // DepositBaseRequest: Request to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
