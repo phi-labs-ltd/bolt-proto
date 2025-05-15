@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package bolt.analytics.v1;
+
+// Service collecting derived metrics for analytics
+service AnalyticsService {
+  // Fetches collected metrics
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+}
+
+// Query to fetch collected metrics
+message GetMetricsRequest {
+  // Assets to get metrics for. If empty, all collected metrics would be returned.
+  // If provided, all provided assets metrics would be returned, even if not collected
+  // (in which case all the metrics would be empty).
+  repeated string assets = 1;
+}
+
+// Response to GetMetricsRequest
+message GetMetricsResponse {
+  // Metrics collected per asset
+  repeated AssetMetrics per_asset = 1;
+}
+
+// Single asset metrics
+message AssetMetrics {
+  // Asset denom
+  string denom = 1;
+  // Total volume traded for this asset, not set if asset was never traded
+  optional TotalVolume total_volume = 2;
+  // Total fees generated in this denom, not set if fees was never collected
+  optional TotalFees total_fees = 3;
+}
+
+// Single asset total volume
+message TotalVolume {
+  // Total volume traded, in ratio format
+  string volume = 2;
+  // Last height when this volume was updated
+  uint64 height = 3;
+}
+
+// Total fees generated on a particular asset
+message TotalFees {
+  // Protocol fees collected, in ratio format
+  string protocol_fee = 2;
+  // LP fees collected, in ratio format
+  string lp_fee = 3;
+  // Last height when the fees for this asset were updated
+  uint64 height = 4;
+}
