@@ -22,3 +22,4 @@ inputs:
   - proto_file: ../bolt/outpost/settlement/v1/settlement.proto
   - proto_file: ../bolt/prices/v1/prices.proto
   - proto_file: ../bolt/analytics/v1/analytics.proto
+  - proto_file: ../bolt/cex/v1/cex.proto

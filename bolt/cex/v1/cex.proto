@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package bolt.cex.v1;
+
+import "bolt/assets/v1/assets.proto";
+
+// Service adapting the CEX communication for Bolt protocol
+service CEXService {
+  // Queries for assets tradeable on this CEX
+  rpc GetAssets(GetAssetsRequest) returns (GetAssetsResponse);
+  // Creates an order on the CEX, waits till its resolved
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  // Withdraws tokens from CEX
+  rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+}
+
+// Request querying for assets supported by the CEX.
+message GetAssetsRequest {}
+
+// Response to GetAssetsRequest
+message GetAssetsResponse {
+  // Lists of Bolt assets name tradeable on this CEX.
+  repeated string assets = 1;
+}
+
+// Request to create order on CEX
+message CreateOrderRequest {
+  // Assets to be traded
+  bolt.assets.v1.Pair pair = 1;
+  // Amount of the asset to be traded
+  string amount = 2;
+  // Determines which assets is the traded amount
+  OrderSide side = 3;
+  // Determines order kind
+  OrderKind kind = 4;
+}
+
+// Order side - determines if requested amount is the BASE or QUOTE
+enum OrderSide {
+  // Order side is not specified - should never be used
+  ORDER_SIDE_UNSPECIFIED = 0;
+  // Provided amount is the BASE asset
+  ORDER_SIDE_BASE = 1;
+  // Provided amount is the QUOTE asset
+  ORDER_SIDE_QUOTE = 2;
+}
+
+// Created order kind
+enum OrderKind {
+  // Order kind is not specified - should never be used
+  ORDER_KIND_UNSPECIFIED = 0;
+  // Market order
+  ORDER_KIND_MARKET = 1;
+}
+
+// Response to CreateOrderRequest
+message CreateOrderResponse {
+  // Amount of BASE asset traded.
+  bolt.assets.v1.Balance base = 1;
+  // Amount of QUOTE asset traded.
+  bolt.assets.v1.Balance quote = 2;
+  // Order statuses. Note that orders in progres (Created, PartiallyFilled) would not be returned,
+  // but order would be awaited till completion.
+  OrderStatus status = 3;
+}
+
+// Status of the filled or cancelled order
+enum OrderStatus {
+  // Order status is not specified - should never be used
+  ORDER_STATUS_UNSPECIFIED = 0;
+  // Order is cancelled before any transaction
+  ORDER_STATUS_CANCELLED = 1;
+  // Order is cancelled being partially filled
+  ORDER_STATUS_PARTIALLY_FILLED_CANCELLED = 2;
+  // Order is filled
+  ORDER_STATUS_FILLED = 3;
+}
+
+// Request to withdraw tokens from CEX
+message WithdrawRequest {
+  // Asset and amount to be withdrawn
+  bolt.assets.v1.Balance asset = 1;
+  // Address where to withdraw tokens
+  string receiver = 2;
+  // Receiver memo
+  optional string memo = 3;
+}
+
+// Response to WithdrawRequest
+message WithdrawResponse {}
