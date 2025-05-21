@@ -11,6 +11,7 @@ plugins:
       - Mbolt/outpost/settlement/v1/settlement.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/settlement/v1
       - Mbolt/prices/v1/prices.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/prices/v1
       - Mbolt/analytics/v1/analytics.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/analytics/v1
+      - Mbolt/cex/v1/cex.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/cex/v1
 
   # Generate Go gRPC code
   - remote: buf.build/grpc/go:v1.2.0
@@ -22,6 +23,7 @@ plugins:
       - Mbolt/outpost/settlement/v1/settlement.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/outpost/settlement/v1
       - Mbolt/prices/v1/prices.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/prices/v1
       - Mbolt/analytics/v1/analytics.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/analytics/v1
+      - Mbolt/cex/v1/cex.proto=github.com/phi-labs-ltd/bolt-proto/go/bolt/cex/v1
       - require_unimplemented_servers=false
 
 inputs:
@@ -30,3 +32,4 @@ inputs:
   - proto_file: ../bolt/outpost/settlement/v1/settlement.proto
   - proto_file: ../bolt/prices/v1/prices.proto
   - proto_file: ../bolt/analytics/v1/analytics.proto
+  - proto_file: ../bolt/cex/v1/cex.proto
