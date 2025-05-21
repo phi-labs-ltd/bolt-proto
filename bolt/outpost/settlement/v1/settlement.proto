@@ -178,6 +178,10 @@ message BalanceUpdate {
   uint64 height = 6;
   // total_shares: Total amount of LP shares minted in the supply of the updated pool.
   string total_shares = 7;
+  // lp_fee: Total LP fees collected on this balance update, always in the BASE asset
+  string lp_fee = 8;
+  // bolt_fee: Bolt protocol fee collected on this balance update, always in the QUOTE asset
+  string bolt_fee = 9;
 }
 
 // GetSupplyContributionRequest: Request fetching users supply contribution in the pool.
