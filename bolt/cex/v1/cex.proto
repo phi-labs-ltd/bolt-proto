@@ -12,6 +12,8 @@ service CEXService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   // Withdraws tokens from CEX
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Ad-hoc configuration reload
+  rpc ReloadConfig(ReloadConfigRequest) returns (ReloadConfigResponse);
 }
 
 // Request querying for assets supported by the CEX.
@@ -88,3 +90,9 @@ message WithdrawRequest {
 
 // Response to WithdrawRequest
 message WithdrawResponse {}
+
+// Triggers ad-hoc configuration reload
+message ReloadConfigRequest {}
+
+// Response to ReloadConfigRequest
+message ReloadConfigResponse {}
