@@ -151,6 +151,8 @@ message Pool {
 message SubscribeBalanceUpdatesRequest {
   // assets: List of assets to subscribe. Empty subscribes to all updates on this settlement.
   repeated string assets = 1;
+  // reasons: List of update reasons to subscribe. Empty subscribes to all the possible reasons.
+  repeated UpdateReason reasons = 2;
 }
 
 // SubscribeBalanceUpdatesResponse: Streamed response for SubscribeBalanceUpdatesRequest.
@@ -182,6 +184,20 @@ message BalanceUpdate {
   string lp_fee = 8;
   // bolt_fee: Bolt protocol fee collected on this balance update, always in the QUOTE asset
   string bolt_fee = 9;
+  // reason: Reason for the balance update
+  UpdateReason reason = 10;
+}
+
+// Reason for the balance update
+enum UpdateReason {
+  // Unspecified trigger
+  UPDATE_REASON_UNSPECIFIED = 0;
+  // Asset deposited to the pool
+  UPDATE_REASON_DEPOSIT = 1;
+  // Asset withdrawn from
+  UPDATE_REASON_WITHDRAWAL = 2;
+  // Trade occured
+  UPDATE_REASON_TRADE = 3;
 }
 
 // GetSupplyContributionRequest: Request fetching users supply contribution in the pool.
