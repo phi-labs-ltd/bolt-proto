@@ -171,7 +171,7 @@ message BalanceUpdate {
   // sender: The sender if the tx hat indicated the event.
   string sender = 4;
   // transaction_id: Unique id of transaction that triggered the update.
-  string transactin_id = 5;
+  string transaction_id = 5;
   // height: Blockchain height at which we want the balance info. If SettlementService
   // is not running on Blockchain, this is the atomic point in time identifier - e. g.
   // timestamp.
