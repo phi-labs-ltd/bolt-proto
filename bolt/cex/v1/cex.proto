@@ -12,6 +12,10 @@ service CEXService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   // Withdraws tokens from CEX
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Queries for balances on CEX accounts
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Queries for deposit address on CEX for particular asset
+  rpc GetDepositAddress(GetDepositAddressRequest) returns (GetDepositAddressResponse);
   // Ad-hoc configuration reload
   rpc ReloadConfig(ReloadConfigRequest) returns (ReloadConfigResponse);
 }
@@ -82,14 +86,39 @@ enum OrderStatus {
 message WithdrawRequest {
   // Asset and amount to be withdrawn
   bolt.assets.v1.Balance asset = 1;
+  // Network on which the assets are to be withdrawn
+  string network = 2;
   // Address where to withdraw tokens
-  string receiver = 2;
+  string receiver = 3;
   // Receiver memo
-  optional string memo = 3;
+  optional string memo = 4;
 }
 
 // Response to WithdrawRequest
 message WithdrawResponse {}
+
+// Queries for balances on cex accounts
+message GetBalancesRequest {}
+
+// Response to GetBalancesRequest
+message GetBalancesResponse {
+  // Assets balances
+  repeated bolt.assets.v1.Balance balances = 1;
+}
+
+// Queries for deposit address on CEX for particular asset
+message GetDepositAddressRequest {
+  // Asset for which account we query
+  string asset = 1;
+  // Network for which account we query
+  string network = 2;
+}
+
+// Response to GetDepositAddressRequest
+message GetDepositAddressResponse {
+  // Address for deposits
+  string address = 1;
+}
 
 // Triggers ad-hoc configuration reload
 message ReloadConfigRequest {}
