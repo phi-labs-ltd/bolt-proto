@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package bolt.analytics.v1;
 
+import "bolt/assets/v1/assets.proto";
+
 // Service collecting derived metrics for analytics
 service AnalyticsService {
   // Fetches collected metrics
@@ -10,42 +12,39 @@ service AnalyticsService {
 
 // Query to fetch collected metrics
 message GetMetricsRequest {
-  // Assets to get metrics for. If empty, all collected metrics would be returned.
-  // If provided, all provided assets metrics would be returned, even if not collected
-  // (in which case all the metrics would be empty).
-  repeated string assets = 1;
+  // Pairs to get metrics for. Note that, this pairs are not symetrical - ARCH/BTC would
+  // only return metrics for ARCH/BTC trades, not BTC/ARCH trades. To get both pairs,
+  // they should be both added to the assets queried.
+  // If no pairs are provided, all pairs metrics would be returned.
+  repeated bolt.assets.v1.Pair pairs = 1;
+  // Pool ids to get metrics for. If not set, all pools analytics would be returned.
+  repeated string pool_ids = 2;
 }
 
 // Response to GetMetricsRequest
 message GetMetricsResponse {
-  // Metrics collected per asset
-  repeated AssetMetrics per_asset = 1;
+  // Metrics collected per pair
+  repeated AssetMetrics per_pair = 1;
 }
 
 // Single asset metrics
 message AssetMetrics {
-  // Asset denom
-  string denom = 1;
-  // Total volume traded for this asset, not set if asset was never traded
-  optional TotalVolume total_volume = 2;
-  // Total fees generated in this denom, not set if fees was never collected
-  optional TotalFees total_fees = 3;
-}
-
-// Single asset total volume
-message TotalVolume {
-  // Total volume traded, in ratio format
-  string volume = 2;
-  // Last height when this volume was updated
-  uint64 height = 3;
-}
-
-// Total fees generated on a particular asset
-message TotalFees {
-  // Protocol fees collected, in ratio format
-  string protocol_fee = 2;
-  // LP fees collected, in ratio format
-  string lp_fee = 3;
-  // Last height when the fees for this asset were updated
-  uint64 height = 4;
+  // Pool id this metrics adhere to
+  string pool_id = 1;
+  // Pair this metrics adhere to
+  bolt.assets.v1.Pair pair = 2;
+  // Total volume of the BASE asset traded in this pair. Repeated, as it might
+  // contain the volume in different denoms (typically the base denom itself and
+  // the unified denom like USDC).
+  repeated bolt.assets.v1.Balance total_base_volume = 3;
+  // Total volume of the BASE asset traded in this pair. Repeated, as it might
+  // contain the volume in different denoms (typically the base denom itself and
+  // the unified denom like USDC).
+  repeated bolt.assets.v1.Balance total_quote_volume = 4;
+  // Total Bolt fees generated in this pair swaps.
+  repeated bolt.assets.v1.Balance total_bolt_fees_volume = 5;
+  // Total LP fees generated in this pair swaps.
+  repeated bolt.assets.v1.Balance total_lp_fees_volume = 6;
+  // Height when the metrics where last updated
+  uint64 height = 7;
 }
