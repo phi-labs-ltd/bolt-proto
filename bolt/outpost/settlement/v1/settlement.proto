@@ -126,8 +126,6 @@ message Trade {
   // transaction_id: Identifier of the transaction including the trade - hash, digest,
   // etc.
   string transaction_id = 8;
-  // pool_id: Unique pool identifier transaction was
-  string pool_id = 9;
 }
 
 // Pool: Description of the single liquidity pool.
