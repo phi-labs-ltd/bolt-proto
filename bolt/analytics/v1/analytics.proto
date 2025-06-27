@@ -12,7 +12,7 @@ service AnalyticsService {
 
 // Query to fetch collected metrics
 message GetMetricsRequest {
-  // Pairs to get metrics for. Note that, this pairs are not symetrical - ARCH/BTC would
+  // Pairs to get metrics for. Note that, this pairs are not symmetrical - ARCH/BTC would
   // only return metrics for ARCH/BTC trades, not BTC/ARCH trades. To get both pairs,
   // they should be both added to the assets queried.
   // If no pairs are provided, all pairs metrics would be returned.
@@ -45,6 +45,6 @@ message AssetMetrics {
   repeated bolt.assets.v1.Balance total_bolt_fees_volume = 5;
   // Total LP fees generated in this pair swaps.
   repeated bolt.assets.v1.Balance total_lp_fees_volume = 6;
-  // Height when the metrics where last updated
+  // Height when the metrics were last updated
   uint64 height = 7;
 }
