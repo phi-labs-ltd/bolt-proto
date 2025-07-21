@@ -110,7 +110,7 @@ message GetTradesByBlockHeightRequest {
 
 // GetTradesByBlockHeightResponse: Response for GetTradesByBlockHeightRequest.
 message GetTradesByBlockHeightResponse {
-  // trades: List of trades that happened at the specified block height.
+  // trades: List of trades that happened at the specified block heights.
   repeated Trade trades = 1;
 }
 
