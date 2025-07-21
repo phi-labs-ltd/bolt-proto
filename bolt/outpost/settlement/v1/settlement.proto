@@ -100,12 +100,12 @@ message GetTradeResponse {
   Trade trade = 1;
 }
 
-// GetTradesByBlockHeightRequest: Request fetching trades that happened at a specific
+// GetTradesByBlockHeightRequest: Request fetching trades that happened at specific
 // block heights.
 message GetTradesByBlockHeightRequest {
-  // height: Block heights to fetch trades for. If multiple heights are provided, the
+  // heights: Block heights to fetch trades for. If multiple heights are provided, the
   // response will contain trades for all of them.
-  repeated uint64 height = 1;
+  repeated uint64 heights = 1;
 }
 
 // GetTradesByBlockHeightResponse: Response for GetTradesByBlockHeightRequest.
