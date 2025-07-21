@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.outpost.settlement.v1;
 
 import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
 
 // Service 1: PublicSettlementService
 service PublicSettlementService {
@@ -16,6 +17,8 @@ service PublicSettlementService {
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
   // Endpoint to fetch the trade details.
   rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
+  // Endpoint to fetch trades given block height.
+  rpc GetTradesByBlockHeight(GetTradesByBlockHeightRequest) returns (GetTradesByBlockHeightResponse);
   // Endpoint to subscribe to trades.
   rpc SubscribeTrades(SubscribeTradesRequest) returns (stream SubscribeTradesResponse);
   // Endpoint to subscribe to balance changes.
@@ -97,6 +100,20 @@ message GetTradeResponse {
   Trade trade = 1;
 }
 
+// GetTradesByBlockHeightRequest: Request fetching trades that happened at specific
+// block heights.
+message GetTradesByBlockHeightRequest {
+  // heights: Block heights to fetch trades for. If multiple heights are provided, the
+  // response will contain trades for all of them.
+  repeated uint64 heights = 1;
+}
+
+// GetTradesByBlockHeightResponse: Response for GetTradesByBlockHeightRequest.
+message GetTradesByBlockHeightResponse {
+  // trades: List of trades that happened at the specified block heights.
+  repeated Trade trades = 1;
+}
+
 // SubscribeTradesRequest: Request starting trades subscription.
 message SubscribeTradesRequest {}
 
@@ -117,7 +134,7 @@ message Trade {
   // source: The source of the trade. Source could be the Sui pool ID, or the EVM
   // address.
   string source = 4;
-  // fee: Total fees of the trade.
+  // fee: Bolt fees collected for the trade. It is always in the QUOTE asset.
   bolt.assets.v1.Balance fee = 5;
   // sender: Trade sender identifier, for example the sender address.
   string sender = 6;
@@ -126,6 +143,10 @@ message Trade {
   // transaction_id: Identifier of the transaction including the trade - hash, digest,
   // etc.
   string transaction_id = 8;
+  // lp_fee: Total LP fees collected on this trade, always in the BASE asset.
+  bolt.assets.v1.Balance lp_fee = 9;
+  // timestamp: Timestamp of the trade in nanoseconds.
+  google.protobuf.Timestamp timestamp = 10;
 }
 
 // Pool: Description of the single liquidity pool.
