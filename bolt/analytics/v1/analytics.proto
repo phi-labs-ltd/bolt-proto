@@ -6,12 +6,12 @@ import "bolt/assets/v1/assets.proto";
 
 // Service collecting derived metrics for analytics
 service AnalyticsService {
-  // Fetches collected metrics
-  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  rpc GetPairTradingVolume(GetPairTradingVolumeRequest) returns (GetPairTradingVolumeResponse);
+  rpc GetPairFees(GetPairFeesRequest) returns (GetPairFeesResponse);
 }
 
 // Query to fetch collected metrics
-message GetMetricsRequest {
+message GetPairTradingVolumeRequest {
   // Pairs to get metrics for. Note that, this pairs are not symmetrical - ARCH/BTC would
   // only return metrics for ARCH/BTC trades, not BTC/ARCH trades. To get both pairs,
   // they should be both added to the assets queried.
@@ -21,14 +21,14 @@ message GetMetricsRequest {
   repeated string pool_ids = 2;
 }
 
-// Response to GetMetricsRequest
-message GetMetricsResponse {
+// Response to GetTradingVolumeRequest
+message GetPairTradingVolumeResponse {
   // Metrics collected per pair
-  repeated AssetMetrics per_pair = 1;
+  repeated TradingVolume tvl = 1;
 }
 
-// Single asset metrics
-message AssetMetrics {
+// Trading volume metrics
+message TradingVolume {
   // Pool id this metrics adhere to
   string pool_id = 1;
   // Pair this metrics adhere to
@@ -36,15 +36,30 @@ message AssetMetrics {
   // Total volume of the BASE asset traded in this pair. Repeated, as it might
   // contain the volume in different denoms (typically the base denom itself and
   // the unified denom like USDC).
-  repeated bolt.assets.v1.Balance total_base_volume = 3;
+  repeated bolt.assets.v1.Balance total_base_out = 3;
   // Total volume of the BASE asset traded in this pair. Repeated, as it might
   // contain the volume in different denoms (typically the base denom itself and
   // the unified denom like USDC).
-  repeated bolt.assets.v1.Balance total_quote_volume = 4;
+  repeated bolt.assets.v1.Balance total_quote_in = 4;
   // Total Bolt fees generated in this pair swaps.
-  repeated bolt.assets.v1.Balance total_bolt_fees_volume = 5;
+  repeated bolt.assets.v1.Balance total_bolt_fees = 5;
   // Total LP fees generated in this pair swaps.
-  repeated bolt.assets.v1.Balance total_lp_fees_volume = 6;
+  repeated bolt.assets.v1.Balance total_lp_fees = 6;
   // Height when the metrics were last updated
   uint64 height = 7;
+}
+
+message GetPairFeesRequest {
+  // Pairs to get metrics for. Note that, this pairs are not symmetrical - ARCH/BTC would
+  // only return metrics for ARCH/BTC trades, not BTC/ARCH trades. To get both pairs,
+  // they should be both added to the assets queried.
+  // If no pairs are provided, all pairs metrics would be returned.
+  repeated bolt.assets.v1.Pair pairs = 1;
+  // Pool ids to get metrics for. If not set, all pools analytics would be returned.
+  repeated string pool_ids = 2;
+}
+
+message GetPairFeesResponse {
+  // Metrics collected per pair
+  repeated TradingVolume tvl = 1;
 }
