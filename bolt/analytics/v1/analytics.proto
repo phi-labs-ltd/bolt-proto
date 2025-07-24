@@ -17,7 +17,7 @@ message GetPoolAnalyticsRequest {
   // they should be both added to the assets queried.
   // If no pairs are provided, all pairs metrics would be returned.
   repeated bolt.assets.v1.Pair pairs = 1;
-  // Pool ids to get metrics for. If not set, all pools analytics would be returned.
+  // Pool contract ids to get metrics for. If not set, all pools analytics would be returned.
   repeated string pool_ids = 2;
 }
 
@@ -29,8 +29,8 @@ message GetPoolAnalyticsResponse {
 
 // Trading volume metrics
 message PoolAnalytics {
-  // Pool id this metrics adhere to
-  string pool_contract_id = 1;
+  // Pool contract id this metrics adhere to
+  string pool_id = 1;
   // Analytics for each pair in the pool
   repeated TradingPairAnalytics trading_pair_analytics = 2;
 }
