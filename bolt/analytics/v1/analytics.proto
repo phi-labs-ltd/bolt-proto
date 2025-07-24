@@ -6,6 +6,7 @@ import "bolt/assets/v1/assets.proto";
 
 // Service collecting derived metrics for analytics
 service AnalyticsService {
+  // Get analytics for a pool
   rpc GetPoolAnalytics(GetPoolAnalyticsRequest) returns (GetPoolAnalyticsResponse);
 }
 
@@ -34,6 +35,7 @@ message PoolAnalytics {
   repeated TradingPairAnalytics trading_pair_analytics = 2;
 }
 
+// Analytics for a trading pair in a pool. Each pool can have 1 to many, base:quote pairs.
 message TradingPairAnalytics {
   // Pair this metrics adhere to
   bolt.assets.v1.Pair pair = 1;
