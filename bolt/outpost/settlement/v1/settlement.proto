@@ -127,16 +127,16 @@ message SubscribeTradesResponse {
 message Trade {
   // id: Trade unique identifier
   string id = 1;
-  // input: Balance added to the pool by the trade.
+  // input: Base asset balance added to the pool by the trade.
   bolt.assets.v1.Balance input = 2;
-  // output: Balance drained from the pool by the trade.
+  // output: Quote asset balance drained from the pool by the trade.
   bolt.assets.v1.Balance output = 3;
-  // source: The source of the trade. Source could be the Sui pool ID, or the EVM
-  // address.
+  // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
+  // contract address. Each pool has a unique contract ID.
   string source = 4;
-  // fee: Bolt fees collected for the trade. It is always in the QUOTE asset.
+  // fee: Bolt network fees collected for the trade. It is always in the QUOTE asset.
   bolt.assets.v1.Balance fee = 5;
-  // sender: Trade sender identifier, for example the sender address.
+  // sender: Address of the liquidity provider who executed the trade.
   string sender = 6;
   // height: Height at which the trade happened.
   uint64 height = 7;
