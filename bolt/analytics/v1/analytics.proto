@@ -24,7 +24,7 @@ message GetPoolAnalyticsRequest {
 // Response to GetTradingVolumeRequest
 message GetPoolAnalyticsResponse {
   // Metrics collected per pair
-  repeated PoolAnalytics tvl = 1;
+  repeated PoolAnalytics pool_analytics = 1;
 }
 
 // Trading volume metrics
