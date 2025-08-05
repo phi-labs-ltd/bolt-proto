@@ -8,7 +8,7 @@ import "bolt/assets/v1/assets.proto";
 service AnalyticsService {
   // Get analytics for a pool
   rpc GetPoolAnalytics(GetPoolAnalyticsRequest) returns (GetPoolAnalyticsResponse);
-  // Get analytics for a wallet
+  // Get end user active wallet analytics
   rpc GetWalletAnalytics(GetWalletAnalyticsRequest) returns (GetWalletAnalyticsResponse);
   // Get trade analytics
   rpc GetTradeAnalytics(GetTradeAnalyticsRequest) returns (GetTradeAnalyticsResponse);
