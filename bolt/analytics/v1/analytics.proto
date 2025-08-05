@@ -81,7 +81,7 @@ message GetTradeAnalyticsRequest {
   optional string time_period = 1;
 }
 
-// Response to fetch analytics for a trade.
+// Response to fetch trade analytics.
 message GetTradeAnalyticsResponse {
   // Trades fetched within the time period
   uint64 trade_count = 1;
