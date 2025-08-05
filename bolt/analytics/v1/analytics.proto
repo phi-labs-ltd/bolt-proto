@@ -58,25 +58,25 @@ message TradingPairAnalytics {
 }
 
 message GetWalletAnalyticsRequest {
-    // time period for which to fetch wallets in hours
-    // this will be period from current time to current time - timePeriod
-    // return all wallet count if timePeriod is not provided
-    optional string timePeriod = 1;
+  // time period for which to fetch wallets in hours
+  // this will be period from current time to current time - timePeriod
+  // return all wallet count if timePeriod is not provided
+  optional string timePeriod = 1;
 }
 
 message GetWalletAnalyticsResponse {
-    // Wallets fetched within the time period
-    uint64 wallet_count = 1;
+  // Wallets fetched within the time period
+  uint64 wallet_count = 1;
 }
 
 message GetTradeAnalyticsRequest {
-    // time period for which to fetch trades in hours
-    // this will be period from current time to current time - timePeriod
-    // return all wallet count if timePeriod is not provided
-    optional string timePeriod = 1;
+  // time period for which to fetch trades in hours
+  // this will be period from current time to current time - timePeriod
+  // return all wallet count if timePeriod is not provided
+  optional string timePeriod = 1;
 }
 
 message GetTradeAnalyticsResponse {
-    // Trades fetched within the time period
-    uint64 trade_count = 1;
+  // Trades fetched within the time period
+  uint64 trade_count = 1;
 }
