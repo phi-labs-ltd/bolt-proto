@@ -73,7 +73,7 @@ message GetWalletAnalyticsResponse {
   uint64 wallet_count = 1;
 }
 
-// Request to fetch analytics for a trade.
+// Request to fetch trade analytics.
 message GetTradeAnalyticsRequest {
   // time period for which to fetch trades in hours
   // this will be period from current time to current time - timePeriod
