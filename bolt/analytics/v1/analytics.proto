@@ -59,7 +59,7 @@ message TradingPairAnalytics {
   bolt.assets.v1.Balance total_lp_fees = 6;
 }
 
-// Request to fetch analytics for a wallet.
+// Request to fetch end user active wallet analytics.
 message GetWalletAnalyticsRequest {
   // time period for which to fetch wallets in hours
   // this will be period from current time to current time - timePeriod
