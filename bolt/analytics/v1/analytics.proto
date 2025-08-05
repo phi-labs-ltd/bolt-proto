@@ -8,6 +8,8 @@ import "bolt/assets/v1/assets.proto";
 service AnalyticsService {
   // Get analytics for a pool
   rpc GetPoolAnalytics(GetPoolAnalyticsRequest) returns (GetPoolAnalyticsResponse);
+  rpc GetWalletAnalytics(GetWalletAnalyticsRequest) returns (GetWalletAnalyticsResponse);
+  rpc GetTradeAnalytics(GetTradeAnalyticsRequest) returns (GetTradeAnalyticsResponse);
 }
 
 // Query to fetch collected metrics
@@ -33,6 +35,8 @@ message PoolAnalytics {
   string pool_id = 1;
   // Analytics for each pair in the pool
   repeated TradingPairAnalytics trading_pair_analytics = 2;
+  // Latest block height when this metric was generated
+  string block_height = 3;
 }
 
 // Analytics for a trading pair in a pool. Each pool can have 1 to many, base:quote pairs.
@@ -51,4 +55,28 @@ message TradingPairAnalytics {
   bolt.assets.v1.Balance total_bolt_fees = 5;
   // Total LP fees generated in this pair swaps.
   bolt.assets.v1.Balance total_lp_fees = 6;
+}
+
+message GetWalletAnalyticsRequest {
+    // time period for which to fetch wallets in hours
+    // this will be period from current time to current time - timePeriod
+    // return all wallet count if timePeriod is not provided
+    optional string timePeriod = 1;
+}
+
+message GetWalletAnalyticsResponse {
+    // Wallets fetched within the time period
+    uint64 wallet_count = 1;
+}
+
+message GetTradeAnalyticsRequest {
+    // time period for which to fetch trades in hours
+    // this will be period from current time to current time - timePeriod
+    // return all wallet count if timePeriod is not provided
+    optional string timePeriod = 1;
+}
+
+message GetTradeAnalyticsResponse {
+    // Trades fetched within the time period
+    uint64 trade_count = 1;
 }
