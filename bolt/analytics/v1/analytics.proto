@@ -10,7 +10,7 @@ service AnalyticsService {
   rpc GetPoolAnalytics(GetPoolAnalyticsRequest) returns (GetPoolAnalyticsResponse);
   // Get analytics for a wallet
   rpc GetWalletAnalytics(GetWalletAnalyticsRequest) returns (GetWalletAnalyticsResponse);
-  // Get analytics for a trade
+  // Get trade analytics
   rpc GetTradeAnalytics(GetTradeAnalyticsRequest) returns (GetTradeAnalyticsResponse);
 }
 
