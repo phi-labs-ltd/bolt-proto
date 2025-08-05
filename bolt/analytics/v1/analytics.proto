@@ -67,7 +67,7 @@ message GetWalletAnalyticsRequest {
   optional string time_period = 1;
 }
 
-// Response to fetch analytics for a wallet.
+// Response to fetch end user active wallet analytics.
 message GetWalletAnalyticsResponse {
   // Wallets fetched within the time period
   uint64 wallet_count = 1;
