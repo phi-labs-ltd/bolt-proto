@@ -72,7 +72,7 @@ message GetWalletAnalyticsRequest {
 // Response to fetch end user active wallet analytics.
 message GetWalletAnalyticsResponse {
   // Wallets fetched within the time period
-  repeated WalletAnalytics wallets = 1;
+  repeated WalletAnalytics wallet_analytics = 1;
 }
 
 // Analytics for wallets.
@@ -96,7 +96,7 @@ message GetTradeAnalyticsRequest {
 // Response to fetch trade analytics.
 message GetTradeAnalyticsResponse {
   // Trades fetched within the time period
-  repeated TradeAnalytics trades = 1;
+  repeated TradeAnalytics trade_analytics = 1;
 }
 
 // Analytics for trades.
