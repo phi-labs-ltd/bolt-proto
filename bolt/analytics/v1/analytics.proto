@@ -39,6 +39,8 @@ message PoolAnalytics {
   repeated TradingPairAnalytics trading_pair_analytics = 2;
   // Latest block height when this metric was generated
   string block_height = 3;
+  // Total trades count on bolt
+  uint64 total_trades = 4;
 }
 
 // Analytics for a trading pair in a pool. Each pool can have 1 to many, base:quote pairs.
@@ -70,7 +72,17 @@ message GetWalletAnalyticsRequest {
 // Response to fetch end user active wallet analytics.
 message GetWalletAnalyticsResponse {
   // Wallets fetched within the time period
-  uint64 wallet_count = 1;
+  repeated WalletAnalytics wallet_analytics = 1;
+}
+
+// Analytics for wallets.
+message WalletAnalytics {
+  // Pool contract id this metrics adhere to
+  string pool_id = 1;
+  // count of wallets
+  uint64 wallet_count = 2;
+  // Pair this metrics adhere to
+  bolt.assets.v1.Pair pair = 3;
 }
 
 // Request to fetch trade analytics.
@@ -84,5 +96,15 @@ message GetTradeAnalyticsRequest {
 // Response to fetch trade analytics.
 message GetTradeAnalyticsResponse {
   // Trades fetched within the time period
-  uint64 trade_count = 1;
+  repeated TradeAnalytics trade_analytics = 1;
+}
+
+// Analytics for trades.
+message TradeAnalytics {
+  // Pool contract id this metrics adhere to
+  string pool_id = 1;
+  // count of trades
+  uint64 trade_count = 2;
+  // Pair this metrics adhere to
+  bolt.assets.v1.Pair pair = 3;
 }
