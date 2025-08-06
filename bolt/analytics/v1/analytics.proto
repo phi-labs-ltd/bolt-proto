@@ -39,8 +39,6 @@ message PoolAnalytics {
   repeated TradingPairAnalytics trading_pair_analytics = 2;
   // Latest block height when this metric was generated
   string block_height = 3;
-  // Total trades count on bolt
-  uint64 total_trades = 4;
 }
 
 // Analytics for a trading pair in a pool. Each pool can have 1 to many, base:quote pairs.
@@ -59,6 +57,8 @@ message TradingPairAnalytics {
   bolt.assets.v1.Balance total_bolt_fees = 5;
   // Total LP fees generated in this pair swaps.
   bolt.assets.v1.Balance total_lp_fees = 6;
+  // Total trades count on bolt
+  uint64 total_trades = 7;
 }
 
 // Request to fetch end user active wallet analytics.
