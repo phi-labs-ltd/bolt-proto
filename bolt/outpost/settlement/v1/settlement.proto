@@ -127,9 +127,9 @@ message SubscribeTradesResponse {
 message Trade {
   // id: Trade unique identifier
   string id = 1;
-  // input: Base asset balance added to the pool by the trade.
+  // input: Quote asset balance added to the pool by the trade.
   bolt.assets.v1.Balance input = 2;
-  // output: Quote asset balance drained from the pool by the trade.
+  // output: Base asset balance drained from the pool by the trade.
   bolt.assets.v1.Balance output = 3;
   // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
   // contract address. Each pool has a unique contract ID.
