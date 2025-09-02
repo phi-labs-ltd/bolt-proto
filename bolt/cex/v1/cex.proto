@@ -118,6 +118,8 @@ message GetDepositAddressRequest {
 message GetDepositAddressResponse {
   // Address for deposits
   string address = 1;
+  // Memo field for the asset transfer. Used by some exchanges for some assets
+  optional string memo = 2;
 }
 
 // Triggers ad-hoc configuration reload
