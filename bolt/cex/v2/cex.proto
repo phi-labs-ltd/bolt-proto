@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package bolt.cex.v2;
+import "bolt/assets/v1/assets.proto";
+
+// Service adapting the CEX communication for Bolt protocol
+service CEXService {
+  // Deposits specified amount to the given CEX address
+  rpc Deposit(DepositRequest) returns (DepositResponse);
+  // Withdraws tokens from CEX to chain address
+  rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Endpoint to get the information about the network the CEX service is running on
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// Request to deposit funds to the CEX
+message DepositRequest {
+  // to_address: The address to which the funds should be deposited
+  DepositAddress to_address = 1;
+  // amount: The amount to be deposited
+  bolt.assets.v1.Balance amount = 2;
+}
+
+// Response to DepositRequest. Doesn't respond anything on success.
+message DepositResponse {}
+
+// Request to withdraw funds from the CEX
+message WithdrawRequest {
+  // amount: The amount to be withdrawn
+  bolt.assets.v1.Balance amount = 1;
+}
+
+// Response to WithdrawRequest. Doesn't respond anything on success.
+message WithdrawResponse {}
+
+// Request to get information about the CEX service
+message InfoRequest {}
+
+// Response to the InfoRequest. Contains information about which chain the CEX service is running on and the address of the signer.
+message InfoResponse {
+  // chain_id: The chain id of the chain the CEX service is running on. e.g. archway-1
+  string chain_id = 1;
+  // whoami: The address of the signer who will be submitting sending and receiving funds from the chain
+  string whoami = 2;
+}
+
+// Deposit address structure containing address and optional memo
+message DepositAddress {
+  // address: The deposit address
+  string address = 1;
+  // memo: Optional memo for the deposit address
+  optional string memo = 2;
+}
