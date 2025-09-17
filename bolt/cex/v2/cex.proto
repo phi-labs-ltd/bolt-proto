@@ -27,8 +27,10 @@ message DepositResponse {}
 
 // Request to withdraw funds from the CEX
 message WithdrawRequest {
+  // address: The address to which the funds should be withdrawn
+  string address = 1;
   // amount: The amount to be withdrawn
-  bolt.assets.v1.Balance amount = 1;
+  bolt.assets.v1.Balance amount = 2;
 }
 
 // Response to WithdrawRequest. Doesn't respond anything on success.
