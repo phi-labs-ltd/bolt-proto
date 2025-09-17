@@ -43,7 +43,7 @@ message InfoRequest {}
 message InfoResponse {
   // chain_id: The chain id of the chain the CEX service is running on. e.g. archway-1
   string chain_id = 1;
-  // whoami: The address of the signer who will be submitting sending and receiving funds from the chain
+  // whoami: The address of the signer who will be submitting transactions for sending and receiving funds from the chain
   string whoami = 2;
 }
 
