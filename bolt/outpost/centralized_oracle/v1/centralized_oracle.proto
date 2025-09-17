@@ -3,7 +3,7 @@ syntax = "proto3";
 package bolt.outpost.centralized_oracle.v1;
 
 import "bolt/assets/v1/assets.proto";
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 // Service 1: OracleService
 service OracleService {
@@ -35,10 +35,12 @@ message InfoResponse {
 
 // PriceUpdate: Price update for a given pair
 message PriceUpdate {
+  reserved 3; // Prevents reuse of field number 3
+  reserved "timestamp"; // Prevents reuse of the field name "timestamp"
   // pair: The pair for which the price is being updated. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
   // price: The price of the pair. e.g. 10.0
   string price = 2;
-  // timestamp: The timestamp of the price update. e.g. 2023-10-01T00:00:00Z
-  google.protobuf.Timestamp timestamp = 3;
+  // duration: The duration for which the price is valid
+  google.protobuf.Duration duration = 4;
 }
