@@ -147,6 +147,8 @@ message Trade {
   bolt.assets.v1.Balance lp_fee = 9;
   // timestamp: Timestamp of the trade in nanoseconds.
   google.protobuf.Timestamp timestamp = 10;
+  // price: Price used by the pool to execute the trade, in rational values e.g. 5/3
+  string price = 11;
 }
 
 // Pool: Description of the single liquidity pool.
