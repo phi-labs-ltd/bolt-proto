@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package bolt.cex.v2;
+
 import "bolt/assets/v1/assets.proto";
 
 // Service adapting the CEX communication for Bolt protocol
