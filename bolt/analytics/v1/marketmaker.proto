@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package bolt.analytics.v1;
+
+import "bolt/assets/v1/assets.proto";
+
+// Service collecting  metrics form market maker service
+service MarketMakerAnalyticsService {
+    rpc PushMarketMakerMetrics(MarketMakerMetricsRequest) returns (MarketMakerMetricsResponse);
+}
+
+
+// Request to push market maker metrics
+// This would be called by market maker service to push metrics
+message MarketMakerMetricsRequest {
+    // Pool contract id this metrics adhere to
+    string pool_id = 1;
+}
+
+// Response to PushMarketMakerMetrics
+message MarketMakerMetricsResponse {
+    // Success status
+    bool success = 1;
+}
