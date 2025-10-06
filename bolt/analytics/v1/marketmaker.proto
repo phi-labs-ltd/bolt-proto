@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package bolt.analytics.v1;
+import "google/protobuf/timestamp.proto";
 
 import "bolt/assets/v1/assets.proto";
 
@@ -15,7 +16,13 @@ service MarketMakerAnalyticsService {
 // This would be called by market maker service to push metrics
 message PushMarketMakerMetricsRequest {
     // Pool contract id this metrics adhere to
-    string pool_id = 1;
+    strint transaction_id = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    string market_maker_address = 3;
+    string cex_id = 4;
+    string cex_transaction_id = 5;
+    repeated bolt.assets.v1.Balance amounts_swaped = 6;
+    string outpost = 7;
 }
 
 // Response to PushMarketMakerMetrics
