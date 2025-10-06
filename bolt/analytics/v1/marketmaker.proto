@@ -16,7 +16,7 @@ service MarketMakerAnalyticsService {
 // This would be called by market maker service to push metrics
 message PushMarketMakerMetricsRequest {
     // Pool contract id this metrics adhere to
-    strint transaction_id = 1;
+    string transaction_id = 1;
     google.protobuf.Timestamp timestamp = 2;
     string market_maker_address = 3;
     string cex_id = 4;
