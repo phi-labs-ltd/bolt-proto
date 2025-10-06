@@ -21,8 +21,9 @@ message PushMarketMakerMetricsRequest {
     string market_maker_address = 3;
     string cex_id = 4;
     string cex_transaction_id = 5;
-    repeated bolt.assets.v1.Balance amounts_swaped = 6;
-    string outpost = 7;
+    bolt.assets.v1.Balance input = 6;
+    bolt.assets.v1.Balance output = 7;
+    string outpost = 8;
 }
 
 // Response to PushMarketMakerMetrics
