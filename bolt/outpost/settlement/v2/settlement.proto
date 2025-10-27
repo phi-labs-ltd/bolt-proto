@@ -253,9 +253,9 @@ message SettlementInfoResponse {
 // Service 2: PrivateSettlementService
 service PrivateSettlementService {
   // Endpoint to swap buy. Should be invoked by MM to rebalance.
-  rpc SwapExactIn(SwapExactInRequest) returns (SwapExactInResponse);
+  rpc SwapBuy(SwapBuyRequest) returns (SwapBuyResponse);
   // Endpoint to swap sell. Should be invoked by MM to rebalance.
-  rpc SwapExactOut(SwapExactOutRequest) returns (SwapExactOutResponse);
+  rpc SwapSell(SwapSellRequest) returns (SwapSellResponse);
   // Endpoint to deposit base asset. Should be invoked by the MM to deposit the base asset.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
   // Endpoint to withdraw base asset. Should be invoked by the MM to exit the pool.
@@ -266,8 +266,8 @@ service PrivateSettlementService {
   rpc Info(InfoRequest) returns (InfoResponse);
 }
 
-// SwapExactInRequest: Request to swap assets. Should be invoked by the user to swap assets.
-message SwapExactInRequest {
+// SwapBuyRequest: Request to swap assets. Should be invoked by the user to swap assets.
+message SwapBuyRequest {
   // want_out: The asset the user wants to receive. e.g. USDT
   string want_out = 1;
   // input: The amount of asset the user wants to sell. e.g. ATOM
@@ -278,8 +278,8 @@ message SwapExactInRequest {
   string receiver = 4;
 }
 
-// SwapExactInResponse: Response to the SwapExactInRequest. Contains information about the swap.
-message SwapExactInResponse {
+// SwapBuyResponse: Response to the SwapBuyRequest. Contains information about the swap.
+message SwapBuyResponse {
   // base_out: The amount of base asset the user received.
   Asset base_out = 1;
   // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
@@ -290,8 +290,8 @@ message SwapExactInResponse {
   string trade_id = 4;
 }
 
-// SwapExactOutRequest: Request to swap assets. Should be invoked by the user to swap assets.
-message SwapExactOutRequest {
+// SwapSellRequest: Request to swap assets. Should be invoked by the user to swap assets.
+message SwapSellRequest {
   // want_out: The asset the user wants to receive. e.g. USDT
   string want_out = 1;
   // input: The amount of asset the user wants to sell. e.g. ATOM
@@ -302,8 +302,8 @@ message SwapExactOutRequest {
   string receiver = 4;
 }
 
-// SwapExactOutResponse: Response to the SwapExactOutRequest. Contains information about the swap.
-message SwapExactOutResponse {
+// SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
+message SwapSellResponse {
   // quote_out: The amount of quote asset the user received.
   Asset quote_out = 1;
   // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
