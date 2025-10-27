@@ -88,7 +88,7 @@ message GetBalancesResponse {
   uint64 height = 3;
 }
 
-// GetTradeRequest: Request fetching specific trade details..
+// GetTradeRequest: Request fetching specific trade details.
 message GetTradeRequest {
   // id: Trade unique identifier
   string id = 1;
@@ -166,14 +166,14 @@ message Pool {
   string base_asset = 1;
   // base_amount: Amount of BASE asset in the pool.
   string base_amount = 2;
-  // qute_assets: Asset that can be used as QUOTE to acqire BASE asset from this pool.
+  // quote_assets: Asset that can be used as QUOTE to acquire BASE asset from this pool.
   repeated AssetConfig quote_assets = 3;
   // lp_fee_ratio: Transaction fee to be distributed among liquidity providers according
   // to their shares.
   string lp_fee_ratio = 4;
   // protocol_fee_ratio: Transaction fee to be collected for the protocol.
   string protocol_fee_ratio = 5;
-  // min_base_out: Minimum BASE amount that can be transared out per to avoid too low
+  // min_base_out: Minimum BASE amount that can be transferred out per to avoid too low
   // quantity transaction as it could make MMM too difficult/impossible. Basically
   // defensive mechanism about DoS attacks against MMs.
   string min_base_out = 6;
@@ -184,7 +184,7 @@ message Pool {
   // during periods of high volatility or low liquidity.
   string max_dynamic_fee_ratio = 8;
   // is_paused: Indicates if the pool is currently paused for trading.
-  string is_paused = 9;
+  bool is_paused = 9;
 }
 
 // AssetConfig: Configuration of a single QUOTE asset in the pool.
@@ -198,7 +198,7 @@ message AssetConfig {
   // limit_ratio: Maximum QUOTE amount that can be transared out as ratio of the
   // current BASE liquidity in the pool.
   string limit_ratio = 3;
-  // limit_fixed: Maximum QUOTE amount that can be transared out as fixed amount.
+  // limit_fixed: Maximum QUOTE amount that can be transferred out as fixed amount.
   string limit_fixed = 4;
 }
 
@@ -351,9 +351,9 @@ message WithdrawBaseResponse {
 
 // ClaimFeesRequest: Request to claim the fees owned to the liquidity provider.
 message ClaimFeesRequest {
-  /// pool_id: The id of the pool to claim fees from.
+  // pool_id: The id of the pool to claim fees from.
   string pool_id = 1;
-  /// reward_asset: The asset in which the fees will be claimed. e.g. USDT
+  // reward_asset: The asset in which the fees will be claimed. e.g. USDT
   string reward_asset = 2;
 }
 
