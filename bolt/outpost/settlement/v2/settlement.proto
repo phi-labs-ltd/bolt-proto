@@ -1,0 +1,385 @@
+syntax = "proto3";
+
+package bolt.outpost.settlement.v2;
+
+import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
+
+// Service 1: PublicSettlementService
+service PublicSettlementService {
+  // Endpoint to fetch the pool info.
+  rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
+  // Endpoint to fetch the pool by asset.
+  rpc GetPoolByBaseAsset(GetPoolByBaseAssetRequest) returns (GetPoolByBaseAssetResponse);
+  // Endpoint to query available pools.
+  rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
+  // Endpoint to fetch balances of BASE asset.
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Endpoint to fetch the trade details.
+  rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
+  // Endpoint to fetch trades given block height.
+  rpc GetTradesByBlockHeight(GetTradesByBlockHeightRequest) returns (GetTradesByBlockHeightResponse);
+  // Endpoint to fetch supply contribution which happened in the given block height.
+  rpc GetBalanceUpdatesByBlockHeight(GetBalanceUpdatesByBlockHeightRequest) returns (GetBalanceUpdatesByBlockHeightResponse);
+  // Endpoint to subscribe to trades.
+  rpc SubscribeTrades(SubscribeTradesRequest) returns (stream SubscribeTradesResponse);
+  // Endpoint to subscribe to balance changes.
+  rpc SubscribeBalanceUpdates(SubscribeBalanceUpdatesRequest) returns (stream SubscribeBalanceUpdatesResponse);
+  // Endpoint to query the settlement info.
+  rpc SettlementInfo(SettlementInfoRequest) returns (SettlementInfoResponse);
+}
+
+// GetPoolRequest: Request to fetch info about a specific pool.
+message GetPoolRequest {
+  // pool_identifier: The pool to fetch.
+  string pool_identifier = 1;
+}
+
+// GetPoolResponse: Response to the GetPoolRequest.
+message GetPoolResponse {
+  // pool: Description of the pool.
+  Pool pool = 1;
+}
+
+// GetPoolByBaseAssetRequest: Request to fetch a liquidity pool managing particular
+// asset.
+message GetPoolByBaseAssetRequest {
+  // base_asset: BASE asset we want the fetched pool to manage.
+  string base_asset = 1;
+}
+
+// GetPoolByBaseAssetResponse: Response to the GetPoolByBaseAssetRequest.
+message GetPoolByBaseAssetResponse {
+  // pool: Description of the pool.
+  Pool pool = 1;
+}
+
+// GetPoolsRequest: Request to query pools managed by this service.
+message GetPoolsRequest {}
+
+// GetPoolsResponse: Response to the GetPoolsRequest.
+message GetPoolsResponse {
+  // pools: Description of pools managed by this service.
+  repeated Pool pools = 1;
+}
+
+// GetBalancesRequest: Request fetching BASE balance on all the pools, and all the
+// QUOTE balances on pools with particular BASE asset.
+message GetBalancesRequest {
+  // user: Unique user identifier.
+  string user = 1;
+  // base_asset: BASE asset for which balances are fetched.
+  string base_asset = 2;
+  // height: Blockchain height at which we want the balance info. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp. It's optional - if missing, the most recent balance should be returned.
+  optional uint64 height = 3;
+}
+
+// GetBalancesResponse: Response for GetBalancesRequest.
+message GetBalancesResponse {
+  // base: BASE asset balance.
+  bolt.assets.v1.Balance base = 1;
+  // pool_liquidity: Total BASE liquidity in the pool.
+  bolt.assets.v1.Balance pool_liquidity = 2;
+  // height: Blockchain height this balance info is accurate for. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp.
+  uint64 height = 3;
+}
+
+// GetTradeRequest: Request fetching specific trade details..
+message GetTradeRequest {
+  // id: Trade unique identifier
+  string id = 1;
+}
+
+// GetTradeResponse: Response for GetTradeRequest.
+message GetTradeResponse {
+  // trade: Fetched trade details.
+  Trade trade = 1;
+}
+
+// GetTradesByBlockHeightRequest: Request fetching trades that happened at specific
+// block heights.
+message GetTradesByBlockHeightRequest {
+  // heights: Block heights to fetch trades for. If multiple heights are provided, the
+  // response will contain trades for all of them.
+  repeated uint64 heights = 1;
+}
+
+// GetTradesByBlockHeightResponse: Response for GetTradesByBlockHeightRequest.
+message GetTradesByBlockHeightResponse {
+  // trades: List of trades that happened at the specified block heights.
+  repeated Trade trades = 1;
+}
+
+// GetBalanceUpdatesByBlockHeightRequest: Request fetching balance updates that
+// happened at specific block heights.
+message GetBalanceUpdatesByBlockHeightRequest {
+  // heights: Block heights to fetch balance updates for. If multiple heights are
+  // provided, the response will contain balance updates for all of them.
+  repeated uint64 heights = 1;
+}
+
+// GetBalanceUpdatesByBlockHeightResponse: Response for GetBalanceUpdatesByBlockHeightRequest.
+message GetBalanceUpdatesByBlockHeightResponse {
+  // updates: List of balance updates that happened at the specified block heights.
+  repeated BalanceUpdate updates = 1;
+}
+
+// SubscribeTradesRequest: Request starting trades subscription.
+message SubscribeTradesRequest {}
+
+// SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
+message SubscribeTradesResponse {
+  // trade: Details of trade that happened.
+  Trade trade = 1;
+}
+
+// Trade: Single trade details.
+message Trade {
+  // id: Trade unique identifier
+  string id = 1;
+  // input: Asset added to the pool by the trade.
+  bolt.assets.v1.Balance input = 2;
+  // output: Asset balance drained from the pool by the trade.
+  bolt.assets.v1.Balance output = 3;
+  // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
+  // contract address. Each pool has a unique contract ID.
+  string source = 4;
+  // fee: Bolt network fees collected for the trade. It is always in the BASE asset.
+  bolt.assets.v1.Balance fee = 5;
+  // sender: Address of the user who executed the trade.
+  string sender = 6;
+  // height: Height at which the trade happened.
+  uint64 height = 7;
+  // timestamp: Timestamp of the trade in nanoseconds.
+  google.protobuf.Timestamp timestamp = 8;
+  // price: Price used by the pool to execute the trade, in rational values e.g. 5/3
+  string price = 9;
+}
+
+// Pool: Description of the single liquidity pool.
+message Pool {
+  // base_asset: Pool BASE asset.
+  string base_asset = 1;
+  // base_amount: Amount of BASE asset in the pool.
+  string base_amount = 2;
+  // qute_assets: Asset that can be used as QUOTE to acqire BASE asset from this pool.
+  repeated AssetConfig quote_assets = 3;
+  // lp_fee_ratio: Transaction fee to be distributed among liquidity providers according
+  // to their shares.
+  string lp_fee_ratio = 4;
+  // protocol_fee_ratio: Transaction fee to be collected for the protocol.
+  string protocol_fee_ratio = 5;
+  // min_base_out: Minimum BASE amount that can be transared out per to avoid too low
+  // quantity transaction as it could make MMM too difficult/impossible. Basically
+  // defensive mechanism about DoS attacks against MMs.
+  string min_base_out = 6;
+  // withdrawal_fee_ratio: Fee ratio applied when liquidity providers withdraw their
+  // BASE assets from the pool.
+  string withdrawal_fee_ratio = 7;
+  // max_dynamic_fee_ratio: Maximum dynamic fee ratio that can be applied to trades
+  // during periods of high volatility or low liquidity.
+  string max_dynamic_fee_ratio = 8;
+  // is_paused: Indicates if the pool is currently paused for trading.
+  string is_paused = 9;
+}
+
+// AssetConfig: Configuration of a single QUOTE asset in the pool.
+message AssetConfig {
+  // denom: QUOTE asset denomination.
+  string denom = 1;
+  // min_out: Minimum QUOTE amount that can be transared out per to avoid too low
+  // quantity transaction as it could make MMM too difficult/impossible. Basically
+  // defensive mechanism about DoS attacks against MMs.
+  string min_out = 2;
+  // limit_ratio: Maximum QUOTE amount that can be transared out as ratio of the
+  // current BASE liquidity in the pool.
+  string limit_ratio = 3;
+  // limit_fixed: Maximum QUOTE amount that can be transared out as fixed amount.
+  string limit_fixed = 4;
+}
+
+// SubscribeBalanceUpdatesRequest: Request starting balance updates subscription.
+message SubscribeBalanceUpdatesRequest {}
+
+// SubscribeBalanceUpdatesResponse: Streamed response for SubscribeBalanceUpdatesRequest.
+message SubscribeBalanceUpdatesResponse {
+  // update: Pool update details.
+  BalanceUpdate update = 1;
+}
+
+// BalanceUpdate: Single balance update event details.
+message BalanceUpdate {
+  // base_added: BASE asset balance added/removed to the pool with deposit_base/withdraw_base.
+  bolt.assets.v1.Balance base_added = 1;
+  // balance_update_type: Type of the balance update - deposit or withdraw.
+  BalanceUpdateType balance_update_type = 2;
+  // lp_address: The lp_address of the deposit/withdraw event.
+  string lp_address = 3;
+  // transaction_id: Unique id of transaction that triggered the update.
+  string transaction_id = 4;
+  // height: Blockchain height at which we want the balance info. If SettlementService
+  // is not running on Blockchain, this is the atomic point in time identifier - e. g.
+  // timestamp.
+  uint64 height = 5;
+  // shares_updated: Total amount of LP shares minted/burned in the supply of the updated pool.
+  string shares_updated = 6;
+  // total_lp_shares: Total amount of LP shares in the pool after the update.
+  string total_lp_shares = 7;
+}
+
+// BalanceUpdateType: Enum representing the type of balance update.
+enum BalanceUpdateType {
+  //  BALANCE_UPDATE_TYPE_UNSPECIFIED: Unknown balance update type.
+  BALANCE_UPDATE_TYPE_UNSPECIFIED = 0;
+  //  BALANCE_UPDATE_TYPE_DEPOSIT_BASE: Balance update due to deposit_base.
+  BALANCE_UPDATE_TYPE_DEPOSIT_BASE = 1;
+  //  BALANCE_UPDATE_TYPE_WITHDRAW_BASE: Balance update due to withdraw_base.
+  BALANCE_UPDATE_TYPE_WITHDRAW_BASE = 2;
+}
+
+// SettlementInfoRequest: Queries for settlement info.
+message SettlementInfoRequest {}
+
+// SettlementInfoResponse: Response for SettlementInfoRequest.
+message SettlementInfoResponse {
+  // network_id: Network identifier where the settlement sync is deployed.
+  string network_id = 1;
+}
+
+// Service 2: PrivateSettlementService
+service PrivateSettlementService {
+  // Endpoint to swap buy. Should be invoked by MM to rebalance.
+  rpc SwapExactIn(SwapExactInRequest) returns (SwapExactInResponse);
+  // Endpoint to swap sell. Should be invoked by MM to rebalance.
+  rpc SwapExactOut(SwapExactOutRequest) returns (SwapExactOutResponse);
+  // Endpoint to deposit base asset. Should be invoked by the MM to deposit the base asset.
+  rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
+  // Endpoint to withdraw base asset. Should be invoked by the MM to exit the pool.
+  rpc WithdrawBase(WithdrawBaseRequest) returns (WithdrawBaseResponse);
+  // Endpoint to withdraw the fees owned to the LP.
+  rpc ClaimFees(ClaimFeesRequest) returns (ClaimFeesResponse);
+  // Endpoint to get the information about the network the service is running on
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// SwapExactInRequest: Request to swap assets. Should be invoked by the user to swap assets.
+message SwapExactInRequest {
+  // want_out: The asset the user wants to receive. e.g. USDT
+  string want_out = 1;
+  // input: The amount of asset the user wants to sell. e.g. ATOM
+  Asset input = 2;
+  // min_base_out: The minimum amount of base asset the user wants to receive, after fees. in rational values e.g 5/3
+  string min_base_out = 3;
+  // receiver: The address of the user who will receive the swapped asset. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  string receiver = 4;
+}
+
+// SwapExactInResponse: Response to the SwapExactInRequest. Contains information about the swap.
+message SwapExactInResponse {
+  // base_out: The amount of base asset the user received.
+  Asset base_out = 1;
+  // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
+  string spot_price = 2;
+  // fee: The fee charged for the swap. includes protocol fees and lp fees
+  Asset fee = 3;
+  // trade_id: The id of the trade. e.g. tx hash
+  string trade_id = 4;
+}
+
+// SwapExactOutRequest: Request to swap assets. Should be invoked by the user to swap assets.
+message SwapExactOutRequest {
+  // want_out: The asset the user wants to receive. e.g. USDT
+  string want_out = 1;
+  // input: The amount of asset the user wants to sell. e.g. ATOM
+  Asset input = 2;
+  // min_quote_out: The minimum amount of quote asset the user wants to receive, after fees. in rational values e.g 5/3
+  string min_quote_out = 3;
+  // receiver: The address of the user who will receive the swapped asset. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  string receiver = 4;
+}
+
+// SwapExactOutResponse: Response to the SwapExactOutRequest. Contains information about the swap.
+message SwapExactOutResponse {
+  // quote_out: The amount of quote asset the user received.
+  Asset quote_out = 1;
+  // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
+  string spot_price = 2;
+  // fee: The fee charged for the swap. includes protocol fees and lp fees
+  Asset fee = 3;
+  // trade_id: The id of the trade. e.g. tx hash
+  string trade_id = 4;
+}
+
+// DepositBaseRequest: Request to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
+message DepositBaseRequest {
+  // amount: The amount of base asset the user wants to deposit. e.g. 1000 USDT
+  Asset amount = 1;
+}
+
+// DepositBaseResponse: Response to the DepositBaseRequest. Contains information about the deposit.
+message DepositBaseResponse {
+  // amount: The amount of base asset the user deposited. e.g. 1000 USDT
+  Asset amount = 1;
+  // tx_id: The hash of the transaction.
+  string tx_id = 2;
+  // epoch: Epoch to which balance was added, and in which new shares were minted. It would be missing if the pool is not
+  // supporting epochs (e. g. CW).
+  optional uint64 epoch = 3;
+  // shares: The amount of LP the user owns in the epoch the balance was added to. e.g. 1000 shares
+  string shares = 4;
+  // height: Blockchain height on which the shares were minted.
+  uint64 height = 5;
+}
+
+// WithdrawBaseRequest: Request to withdraw base asset. Should be invoked by the liquidity provider to withdraw base asset.
+message WithdrawBaseRequest {
+  // base_asset: The base asset the user wants to withdraw. e.g. USDT
+  string base_asset = 1;
+}
+
+// WithdrawBaseResponse: Response to the WithdrawBaseRequest. Contains information about the withdrawn base asset.
+message WithdrawBaseResponse {
+  // withdrawn: The amount of base asset withdrawn. e.g. 1000 USDT
+  Asset withdrawn = 1;
+  // tx_id: The hash of the transaction.
+  string tx_id = 2;
+}
+
+// ClaimFeesRequest: Request to claim the fees owned to the liquidity provider.
+message ClaimFeesRequest {
+  /// pool_id: The id of the pool to claim fees from.
+  string pool_id = 1;
+  /// reward_asset: The asset in which the fees will be claimed. e.g. USDT
+  string reward_asset = 2;
+}
+
+// ClaimFeesResponse: Response to the ClaimFeesRequest. Contains information about the claimed fees.
+message ClaimFeesResponse {
+  // withdrawn: The amount of fees withdrawn. e.g. 1000 USDT
+  Asset withdrawn = 1;
+  // tx_id: The hash of the transaction.
+  string tx_id = 2;
+}
+
+// InfoRequest: Request to get information about the settlement.
+message InfoRequest {}
+
+// InfoResponse: Response to the InfoRequest. Contains information about which chain the settlement service is running on and the address of the signer.
+message InfoResponse {
+  // network_id: The chain id of the chain the settlement service is running on. e.g. archway-1
+  string network_id = 1;
+  // whoami: The address of the signer who will be submitting the transactions. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  string whoami = 2;
+}
+
+// Asset: The asset being traded. e.g. BTC, ETH
+message Asset {
+  // denom: The denomination of the asset. e.g. ARCH, USDT
+  string denom = 1;
+  // amount: The amount of the asset in rational values e.g. 5/3
+  string amount = 2;
+}
