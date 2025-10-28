@@ -7,8 +7,20 @@ import "bolt/assets/v1/assets.proto";
 // Service adapting the CEX communication for Bolt protocol
 service CEXService {
   // Deposits specified amount to the given CEX address
+  // This is used by the MM to deposit funds to the CEX for rebalancing purposes
+  // The MM will withdraw the assets into the address of CEX service and the Deposit method will
+  // be called by the MM to send the tokens to the CEX's deposit address (with any memo if needed)
+  // Cosmos: Depositing involves sending the tokens from Archway chain to the asset's native chain (e.g. ATOM to Cosmos Hub) and from there to the CEX deposit address
+  // Sui: Depositing involves sending tokens from the chain to the CEX deposit address
+  // Solana: Depositing involves sending tokens from the chain to the CEX deposit address
+  // EVM: Depositing involves sending tokens from the chain to the CEX deposit address
   rpc Deposit(DepositRequest) returns (DepositResponse);
   // Withdraws tokens from CEX to chain address
+  // This is used by the MM to withdraw funds from the CEX back to account of the MM on the chain
+  // Cosmos: Withdrawing involves sending tokens from asset's native chain (e.g. Cosmos Hub) to the Archway chain address via ICS20 and ICA
+  // Sui: Not needed as tokens can be withdrawn directly to Sui address
+  // Solana: Not needed as tokens can be withdrawn directly to Solana address
+  // EVM: Not needed as tokens can be withdrawn directly to EVM address
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
   // Endpoint to get the information about the network the CEX service is running on
   rpc Info(InfoRequest) returns (InfoResponse);
@@ -16,7 +28,7 @@ service CEXService {
 
 // Request to deposit funds to the CEX
 message DepositRequest {
-  // to_address: The address to which the funds should be deposited
+  // to_address: The address to which the funds should be deposited. This is provided by the CEX
   DepositAddress to_address = 1;
   // amount: The amount to be deposited
   bolt.assets.v1.Balance amount = 2;
