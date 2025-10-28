@@ -17,7 +17,7 @@ service CEXService {
   rpc Deposit(DepositRequest) returns (DepositResponse);
   // Withdraws tokens from CEX to chain address
   // This is used by the MM to withdraw funds from the CEX back to account of the MM on the chain
-  // Cosmos: Withdrawing involves the sending tokens from asset's native chain (e.g. Cosmos Hub) to the Archway chain address via ICS20 and ICA
+  // Cosmos: Withdrawing involves sending tokens from asset's native chain (e.g. Cosmos Hub) to the Archway chain address via ICS20 and ICA
   // Sui: Not needed as tokens can be withdrawn directly to Sui address
   // Solana: Not needed as tokens can be withdrawn directly to Solana address
   // EVM: Not needed as tokens can be withdrawn directly to EVM address
