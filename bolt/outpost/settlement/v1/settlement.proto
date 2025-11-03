@@ -168,6 +168,8 @@ message Pool {
   // quantity transaction as it could make MMM too difficult/impossible. Basically
   // defensive mechanism about DoS attacks against MMs.
   string min_base_out = 6;
+  // id: Pool unique identifier
+  string id = 7;
 }
 
 // SubscribeBalanceUpdatesRequest: Request starting balance updates subscription.
@@ -205,6 +207,8 @@ message BalanceUpdate {
   string lp_fee = 8;
   // bolt_fee: Bolt protocol fee collected on this balance update, always in the QUOTE asset
   string bolt_fee = 9;
+  // pool_id: Pool id on which update happened
+  string pool_id = 10;
 }
 
 // GetSupplyContributionRequest: Request fetching users supply contribution in the pool.
