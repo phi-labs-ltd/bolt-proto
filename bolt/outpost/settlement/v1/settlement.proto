@@ -136,7 +136,7 @@ message Trade {
   string source = 4;
   // fee: Bolt network fees collected for the trade. It is always in the QUOTE asset.
   bolt.assets.v1.Balance fee = 5;
-  // sender: Address of the liquidity provider who executed the trade.
+  // sender: The wallet address of the end user executing the trade on Bolt.
   string sender = 6;
   // height: Height at which the trade happened.
   uint64 height = 7;
