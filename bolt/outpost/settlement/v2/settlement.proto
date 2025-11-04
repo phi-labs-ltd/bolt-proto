@@ -191,11 +191,11 @@ message Pool {
 message AssetConfig {
   // denom: QUOTE asset denomination.
   string denom = 1;
-  // min_out: Minimum QUOTE amount that can be transared out per to avoid too low
+  // min_out: Minimum QUOTE amount that can be transferred out per to avoid too low
   // quantity transaction as it could make MMM too difficult/impossible. Basically
   // defensive mechanism about DoS attacks against MMs.
   string min_out = 2;
-  // limit_ratio: Maximum QUOTE amount that can be transared out as ratio of the
+  // limit_ratio: Maximum QUOTE amount that can be transferred out as ratio of the
   // current BASE liquidity in the pool.
   string limit_ratio = 3;
   // limit_fixed: Maximum QUOTE amount that can be transferred out as fixed amount.

@@ -13,7 +13,7 @@ service PricesService {
   // Endpoint to fetch multiple pairs prices in batch.
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
 
-  // Endpoint to subscribe on mutiple pairs price changes.
+  // Endpoint to subscribe on multiple pairs price changes.
   rpc StreamPrices(StreamPricesRequest) returns (stream StreamPricesResponse);
 
   // Endpoint to query for price venue information.
@@ -48,7 +48,7 @@ message GetPricesRequest {
 // GetPricesResponse: Response to GetPricesRequest.
 message GetPricesResponse {
   // prices: List of prices information for requested pairs. Every item is a
-  // GetPriceResponse as it would be returned if price was requested individualy
+  // GetPriceResponse as it would be returned if price was requested individually
   // with GetPrice.
   repeated GetPriceResponse prices = 1;
 }

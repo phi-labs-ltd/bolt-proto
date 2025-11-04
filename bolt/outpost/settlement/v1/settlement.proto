@@ -136,7 +136,7 @@ message Trade {
   string source = 4;
   // fee: Bolt network fees collected for the trade. It is always in the QUOTE asset.
   bolt.assets.v1.Balance fee = 5;
-  // sender: Address of the liquidity provider who executed the trade.
+  // sender: The wallet address of the end user executing the trade on Bolt.
   string sender = 6;
   // height: Height at which the trade happened.
   uint64 height = 7;
@@ -157,14 +157,14 @@ message Pool {
   string base_asset = 1;
   // base_amount: Amount of BASE asset int he pool.
   string base_amount = 2;
-  // qute_assets: Asset that can be used as QUOTE to acqire BASE asset from this pool.
+  // quote_assets: Asset that can be used as QUOTE to acquire BASE asset from this pool.
   repeated string quote_assets = 3;
   // lp_fee_ratio: Transaction fee to be distributed among liquidity providers according
   // to their shares.
   string lp_fee_ratio = 4;
   // protocol_fee_ratio: Transaction fee to be collected for the protocol.
   string protocol_fee_ratio = 5;
-  // min_base_out: Minimum BASE amount that can be transared out per to avoid too low
+  // min_base_out: Minimum BASE amount that can be transferred out per to avoid too low
   // quantity transaction as it could make MMM too difficult/impossible. Basically
   // defensive mechanism about DoS attacks against MMs.
   string min_base_out = 6;
@@ -211,7 +211,7 @@ message BalanceUpdate {
 message GetSupplyContributionRequest {
   // base_asset: BASE asset of the pool.
   string base_asset = 1;
-  // epoch: Intex of the epoch to get the contribution info for. It is optional, but it
+  // epoch: Index of the epoch to get the contribution info for. It is optional, but it
   // should always be set if the pool supports more than a single epoch, and should
   // (e. g. Sui) always be empty for single epoch pools (e. g. CW).
   optional uint64 epoch = 2;
@@ -230,10 +230,10 @@ message GetSupplyContributionResponse {
   string total_supply = 2;
   // user_base: Specific user BASE asset balance in that specific supply.
   bolt.assets.v1.Balance user_base = 3;
-  // user_shares: LP sharees in that specific supply owned by the user.
+  // user_shares: LP shares in that specific supply owned by the user.
   string user_shares = 4;
   // height: Height on which the most recent shares were minted. Note that if
-  // height was provied, it is the last shares minting before the queried height.
+  // height was provided, it is the last shares minting before the queried height.
   optional uint64 height = 5;
 }
 
