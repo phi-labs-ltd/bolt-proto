@@ -185,6 +185,10 @@ message Pool {
   string max_dynamic_fee_ratio = 8;
   // is_paused: Indicates if the pool is currently paused for trading.
   bool is_paused = 9;
+  // unclaimed_protocol_fees: Total amount of unclaimed protocol fees in the pool.
+  bolt.assets.v1.Balance unclaimed_protocol_fees = 10;
+  // unclaimed_lp_fees: Total amount of unclaimed liquidity provider fees in the pool.
+  bolt.assets.v1.Balance unclaimed_lp_fees = 11;
 }
 
 // AssetConfig: Configuration of a single QUOTE asset in the pool.
