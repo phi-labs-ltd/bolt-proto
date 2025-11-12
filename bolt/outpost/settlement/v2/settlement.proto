@@ -86,6 +86,8 @@ message GetBalancesResponse {
   // is not running on Blockchain, this is the atomic point in time identifier - e. g.
   // timestamp.
   uint64 height = 3;
+  // quotes: QUOTE assets balances.
+  repeated bolt.assets.v1.Balance quotes = 4;
 }
 
 // GetTradeRequest: Request fetching specific trade details.
