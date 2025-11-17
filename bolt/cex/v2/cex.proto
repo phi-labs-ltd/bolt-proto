@@ -61,7 +61,7 @@ message GetWithdrawAddressRequest {
   string asset = 1;
 }
 
-// Response to WithdrawAddressRequest. Contains the withdraw address used by the CEX service
+// Response to GetWithdrawAddressRequest. Contains the withdraw address used by the CEX service
 message GetWithdrawAddressResponse {
   // address: The withdraw address used by the CEX service
   string address = 1;
