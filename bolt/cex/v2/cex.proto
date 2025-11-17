@@ -22,6 +22,13 @@ service CEXService {
   // Solana: Not needed as tokens can be withdrawn directly to Solana address
   // EVM: Not needed as tokens can be withdrawn directly to EVM address
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Endpoint to get the withdraw address for CEX to send funds to
+  // This is used by the MM to figure out which address it should ask the CEX to withdraw funds to
+  // Cosmos: The withdraw address is the ICA address on the asset's native chain (e.g. Cosmos Hub)
+  // Sui: The withdraw address is the Sui address of the CEX service
+  // Solana: The withdraw address is the Solana address of the CEX service
+  // EVM: The withdraw address is the EVM address of the CEX service
+  rpc GetWithdrawAddress(GetWithdrawAddressRequest) returns (GetWithdrawAddressResponse);
   // Endpoint to get the information about the network the CEX service is running on
   rpc Info(InfoRequest) returns (InfoResponse);
 }
@@ -47,6 +54,20 @@ message WithdrawRequest {
 
 // Response to WithdrawRequest. Doesn't respond anything on success.
 message WithdrawResponse {}
+
+// Request to get the withdraw address used by the CEX service
+message GetWithdrawAddressRequest {
+  // asset_name: The name of the asset for which to get the withdraw address
+  string asset_name = 1;
+}
+
+// Response to WithdrawAddressRequest. Contains the withdraw address used by the CEX service
+message GetWithdrawAddressResponse {
+  // address: The withdraw address used by the CEX service
+  string address = 1;
+  // chain_id: The chain id of the chain the withdraw address is for
+  string chain_id = 2;
+}
 
 // Request to get information about the CEX service
 message InfoRequest {}
