@@ -150,7 +150,7 @@ message Trade {
   // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
   // contract address. Each pool has a unique contract ID.
   string source = 4;
-  // protocol_fee: Bolt protocol  fees collected for the trade. It is always in the BASE asset.
+  // protocol_fee: Bolt protocol fees collected for the trade. It is always in the BASE asset.
   bolt.assets.v1.Balance protocol_fee = 5;
   // sender: Address of the user who executed the trade.
   string sender = 6;
