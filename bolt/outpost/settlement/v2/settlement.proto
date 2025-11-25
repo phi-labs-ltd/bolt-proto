@@ -150,8 +150,8 @@ message Trade {
   // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
   // contract address. Each pool has a unique contract ID.
   string source = 4;
-  // fee: Bolt network fees collected for the trade. It is always in the BASE asset.
-  bolt.assets.v1.Balance fee = 5;
+  // protocol_fee: Bolt protocol fees collected for the trade. It is always in the BASE asset.
+  bolt.assets.v1.Balance protocol_fee = 5;
   // sender: Address of the user who executed the trade.
   string sender = 6;
   // height: Height at which the trade happened.
@@ -160,6 +160,8 @@ message Trade {
   google.protobuf.Timestamp timestamp = 8;
   // price: Price used by the pool to execute the trade, in rational values e.g. 5/3
   string price = 9;
+  // lp_fee: Liquidity provider fees collected for the trade. It is always in the BASE asset.
+  bolt.assets.v1.Balance lp_fee = 10;
 }
 
 // Pool: Description of the single liquidity pool.
