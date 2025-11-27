@@ -388,7 +388,7 @@ message InfoResponse {
 
 // TransferRequest: Request to transfer assets to another address.
 message TransferRequest {
-  // to_address: The address to which the asset is being transferred. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  // to_address: The address to which the assets are being transferred. e.g. archway1qwertyuiopasdfghjklzxcvbnm
   string to_address = 1;
   // assets: The list of assets to be transferred.
   repeated Asset assets = 2;
