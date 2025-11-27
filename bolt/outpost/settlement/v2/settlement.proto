@@ -396,7 +396,7 @@ message TransferRequest {
 
 // TransferResponse: Response to the TransferRequest. Contains information about the transfer.
 message TransferResponse {
-  // tx_id: The hash of the transaction.
+  // tx_id: The hash of the transfer transaction.
   string tx_id = 1;
 }
 
