@@ -272,6 +272,8 @@ service PrivateSettlementService {
   rpc ClaimFees(ClaimFeesRequest) returns (ClaimFeesResponse);
   // Endpoint to get the information about the network the service is running on
   rpc Info(InfoRequest) returns (InfoResponse);
+  // Endpoint to transfer assets to another address
+  rpc Transfer(TransferRequest) returns (TransferResponse);
 }
 
 // SwapBuyRequest: Request to swap assets. Should be invoked by the user to swap assets.
@@ -382,6 +384,20 @@ message InfoResponse {
   string network_id = 1;
   // whoami: The address of the signer who will be submitting the transactions. e.g. archway1qwertyuiopasdfghjklzxcvbnm
   string whoami = 2;
+}
+
+// TransferRequest: Request to transfer assets to another address.
+message TransferRequest {
+  // to_address: The address to which the asset is being transferred. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  string to_address = 1;
+  // assets: The list of assets to be transferred.
+  repeated Asset assets = 2;
+}
+
+// TransferResponse: Response to the TransferRequest. Contains information about the transfer.
+message TransferResponse {
+  // tx_id: The hash of the transaction.
+  string tx_id = 1;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
