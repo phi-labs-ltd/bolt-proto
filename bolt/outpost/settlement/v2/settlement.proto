@@ -349,6 +349,9 @@ message DepositBaseResponse {
 message WithdrawBaseRequest {
   // base_asset: The base asset the user wants to withdraw. e.g. USDT
   string base_asset = 1;
+  // shares: The amount of LP shares the user wants to burn in exchange for base asset. e.g. 1000 shares
+  // if no value is provided, all shares owned by the user will be burned.
+  optional string shares = 2;
 }
 
 // WithdrawBaseResponse: Response to the WithdrawBaseRequest. Contains information about the withdrawn base asset.
