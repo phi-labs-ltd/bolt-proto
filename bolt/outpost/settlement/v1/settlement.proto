@@ -10,8 +10,7 @@ service PublicSettlementService {
   // Endpoint to fetch the pool info.
   rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
   // Endpoint to fetch the pool by asset.
-  rpc GetPoolByBaseAsset(GetPoolByBaseAssetRequest)
-      returns (GetPoolByBaseAssetResponse);
+  rpc GetPoolByBaseAsset(GetPoolByBaseAssetRequest) returns (GetPoolByBaseAssetResponse);
   // Endpoint to query available pools.
   rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
   // Endpoint to fetch balances of BASE asset and all QUOTE assets.
@@ -19,21 +18,16 @@ service PublicSettlementService {
   // Endpoint to fetch the trade details.
   rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
   // Endpoint to fetch trades given block height.
-  rpc GetTradesByBlockHeight(GetTradesByBlockHeightRequest)
-      returns (GetTradesByBlockHeightResponse);
+  rpc GetTradesByBlockHeight(GetTradesByBlockHeightRequest) returns (GetTradesByBlockHeightResponse);
   // Endpoint to fetch supply contribution which happened in the given block
   // height.
-  rpc GetBalanceUpdatesByBlockHeight(GetBalanceUpdatesByBlockHeightRequest)
-      returns (GetBalanceUpdatesByBlockHeightResponse);
+  rpc GetBalanceUpdatesByBlockHeight(GetBalanceUpdatesByBlockHeightRequest) returns (GetBalanceUpdatesByBlockHeightResponse);
   // Endpoint to subscribe to trades.
-  rpc SubscribeTrades(SubscribeTradesRequest)
-      returns (stream SubscribeTradesResponse);
+  rpc SubscribeTrades(SubscribeTradesRequest) returns (stream SubscribeTradesResponse);
   // Endpoint to subscribe to balance changes.
-  rpc SubscribeBalanceUpdates(SubscribeBalanceUpdatesRequest)
-      returns (stream SubscribeBalanceUpdatesResponse);
+  rpc SubscribeBalanceUpdates(SubscribeBalanceUpdatesRequest) returns (stream SubscribeBalanceUpdatesResponse);
   // Endpoint to fetch the user contribution to the pool.
-  rpc GetSupplyContribution(GetSupplyContributionRequest)
-      returns (GetSupplyContributionResponse);
+  rpc GetSupplyContribution(GetSupplyContributionRequest) returns (GetSupplyContributionResponse);
   // Endpoint to query the settlement info.
   rpc SettlementInfo(SettlementInfoRequest) returns (SettlementInfoResponse);
 }
@@ -314,8 +308,7 @@ service PrivateSettlementService {
   rpc WithdrawQuotes(WithdrawQuotesRequest) returns (WithdrawQuotesResponse);
   // Endpoint to withdraw all quotes. Should be invoked by the liquidity
   // provider to withdraw all quotes.
-  rpc WithdrawAllQuotes(WithdrawAllQuotesRequest)
-      returns (WithdrawAllQuotesResponse);
+  rpc WithdrawAllQuotes(WithdrawAllQuotesRequest) returns (WithdrawAllQuotesResponse);
   // Endpoint to deposit base asset. Should be invoked by the liquidity provider
   // to deposit the base asset.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
@@ -324,8 +317,7 @@ service PrivateSettlementService {
   rpc WithdrawBase(WithdrawBaseRequest) returns (WithdrawBaseResponse);
   // Endpoint to withdraw all base asset. Should be invoked by the liquidity
   // provider to withdraw all base asset.
-  rpc WithdrawAllBases(WithdrawAllBasesRequest)
-      returns (WithdrawAllBasesResponse);
+  rpc WithdrawAllBases(WithdrawAllBasesRequest) returns (WithdrawAllBasesResponse);
   // Endpoint to get the information about the network the oracle is running on
   rpc Info(InfoRequest) returns (InfoResponse);
   // Endpoint to transfer assets to another address
