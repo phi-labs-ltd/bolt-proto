@@ -214,10 +214,10 @@ message BalanceUpdate {
   // epoch: Epoch index which supply balance has changed. Optional as it would
   // be missing for pools with only a single epoch (e. g. CW).
   optional uint64 epoch = 1;
-  // base_out: BASE asset balance drained from the supply to be used in a trade.
-  bolt.assets.v1.Balance base_out = 2;
-  // quote_in: QUOTE asset balance put in the pool with this trade.
-  bolt.assets.v1.Balance quote_in = 3;
+  // amount_out: Asset balance drained from the supply.
+  bolt.assets.v1.Balance amount_out = 2;
+  // amount_in: Asset balance put in the pool.
+  bolt.assets.v1.Balance amount_in = 3;
   // sender: The sender if the tx hat indicated the event.
   string sender = 4;
   // transaction_id: Unique id of transaction that triggered the update.
@@ -235,6 +235,27 @@ message BalanceUpdate {
   // bolt_fee: Bolt protocol fee collected on this balance update, always in the
   // QUOTE asset
   string bolt_fee = 9;
+  // source: Liquidity pool contract ID where the update happened. Source could
+  // be the Sui pool contract ID, or the EVM contract address. Each pool has a
+  // unique contract ID.
+  string source = 10;
+  // balance_update_type: Type of the balance update - deposit, withdraw or
+  // trade.
+  BalanceUpdateType balance_update_type = 11;
+}
+
+// BalanceUpdateType: Enum representing the type of balance update.
+enum BalanceUpdateType {
+  //  BALANCE_UPDATE_TYPE_UNSPECIFIED: Unknown balance update type.
+  BALANCE_UPDATE_TYPE_UNSPECIFIED = 0;
+  //  BALANCE_UPDATE_TYPE_DEPOSIT_BASE: Balance update due to deposit_base.
+  BALANCE_UPDATE_TYPE_DEPOSIT_BASE = 1;
+  //  BALANCE_UPDATE_TYPE_WITHDRAW_BASE: Balance update due to withdraw_base.
+  BALANCE_UPDATE_TYPE_WITHDRAW_BASE = 2;
+  //  BALANCE_UPDATE_TYPE_WITHDRAW_QUOTE: Balance update due to withdraw_quote.
+  BALANCE_UPDATE_TYPE_WITHDRAW_QUOTE = 3;
+  //  BALANCE_UPDATE_TYPE_TRADE: Balance update due to swap.
+  BALANCE_UPDATE_TYPE_TRADE = 4;
 }
 
 // GetSupplyContributionRequest: Request fetching users supply contribution in
@@ -441,7 +462,8 @@ message TransferRequest {
   // to_address: The address to which the assets should be transferred. e.g.
   // archway1qwertyuiopasdfghjklzxcvbnm
   string to_address = 1;
-  // memo: An optional memo for the transfer transaction. e.g. "Payment for services"
+  // memo: An optional memo for the transfer transaction. e.g. "Payment for
+  // services"
   optional string memo = 2;
   // assets: The list of assets to be transferred. e.g. BTC, ETH
   repeated Asset assets = 3;
