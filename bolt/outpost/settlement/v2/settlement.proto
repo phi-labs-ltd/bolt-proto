@@ -171,7 +171,7 @@ message Pool {
   // base_amount: Amount of BASE asset in the pool.
   string base_amount = 2;
   // quote_assets: Asset that can be used as QUOTE to acquire BASE asset from this pool.
-  repeated AssetConfig quote_assets = 3;
+  repeated Quote quote_assets = 3;
   // lp_fee_ratio: Transaction fee to be distributed among liquidity providers according
   // to their shares.
   string lp_fee_ratio = 4;
@@ -195,10 +195,12 @@ message Pool {
   bolt.assets.v1.Balance unclaimed_lp_fees = 11;
 }
 
-// AssetConfig: Configuration of a single QUOTE asset in the pool.
-message AssetConfig {
+// Quote: Configuration of a single QUOTE asset in the pool.
+message Quote {
   // denom: QUOTE asset denomination.
   string denom = 1;
+  // amount: Amount of QUOTE asset in the pool.
+  string amount = 5;
   // min_out: Minimum QUOTE amount that can be transferred out per to avoid too low
   // quantity transaction as it could make MMM too difficult/impossible. Basically
   // defensive mechanism about DoS attacks against MMs.
