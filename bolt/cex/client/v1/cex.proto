@@ -6,11 +6,11 @@ import "bolt/assets/v1/assets.proto";
 
 // Service adapting the CEX communication for Market Maker
 service CEXService {
-  // Queries for balances on cex accounts
+  // Queries for balances on CEX accounts
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
 }
 
-// Queries for balances on cex accounts
+// Queries for balances on CEX accounts
 message GetBalancesRequest {
   // exchange: The exchange for which to get the balances
   Exchange exchange = 1;
