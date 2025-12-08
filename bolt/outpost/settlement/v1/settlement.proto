@@ -170,7 +170,7 @@ message Trade {
   // timestamp: Timestamp of the trade in nanoseconds.
   google.protobuf.Timestamp timestamp = 10;
   // price: Price used by the pool to execute the trade, in rational values e.g.
-  // 5/3
+  // 5/3. Price of input(base) quoted in output(quote).
   string price = 11;
 }
 
