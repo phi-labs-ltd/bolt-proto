@@ -5,7 +5,7 @@ package bolt.cex.adapter.v2;
 import "bolt/assets/v1/assets.proto";
 
 // Service adapting the CEX communication for Bolt protocol
-service CEXService {
+service CEXAdapterService {
   // Deposits specified amount to the given CEX address
   // This is used by the MM to deposit funds to the CEX for rebalancing purposes
   // The MM will withdraw the assets into the address of CEX service and the Deposit method will
