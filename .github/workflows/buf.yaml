@@ -22,6 +22,18 @@ jobs:
       - uses: bufbuild/buf-action@v1
         with:
           setup_only: true
-      - run: |
-          buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-prost:v0.4.0
-          buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-tonic:v0.4.1
+      
+      - name: Get prost version
+        id: prost
+        run: |
+          echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-prost:v0.4.0)" >> $GITHUB_OUTPUT
+
+      - name: Get tonic version
+        id: tonic
+        run: |
+          echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-tonic:v0.4.1)" >> $GITHUB_OUTPUT
+
+      - name: Output prost and tonic versions
+        run: |
+          echo "Prost version: ${{ steps.prost.outputs.version }}"
+          echo "Tonic version: ${{ steps.tonic.outputs.version }}"
