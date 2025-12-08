@@ -5,7 +5,7 @@ package bolt.cex.client.v1;
 import "bolt/assets/v1/assets.proto";
 
 // Service adapting the CEX communication for Market Maker
-service CEXService {
+service CEXClientService {
   // Queries for balances on CEX accounts
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
 }
