@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.cex.v1;
+package bolt.cex.adapter.v1;
 
 import "bolt/assets/v1/assets.proto";
 
