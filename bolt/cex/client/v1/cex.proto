@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package bolt.cex.client.v1;
+
+import "bolt/assets/v1/assets.proto";
+
+// Service adapting the CEX communication for Market Maker
+service CEXService {
+  // Queries for balances on cex accounts
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+}
+
+// Queries for balances on cex accounts
+message GetBalancesRequest {
+  // exchange: The exchange for which to get the balances
+  Exchange exchange = 1;
+}
+
+// Response to GetBalancesRequest
+message GetBalancesResponse {
+  // Assets balances
+  repeated bolt.assets.v1.Balance balances = 1;
+}
+
+// Supported exchanges
+enum Exchange {
+  // Exchange is not specified - should never be used
+  EXCHANGE_UNSPECIFIED = 0;
+  // Crypto.com exchange
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // Gate.io exchange
+  EXCHANGE_GATEIO = 2;
+}
