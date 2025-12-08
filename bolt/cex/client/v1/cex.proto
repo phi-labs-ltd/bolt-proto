@@ -10,7 +10,8 @@ service CEXService {
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
 }
 
-// Queries for balances on CEX accounts
+// Request to query balances on CEX accounts for a specific exchange.
+// The `exchange` parameter is required and specifies which exchange to query.
 message GetBalancesRequest {
   // exchange: The exchange for which to get the balances
   Exchange exchange = 1;
