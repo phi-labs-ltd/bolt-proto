@@ -15,3 +15,11 @@ jobs:
       - uses: bufbuild/buf-action@v1
         with:
           push: false
+
+  prs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bufbuild/buf-action@v1
+      - run: |
+          buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-prost:v0.4.0
+          buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-tonic:v0.4.1
