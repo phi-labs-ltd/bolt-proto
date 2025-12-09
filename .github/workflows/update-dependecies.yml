@@ -39,6 +39,7 @@ jobs:
             - name: Update Dependencies
               run: |
                   cd grpc
+                  cargo login --registry buf "Bearer ${{ secrets.BUF_TOKEN }}"
                   cargo update philabs_bolt-proto_community_neoeinstein-prost --precise ${{ steps.rust-prost.outputs.version }} -w
                   cargo update philabs_bolt-proto_community_neoeinstein-tonic --precise ${{ steps.rust-tonic.outputs.version }} -w
 
