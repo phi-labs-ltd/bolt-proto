@@ -22,7 +22,7 @@ jobs:
       - uses: bufbuild/buf-action@v1
         with:
           setup_only: true
-      
+
       - name: Get prost version
         id: rust-prost
         run: |
@@ -38,6 +38,29 @@ jobs:
           echo "Prost version: ${{ steps.rust-prost.outputs.version }}"
           echo "Tonic version: ${{ steps.rust-tonic.outputs.version }}"
 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: phi-labs-ltd/sui-outpost
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+
+      - name: Update Dependencies
+        run: |
+          cd grpc
+          cargo update philabs_bolt-proto_community_neoeinstein-prost --precise ${{ steps.rust-prost.outputs.version }} -w
+          cargo update philabs_bolt-proto_community_neoeinstein-tonic --precise ${{ steps.rust-tonic.outputs.version }} -w
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update the protobuf dependencies to latest versions
+          branch: bump-proto-version
+          title: "chore: Update the protobuf dependencies to latest versions"
+          body: Update the protobuf dependencies to latest versions
+          delete-branch: true
+
   go-prs:
     runs-on: ubuntu-latest
     steps:
@@ -49,7 +72,7 @@ jobs:
         id: go-protocolbuffers
         run: |
           echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto  --plugin=buf.build/protocolbuffers/go:v1.36.10)" >> $GITHUB_OUTPUT
-    
+
       - name: Get grpc-go version
         id: go-grpc
         run: |
