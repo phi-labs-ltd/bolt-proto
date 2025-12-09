@@ -44,7 +44,7 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - repository: philabs-ltd/sui-outpost
+                    - repository: phi-labs-ltd/sui-outpost
                       grpc_path: grpc
 
         steps:
