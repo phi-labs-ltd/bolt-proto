@@ -33,7 +33,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   repository: phi-labs-ltd/sui-outpost
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.PROTO_DEPENDENCIES_UPDATE_PAT }}
                   ref: main
 
             - name: Update Dependencies
@@ -45,7 +45,7 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v7
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.PROTO_DEPENDENCIES_UPDATE_PAT }}
                   commit-message: Update the protobuf dependencies to latest versions
                   branch: bump-proto-version
                   title: "chore: Update the protobuf dependencies to latest versions"
