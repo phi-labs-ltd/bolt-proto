@@ -16,7 +16,7 @@ jobs:
         with:
           push: false
 
-  prs:
+  rust-prs:
     runs-on: ubuntu-latest
     steps:
       - uses: bufbuild/buf-action@v1
@@ -33,6 +33,18 @@ jobs:
         run: |
           echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-tonic:v0.4.1)" >> $GITHUB_OUTPUT
 
+      - name: Output prost and tonic versions
+        run: |
+          echo "Prost version: ${{ steps.rust-prost.outputs.version }}"
+          echo "Tonic version: ${{ steps.rust-tonic.outputs.version }}"
+
+  go-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+
       - name: Get protocolbuffers version
         id: go-protocolbuffers
         run: |
@@ -45,7 +57,5 @@ jobs:
 
       - name: Output prost and tonic versions
         run: |
-          echo "Prost version: ${{ steps.rust-prost.outputs.version }}"
-          echo "Tonic version: ${{ steps.rust-tonic.outputs.version }}"
           echo "Go Protocol Buffers version: ${{ steps.go-protocolbuffers.outputs.version }}"
           echo "Go gRPC version: ${{ steps.go-grpc.outputs.version }}"
