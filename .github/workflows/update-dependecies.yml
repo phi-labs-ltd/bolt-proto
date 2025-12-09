@@ -2,13 +2,18 @@ name: Update Buf dependencies
 on:
     push:
     workflow_dispatch:
-    workflow_call: 
+    workflow_call:
 permissions:
     contents: write
     pull-requests: write
 jobs:
-    sui-outpost:
+    proto-versions:
         runs-on: ubuntu-latest
+        outputs:
+            rust-prost-version: ${{ steps.rust-prost.outputs.version }}
+            rust-tonic-version: ${{ steps.rust-tonic.outputs.version }}
+            go-protocolbuffers-version: ${{ steps.go-protocolbuffers.outputs.version }}
+            go-grpc-version: ${{ steps.go-grpc.outputs.version }}
         steps:
             - uses: bufbuild/buf-action@v1
               with:
@@ -24,24 +29,38 @@ jobs:
               run: |
                   echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto --plugin=buf.build/community/neoeinstein-tonic:v0.4.1)" >> $GITHUB_OUTPUT
 
-            - name: Output prost and tonic versions
+            - name: Get protocolbuffers version
+              id: go-protocolbuffers
               run: |
-                  echo "Prost version: ${{ steps.rust-prost.outputs.version }}"
-                  echo "Tonic version: ${{ steps.rust-tonic.outputs.version }}"
+                  echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto  --plugin=buf.build/protocolbuffers/go:v1.36.10)" >> $GITHUB_OUTPUT
+            
+            - name: Get grpc-go version
+              id: go-grpc
+              run: |
+                  echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto   --plugin=buf.build/grpc/go:v1.6.0)" >> $GITHUB_OUTPUT
+    rust:
+        runs-on: ubuntu-latest
+        needs: proto-versions
+        strategy:
+            matrix:
+                include:
+                    - repository: philabs-ltd/sui-outpost
+                      grpc_path: grpc
 
+        steps:
             - name: Checkout Repository
               uses: actions/checkout@v4
               with:
-                  repository: phi-labs-ltd/sui-outpost
+                  repository: ${{ matrix.repository }}
                   token: ${{ secrets.PROTO_DEPENDENCIES_UPDATE_PAT }}
                   ref: main
 
             - name: Update Dependencies
               run: |
-                  cd grpc
+                  cd ${{ matrix.grpc_path }}
                   cargo login --registry buf "Bearer ${{ secrets.BUF_TOKEN }}"
-                  cargo update philabs_bolt-proto_community_neoeinstein-prost --precise ${{ steps.rust-prost.outputs.version }} -w
-                  cargo update philabs_bolt-proto_community_neoeinstein-tonic --precise ${{ steps.rust-tonic.outputs.version }} -w
+                  cargo update philabs_bolt-proto_community_neoeinstein-prost --precise ${{ needs.proto-versions.outputs.rust-prost-version }} -w
+                  cargo update philabs_bolt-proto_community_neoeinstein-tonic --precise ${{ needs.proto-versions.outputs.rust-tonic-version }} -w
 
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v7
@@ -52,25 +71,3 @@ jobs:
                   title: "chore: Update the protobuf dependencies to latest versions"
                   body: Update the protobuf dependencies to latest versions
                   delete-branch: true
-
-    go-prs:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: bufbuild/buf-action@v1
-              with:
-                  setup_only: true
-
-            - name: Get protocolbuffers version
-              id: go-protocolbuffers
-              run: |
-                  echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto  --plugin=buf.build/protocolbuffers/go:v1.36.10)" >> $GITHUB_OUTPUT
-
-            - name: Get grpc-go version
-              id: go-grpc
-              run: |
-                  echo "version=$(buf registry sdk version --module=buf.build/philabs/bolt-proto   --plugin=buf.build/grpc/go:v1.6.0)" >> $GITHUB_OUTPUT
-
-            - name: Output prost and tonic versions
-              run: |
-                  echo "Go Protocol Buffers version: ${{ steps.go-protocolbuffers.outputs.version }}"
-                  echo "Go gRPC version: ${{ steps.go-grpc.outputs.version }}"
