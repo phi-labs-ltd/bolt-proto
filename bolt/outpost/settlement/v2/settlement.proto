@@ -250,6 +250,10 @@ enum BalanceUpdateType {
   BALANCE_UPDATE_TYPE_DEPOSIT_BASE = 1;
   //  BALANCE_UPDATE_TYPE_WITHDRAW_BASE: Balance update due to withdraw_base.
   BALANCE_UPDATE_TYPE_WITHDRAW_BASE = 2;
+  //  BALANCE_UPDATE_TYPE_WITHDRAW_QUOTE: Balance update due to withdraw_quote.
+  BALANCE_UPDATE_TYPE_WITHDRAW_QUOTE = 3;
+  //  BALANCE_UPDATE_TYPE_TRADE: Balance update due to swap.
+  BALANCE_UPDATE_TYPE_TRADE = 4;
 }
 
 // SettlementInfoRequest: Queries for settlement info.
