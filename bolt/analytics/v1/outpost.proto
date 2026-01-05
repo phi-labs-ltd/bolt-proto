@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package bolt.analytics.v1;
+
+import "bolt/assets/v1/assets.proto";
+
+// Service for outpost analytics
+service OutpostService {
+  // Get balances for any given address
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Get information about the outpost
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// Request to get balances for a given address
+message GetBalancesRequest {
+  // Address to get the balances for
+  string address = 1;
+  // List of assets to fetch the balances for e.g SUI, USDC, ARCH
+  repeated string assets = 2;
+}
+
+// Response containing balances for the given address
+message GetBalancesResponse {
+  // List of balances for the given address
+  repeated bolt.assets.v1.Balance balances = 1;
+}
+
+// Request to get information about the outpost
+message InfoRequest {}
+
+// Response containing information about the outpost
+message InfoResponse {
+  // Network the outpost is connected to
+  string network_id = 1;
+}
