@@ -16,6 +16,8 @@ service OutpostService {
 message BalancesRequest {
   // Address to get the balances for
   string address = 1;
+  // List of assets to fetch the balances for e.g SUI, USDC, ARCH
+  repeated string assets = 2;
 }
 
 // Response containing balances for the given address
