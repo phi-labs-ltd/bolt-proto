@@ -39,6 +39,7 @@ message GetOrderHistoryRequest {
 
 // Response to GetOrderHistoryRequest
 message GetOrderHistoryResponse {
+  // Response is not fully defined yet.
 }
 
 // Supported exchanges
