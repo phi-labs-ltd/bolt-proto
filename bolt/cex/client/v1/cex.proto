@@ -8,7 +8,7 @@ import "bolt/assets/v1/assets.proto";
 service CEXClientService {
   // Queries for balances on CEX accounts
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
-  // Queries CEX order history 
+  // Queries CEX order history
   rpc GetOrderHistory(GetOrderHistoryRequest) returns (GetOrderHistoryResponse);
 }
 
