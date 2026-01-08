@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.cex.client.v1;
 
 import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
 
 // Service adapting the CEX communication for Market Maker
 service CEXClientService {
