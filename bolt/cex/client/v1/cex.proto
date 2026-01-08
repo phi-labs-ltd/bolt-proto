@@ -30,13 +30,11 @@ message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the balances
   Exchange exchange = 1;
   // A specific instrument name to search.
-  optional string instrument_name = 2;
-  // Start time in Unix time format (inclusive, nanoseconds recommended)
-  optional string start_time = 3;
-  // End time in Unix time format (exclusive, nanoseconds recommended)
-  optional string end_time = 4;
-  // The maximum number of trades to be retrieved before the end_time.
-  optional string limit = 5;
+  optional bolt.assets.v1.Pair asset_pair = 2;
+  // Start time in Unix time format
+  optional google.protobuf.Timestamp start_time = 3;
+  // End time in Unix time format
+  optional google.protobuf.Timestamp end_time = 4;
 }
 
 // Response to GetOrderHistoryRequest
