@@ -271,7 +271,8 @@ service PrivateSettlementService {
   rpc SwapBuy(SwapBuyRequest) returns (SwapBuyResponse);
   // Endpoint to swap sell. Should be invoked by MM to rebalance.
   rpc SwapSell(SwapSellRequest) returns (SwapSellResponse);
-  rpc RebalanceSwapSell(RebalanceSwapSellRequest) returns (SwapSellResponse);
+  // Endpoint for rebalancing using swap sell to reach a minimum base liquidity threshold in the pool.
+  rpc RebalanceSwapSell(RebalanceSwapSellRequest) returns (RebalanceSwapSellResponse);
   // Endpoint to deposit base asset. Should be invoked by the MM to deposit the base asset.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
   // Endpoint to withdraw base asset. Should be invoked by the MM to exit the pool.
@@ -320,9 +321,21 @@ message SwapSellRequest {
   string receiver = 4;
 }
 
+// SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
+message SwapSellResponse {
+  // quote_out: The amount of quote asset the user received.
+  Asset quote_out = 1;
+  // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
+  string spot_price = 2;
+  // fee: The fee charged for the swap. includes protocol fees and lp fees
+  Asset fee = 3;
+  // trade_id: The id of the trade. e.g. tx hash
+  string trade_id = 4;
+}
+
 // Rebalance attempts to sell base tokens to reach a minimum base liquidity threshold in the pool.
 // If the pool's base liquidity is already at the minimum threshold, it returns the base balance unchanged.
-// Otherwise, it calculates how much base can be sold while respecting the pool's quote liquidity constraints.s
+// Otherwise, it calculates how much base can be sold while respecting the pool's quote liquidity constraints.
 message RebalanceSwapSellRequest {
   // want_out: The asset the user wants to receive. e.g. USDT
   string want_out = 1;
@@ -335,7 +348,7 @@ message RebalanceSwapSellRequest {
 }
 
 // SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
-message SwapSellResponse {
+message RebalanceSwapSellResponse {
   // quote_out: The amount of quote asset the user received.
   Asset quote_out = 1;
   // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
