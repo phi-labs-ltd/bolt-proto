@@ -3,11 +3,14 @@ syntax = "proto3";
 package bolt.cex.client.v1;
 
 import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
 
 // Service adapting the CEX communication for Market Maker
 service CEXClientService {
   // Queries for balances on CEX accounts
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Queries CEX order history
+  rpc GetOrderHistory(GetOrderHistoryRequest) returns (GetOrderHistoryResponse);
 }
 
 // Request to query balances on CEX accounts for a specific exchange.
@@ -21,6 +24,23 @@ message GetBalancesRequest {
 message GetBalancesResponse {
   // Assets balances
   repeated bolt.assets.v1.Balance balances = 1;
+}
+
+// Request to retrieve order history for a specified time period.
+message GetOrderHistoryRequest {
+  // exchange: The exchange for which to get the history
+  Exchange exchange = 1;
+  // A specific instrument name to search.
+  optional bolt.assets.v1.Pair asset_pair = 2;
+  // Start time in Unix time format
+  optional google.protobuf.Timestamp start_time = 3;
+  // End time in Unix time format
+  optional google.protobuf.Timestamp end_time = 4;
+}
+
+// Response to GetOrderHistoryRequest
+message GetOrderHistoryResponse {
+  // Response is not fully defined yet.
 }
 
 // Supported exchanges
