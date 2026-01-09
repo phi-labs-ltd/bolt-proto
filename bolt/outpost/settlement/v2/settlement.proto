@@ -329,7 +329,7 @@ message RebalanceSwapSellRequest {
   // input: The amount of asset to potentially swap. Surplus will be returned, in case it is not needed to maintain the minimum threshold.
   Asset input = 2;
   // The minimum base liquidity threshold for the base asset in the pool in rational values e.g. 5/3
-  string min_base_threshold: 3;
+  string min_base_threshold = 3;
   // receiver: The address who will receive the swapped asset. If empty, defaults to tx sender.
   string receiver = 4;
 }
