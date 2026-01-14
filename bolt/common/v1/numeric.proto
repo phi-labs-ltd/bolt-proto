@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package bolt.common.v1.numeric;
+
+// For representing irrational numbers.
+message Fraction {
+  // The top bit
+  int64 numerator = 1;
+  // The bottom bit
+  int64 denominator = 2;
+}

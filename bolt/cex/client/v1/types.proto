@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package bolt.cex.client.v1.types;
+
+// Supported exchanges
+enum Exchange {
+  // Exchange is not specified - should never be used
+  EXCHANGE_UNSPECIFIED = 0;
+  // Crypto.com exchange
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // Gate.io exchange
+  EXCHANGE_GATEIO = 2;
+}
+
+// Order type
+enum MakerTakerSide {
+  // A maker order
+  MAKER = 1;
+  // A taker order
+  TAKER = 2;
+}
+
+// Journal type
+enum JournalType {
+  // Type
+  string TRADING = 1;
+}

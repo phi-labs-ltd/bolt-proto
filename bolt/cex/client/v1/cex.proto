@@ -4,6 +4,8 @@ package bolt.cex.client.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
+import "bolt/cex/client/v1/types.proto";
+import "bolt/common/v1/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // Service adapting the CEX communication for Market Maker
@@ -47,14 +49,12 @@ message GetOrderHistoryResponse {
 
 // Response to GetOrderHistoryRequest
 message HistoryEntry {
-  // Specific exchange to query.
-  Exchange exchange = 1;
   // One of exchange responses.
   oneof data {
     // An optional response from crypto.com
-    CryptoResponse crypto_response = 2;
+    CryptoResponse crypto_response = 1;
     // An optional response from gate.io
-    GateResponse gate_response = 3;
+    GateResponse gate_response = 2;
   }
 }
 
@@ -65,7 +65,7 @@ message CryptoResponse {
   // Event date
   string event_date = 2;
   // Journal type would be TRADING
-  string journal_type = 3;
+  JournalType journal_type = 3;
   // Trade quantity
   Fraction traded_quantity = 4;
   // Trade price
@@ -81,7 +81,7 @@ message CryptoResponse {
   // Client Order ID
   string client_oid = 10;
   // MAKER or TAKER or empty
-  string taker_side = 11;
+  MakerTakerSide taker_side = 11;
   // BUY or SELL
   bolt.cex.adapter.v1.OrderSide side = 12;
   // e.g. BTCUSD-PERP
@@ -107,7 +107,7 @@ message GateResponse {
   // Currency pair
   string currency_pair = 4;
   // Total Executed Value
-  string deal = 5;
+  Fraction deal = 5;
   // Fee deducted, not returned in public endpoints
   Fraction fee = 6;
   // Fee currency unit, not returned in public endpoints
@@ -123,29 +123,11 @@ message GateResponse {
   // Order price
   Fraction price = 12;
   // Trade role, not returned in public endpoints
-  string role = 13;
+  MakerTakerSide role = 13;
   // Consecutive trade ID within a single market.
   string sequence_id = 14;
   // Buy or sell order
   bolt.cex.adapter.v1.OrderSide side = 15;
   // User-defined information, not returned in public endpoints
   string text = 16;
-}
-
-// For representing irrational numbers.
-message Fraction {
-  // The top bit
-  int64 numerator = 1;
-  // The bottom bit
-  int64 denominator = 2;
-}
-
-// Supported exchanges
-enum Exchange {
-  // Exchange is not specified - should never be used
-  EXCHANGE_UNSPECIFIED = 0;
-  // Crypto.com exchange
-  EXCHANGE_CRYPTODOTCOM = 1;
-  // Gate.io exchange
-  EXCHANGE_GATEIO = 2;
 }
