@@ -63,7 +63,7 @@ message CryptoResponse {
   // Account ID
   string account_id = 1;
   // Event date
-  string event_date = 2;
+  google.protobuf.Timestamp event_date = 2;
   // Journal type would be TRADING
   bolt.cex.types.v1.JournalType journal_type = 3;
   // Trade quantity
