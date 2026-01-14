@@ -57,13 +57,13 @@ message CryptoResponse {
   string journal_type = 3;
   decimal traded_quantity = 4;
   decimal traded_price = 5;
-  decimal fees: Decimal = 6;
+  decimal fees Decimal = 6;
   string order_id = 7;
   string trade_id = 8;
   string trade_match_id = 9;
   string client_oid = 10;
   string taker_side = 11;
-  side: Swap = 12;
+  swap side = 12;
   string instrument_name = 13;
   string fee_instrument_name = 14;
   google.protobuf.Timestamp create_time_ms = 15;
