@@ -57,7 +57,7 @@ message CryptoResponse {
   string journal_type = 3;
   decimal traded_quantity = 4;
   decimal traded_price = 5;
-  decimal fees Decimal = 6;
+  decimal fees = 6;
   string order_id = 7;
   string trade_id = 8;
   string trade_match_id = 9;
