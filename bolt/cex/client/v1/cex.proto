@@ -63,7 +63,7 @@ message CryptoResponse {
   string trade_match_id = 9;
   string client_oid = 10;
   string taker_side = 11;
-  swap side = 12;
+  OrderSide side = 12;
   string instrument_name = 13;
   string fee_instrument_name = 14;
   google.protobuf.Timestamp create_time_ms = 15;
@@ -86,7 +86,7 @@ message GateResponse {
   decimal price = 12;
   string role = 13;
   string sequence_id = 14;
-  swap side = 15;
+  OrderSide side = 15;
   string text = 16;
 }
 
