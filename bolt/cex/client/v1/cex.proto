@@ -30,19 +30,62 @@ message GetBalancesResponse {
 message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
   Exchange exchange = 1;
-  // A specific instrument asset name to search.
-  bolt.assets.v1.Pair base_asset = 2;
-  // A specific instrument quote name to search.
-  bolt.assets.v1.Pair quote_asset = 3;
+  // A specific instrument name to search.
+  optional bolt.assets.v1.Pair asset_pair = 2;
   // Start time in Unix time format
-  google.protobuf.Timestamp start_time = 4;
+  optional google.protobuf.Timestamp start_time = 3;
   // End time in Unix time format
-  google.protobuf.Timestamp end_time = 5;
+  optional google.protobuf.Timestamp end_time = 4;
 }
+
 
 // Response to GetOrderHistoryRequest
 message GetOrderHistoryResponse {
-  // Response is not fully defined yet.
+  // Specific exchange to query.
+  Exchange = 1;
+  // An optional response from crypto.com
+  optional CryptoResponse = 2;
+  // An optional response from gate.io
+  optional GateResponse = 3;
+}
+
+message CryptoResponse {
+  string account_id = 1;
+  string event_date = 2;
+  string journal_type = 3;
+  traded_quantity: Decimal = 4;
+  traded_price: Decimal = 5;
+  fees: Decimal = 6;
+  string order_id = 7;
+  string trade_id = 8;
+  string trade_match_id = 9;
+  string client_oid = 10;
+  string taker_side = 11;
+  side: Swap = 12;
+  string instrument_name = 13;
+  string fee_instrument_name = 14;
+  google.protobuf.Timestamp create_time_ms = 15;
+  google.protobuf.Timestamp create_time_ns = 16;
+  google.protobuf.Timestamp transact_time_ns = 17;
+}
+
+message GateResponse {
+  amount: Decimal,
+  google.protobuf.Timestamp create_time_s
+  google.protobuf.Timestamp create_time_ms
+  string currency_pair
+  strin deal
+  fee: Decimal,
+  string fee_currency
+  gt_fee: Decimal,
+  string id
+  string order_id
+  point_fee: Decimal,
+  price: Decimal,
+  string role
+  string sequence_id
+  side: Swap,
+  string text
 }
 
 // Supported exchanges
