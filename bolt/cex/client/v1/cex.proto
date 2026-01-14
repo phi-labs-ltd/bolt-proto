@@ -55,9 +55,9 @@ message CryptoResponse {
   string account_id = 1;
   string event_date = 2;
   string journal_type = 3;
-  traded_quantity: Decimal = 4;
-  traded_price: Decimal = 5;
-  fees: Decimal = 6;
+  decimal traded_quantity = 4;
+  decimal traded_price = 5;
+  decimal fees: Decimal = 6;
   string order_id = 7;
   string trade_id = 8;
   string trade_match_id = 9;
@@ -72,22 +72,22 @@ message CryptoResponse {
 }
 
 message GateResponse {
-  amount: Decimal,
-  google.protobuf.Timestamp create_time_s
-  google.protobuf.Timestamp create_time_ms
-  string currency_pair
-  strin deal
-  fee: Decimal,
-  string fee_currency
-  gt_fee: Decimal,
-  string id
-  string order_id
-  point_fee: Decimal,
-  price: Decimal,
-  string role
-  string sequence_id
-  side: Swap,
-  string text
+  decimal amount = 1;
+  google.protobuf.Timestamp create_time_s = 2;
+  google.protobuf.Timestamp create_time_ms = 3;
+  string currency_pair = 4;
+  string deal = 5;
+  decimal fee = 6;
+  string fee_currency = 7;
+  decimal gt_fee = 8;
+  string id = 9;
+  string order_id = 10;
+  decimal point_fee = 11;
+  decimal price = 12;
+  string role = 13;
+  string sequence_id = 14;
+  swap side = 15;
+  string text = 16;
 }
 
 // Supported exchanges
