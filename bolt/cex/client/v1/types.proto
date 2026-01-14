@@ -15,17 +15,17 @@ enum Exchange {
 // Order type
 enum MakerTakerSide {
   // Unspecified - should never be used
-  MAKER_TAKER_UNSPECIFIED = 0;
+  MAKER_TAKER_SIDE_UNSPECIFIED = 0;
   // A maker order
-  MAKER = 1;
+  MAKER_TAKER_SIDE_MAKER = 1;
   // A taker order
-  TAKER = 2;
+  MAKER_TAKER_SIDE_TAKER = 2;
 }
 
 // Journal type
 enum JournalType {
   // Unspecified - should never be used
-  JOURNAL_UNSPECIFIED = 0;
-  // Type
-  TRADING = 1;
+  JOURNAL_TYPE_UNSPECIFIED = 0;
+  // Trading type
+  JOURNAL_TYPE_TRADING = 1;
 }
