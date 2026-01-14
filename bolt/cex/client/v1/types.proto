@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.cex.client.v1.types;
+package bolt.cex.client.types.v1;
 
 // Supported exchanges
 enum Exchange {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.common.v1.numeric;
+package bolt.common.numeric.v1;
 
 // For representing irrational numbers.
 message Fraction {

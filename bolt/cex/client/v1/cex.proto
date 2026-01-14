@@ -5,7 +5,7 @@ package bolt.cex.client.v1;
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/cex/client/v1/types.proto";
-import "bolt/common/v1/numeric.proto";
+import "bolt/common/numeric/v1/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // Service adapting the CEX communication for Market Maker
@@ -20,7 +20,7 @@ service CEXClientService {
 // The `exchange` parameter is required and specifies which exchange to query.
 message GetBalancesRequest {
   // exchange: The exchange for which to get the balances
-  bolt.cex.client.v1.types.Exchange exchange = 1;
+  bolt.cex.client.types.v1.Exchange exchange = 1;
 }
 
 // Response to GetBalancesRequest
@@ -32,7 +32,7 @@ message GetBalancesResponse {
 // Request to retrieve order history for a specified time period.
 message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
-  bolt.cex.client.v1.types.Exchange exchange = 1;
+  bolt.cex.client.types.v1.Exchange exchange = 1;
   // A specific instrument name to search.
   bolt.assets.v1.Pair asset_pair = 2;
   // Start time in Unix time format
@@ -65,13 +65,13 @@ message CryptoResponse {
   // Event date
   string event_date = 2;
   // Journal type would be TRADING
-  bolt.cex.client.v1.types.JournalType journal_type = 3;
+  bolt.cex.client.types.v1.JournalType journal_type = 3;
   // Trade quantity
-  bolt.common.v1.numeric.Fraction traded_quantity = 4;
+  bolt.common.numeric.v1.Fraction traded_quantity = 4;
   // Trade price
-  bolt.common.v1.numeric.Fraction traded_price = 5;
+  bolt.common.numeric.v1.Fraction traded_price = 5;
   // Trade fees, the negative sign means a deduction on balance
-  bolt.common.v1.numeric.Fraction fees = 6;
+  bolt.common.numeric.v1.Fraction fees = 6;
   // Order ID
   string order_id = 7;
   // Trade ID
@@ -81,7 +81,7 @@ message CryptoResponse {
   // Client Order ID
   string client_oid = 10;
   // MAKER or TAKER or empty
-  bolt.cex.client.v1.types.MakerTakerSide taker_side = 11;
+  bolt.cex.client.types.v1.MakerTakerSide taker_side = 11;
   // BUY or SELL
   bolt.cex.adapter.v1.OrderSide side = 12;
   // e.g. BTCUSD-PERP
@@ -99,7 +99,7 @@ message CryptoResponse {
 // Response variant specific to gate.io.
 message GateResponse {
   // Trade amount
-  bolt.common.v1.numeric.Fraction amount = 1;
+  bolt.common.numeric.v1.Fraction amount = 1;
   // Fill Time
   google.protobuf.Timestamp create_time_s = 2;
   // Trading time, with millisecond precision
@@ -107,23 +107,23 @@ message GateResponse {
   // Currency pair
   string currency_pair = 4;
   // Total Executed Value
-  bolt.common.v1.numeric.Fraction deal = 5;
+  bolt.common.numeric.v1.Fraction deal = 5;
   // Fee deducted, not returned in public endpoints
-  bolt.common.v1.numeric.Fraction fee = 6;
+  bolt.common.numeric.v1.Fraction fee = 6;
   // Fee currency unit, not returned in public endpoints
   string fee_currency = 7;
   // GT used to deduct fee, not returned in public endpoints
-  bolt.common.v1.numeric.Fraction gt_fee = 8;
+  bolt.common.numeric.v1.Fraction gt_fee = 8;
   // Fill ID
   string id = 9;
   // Related order ID, not returned in public endpoints
   string order_id = 10;
   // Points used to deduct fee, not returned in public endpoints
-  bolt.common.v1.numeric.Fraction point_fee = 11;
+  bolt.common.numeric.v1.Fraction point_fee = 11;
   // Order price
-  bolt.common.v1.numeric.Fraction price = 12;
+  bolt.common.numeric.v1.Fraction price = 12;
   // Trade role, not returned in public endpoints
-  bolt.cex.client.v1.types.MakerTakerSide role = 13;
+  bolt.cex.client.types.v1.MakerTakerSide role = 13;
   // Consecutive trade ID within a single market.
   string sequence_id = 14;
   // Buy or sell order
