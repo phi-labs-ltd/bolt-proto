@@ -39,12 +39,15 @@ message GetOrderHistoryRequest {
   google.protobuf.Timestamp end_time = 4;
 }
 
+message GetOrderHistoryResponse {
+  repeated HistoryEntry entries = 1;
+}
 
 // Response to GetOrderHistoryRequest
-message GetOrderHistoryResponse {
+message HistoryEntry {
   // Specific exchange to query.
   Exchange exchange = 1;
-  oneof cex_response {
+  oneof data {
     // An optional response from crypto.com
     CryptoResponse crypto_response = 2;
     // An optional response from gate.io
