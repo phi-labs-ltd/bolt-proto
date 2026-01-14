@@ -4,7 +4,7 @@ package bolt.cex.client.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
-import "bolt/cex/client/v1/types.proto";
+import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v1/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -20,7 +20,7 @@ service CEXClientService {
 // The `exchange` parameter is required and specifies which exchange to query.
 message GetBalancesRequest {
   // exchange: The exchange for which to get the balances
-  bolt.cex.client.types.v1.Exchange exchange = 1;
+  bolt.cex.types.v1.Exchange exchange = 1;
 }
 
 // Response to GetBalancesRequest
@@ -32,7 +32,7 @@ message GetBalancesResponse {
 // Request to retrieve order history for a specified time period.
 message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
-  bolt.cex.client.types.v1.Exchange exchange = 1;
+  bolt.cex.types.v1.Exchange exchange = 1;
   // A specific instrument name to search.
   bolt.assets.v1.Pair asset_pair = 2;
   // Start time in Unix time format
@@ -65,7 +65,7 @@ message CryptoResponse {
   // Event date
   string event_date = 2;
   // Journal type would be TRADING
-  bolt.cex.client.types.v1.JournalType journal_type = 3;
+  bolt.cex.types.v1.JournalType journal_type = 3;
   // Trade quantity
   bolt.common.numeric.v1.Fraction traded_quantity = 4;
   // Trade price
@@ -81,7 +81,7 @@ message CryptoResponse {
   // Client Order ID
   string client_oid = 10;
   // MAKER or TAKER or empty
-  bolt.cex.client.types.v1.MakerTakerSide taker_side = 11;
+  bolt.cex.types.v1.MakerTakerSide taker_side = 11;
   // BUY or SELL
   bolt.cex.adapter.v1.OrderSide side = 12;
   // e.g. BTCUSD-PERP
@@ -123,7 +123,7 @@ message GateResponse {
   // Order price
   bolt.common.numeric.v1.Fraction price = 12;
   // Trade role, not returned in public endpoints
-  bolt.cex.client.types.v1.MakerTakerSide role = 13;
+  bolt.cex.types.v1.MakerTakerSide role = 13;
   // Consecutive trade ID within a single market.
   string sequence_id = 14;
   // Buy or sell order
