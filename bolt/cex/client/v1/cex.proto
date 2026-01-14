@@ -32,11 +32,11 @@ message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
   Exchange exchange = 1;
   // A specific instrument name to search.
-  optional bolt.assets.v1.Pair asset_pair = 2;
+  bolt.assets.v1.Pair asset_pair = 2;
   // Start time in Unix time format
-  optional google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp start_time = 3;
   // End time in Unix time format
-  optional google.protobuf.Timestamp end_time = 4;
+  google.protobuf.Timestamp end_time = 4;
 }
 
 
@@ -64,7 +64,7 @@ message CryptoResponse {
   string trade_match_id = 9;
   string client_oid = 10;
   string taker_side = 11;
-  OrderSide side = 12;
+  bolt.cex.adapter.v1.OrderSide side = 12;
   string instrument_name = 13;
   string fee_instrument_name = 14;
   google.protobuf.Timestamp create_time_ms = 15;
@@ -87,7 +87,7 @@ message GateResponse {
   Fraction price = 12;
   string role = 13;
   string sequence_id = 14;
-  OrderSide side = 15;
+  bolt.cex.adapter.v1.OrderSide side = 15;
   string text = 16;
 }
 
