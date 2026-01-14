@@ -23,5 +23,5 @@ enum MakerTakerSide {
 // Journal type
 enum JournalType {
   // Type
-  string TRADING = 1;
+  TRADING = 1;
 }
