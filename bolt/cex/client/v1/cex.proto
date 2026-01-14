@@ -43,10 +43,12 @@ message GetOrderHistoryRequest {
 message GetOrderHistoryResponse {
   // Specific exchange to query.
   Exchange = 1;
-  // An optional response from crypto.com
-  optional CryptoResponse = 2;
-  // An optional response from gate.io
-  optional GateResponse = 3;
+  oneof cex_response {
+    // An optional response from crypto.com
+    CryptoResponse = 2;
+    // An optional response from gate.io
+    GateResponse = 3;
+  }
 }
 
 message CryptoResponse {
