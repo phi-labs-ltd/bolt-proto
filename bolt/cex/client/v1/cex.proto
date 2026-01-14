@@ -20,7 +20,7 @@ service CEXClientService {
 // The `exchange` parameter is required and specifies which exchange to query.
 message GetBalancesRequest {
   // exchange: The exchange for which to get the balances
-  bolt.cex.types.v1.Exchange exchange = 1;
+  Exchange exchange = 1;
 }
 
 // Response to GetBalancesRequest
@@ -32,7 +32,7 @@ message GetBalancesResponse {
 // Request to retrieve order history for a specified time period.
 message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
-  bolt.cex.types.v1.Exchange exchange = 1;
+  Exchange exchange = 1;
   // A specific instrument name to search.
   bolt.assets.v1.Pair asset_pair = 2;
   // Start time in Unix time format
@@ -130,4 +130,14 @@ message GateResponse {
   bolt.cex.adapter.v1.OrderSide side = 15;
   // User-defined information, not returned in public endpoints
   string text = 16;
+}
+
+// Supported exchanges
+enum Exchange {
+  // Exchange is not specified - should never be used
+  EXCHANGE_UNSPECIFIED = 0;
+  // Crypto.com exchange
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // Gate.io exchange
+  EXCHANGE_GATEIO = 2;
 }

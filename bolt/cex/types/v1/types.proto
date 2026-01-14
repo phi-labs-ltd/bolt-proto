@@ -2,16 +2,6 @@ syntax = "proto3";
 
 package bolt.cex.types.v1;
 
-// Supported exchanges
-enum Exchange {
-  // Exchange is not specified - should never be used
-  EXCHANGE_UNSPECIFIED = 0;
-  // Crypto.com exchange
-  EXCHANGE_CRYPTODOTCOM = 1;
-  // Gate.io exchange
-  EXCHANGE_GATEIO = 2;
-}
-
 // Order type
 enum MakerTakerSide {
   // Unspecified - should never be used
