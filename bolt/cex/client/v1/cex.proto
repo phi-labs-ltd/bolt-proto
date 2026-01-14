@@ -42,12 +42,12 @@ message GetOrderHistoryRequest {
 // Response to GetOrderHistoryRequest
 message GetOrderHistoryResponse {
   // Specific exchange to query.
-  Exchange = 1;
+  Exchange exchange = 1;
   oneof cex_response {
     // An optional response from crypto.com
-    CryptoResponse = 2;
+    CryptoResponse crypto_response = 2;
     // An optional response from gate.io
-    GateResponse = 3;
+    GateResponse gate_response = 3;
   }
 }
 
@@ -56,7 +56,7 @@ message CryptoResponse {
   string event_date = 2;
   string journal_type = 3;
   Fraction traded_quantity = 4;
-  decimal traded_price = 5;
+  Fraction traded_price = 5;
   Fraction fees = 6;
   string order_id = 7;
   string trade_id = 8;
@@ -83,7 +83,7 @@ message GateResponse {
   string id = 9;
   string order_id = 10;
   Fraction point_fee = 11;
-  decima price = 12;
+  Fraction price = 12;
   string role = 13;
   string sequence_id = 14;
   OrderSide side = 15;
