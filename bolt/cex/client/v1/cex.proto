@@ -49,6 +49,7 @@ message GetOrderHistoryResponse {
 message HistoryEntry {
   // Specific exchange to query.
   Exchange exchange = 1;
+  // One of exchange responses.
   oneof data {
     // An optional response from crypto.com
     CryptoResponse crypto_response = 2;
