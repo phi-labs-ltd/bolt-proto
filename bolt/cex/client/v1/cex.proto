@@ -30,12 +30,14 @@ message GetBalancesResponse {
 message GetOrderHistoryRequest {
   // exchange: The exchange for which to get the history
   Exchange exchange = 1;
-  // A specific instrument name to search.
-  optional bolt.assets.v1.Pair asset_pair = 2;
+  // A specific instrument asset name to search.
+  bolt.assets.v1.Pair base_asset = 2;
+  // A specific instrument quote name to search.
+  bolt.assets.v1.Pair quote_asset = 3;
   // Start time in Unix time format
-  optional google.protobuf.Timestamp start_time = 3;
+  google.protobuf.Timestamp start_time = 4;
   // End time in Unix time format
-  optional google.protobuf.Timestamp end_time = 4;
+  google.protobuf.Timestamp end_time = 5;
 }
 
 // Response to GetOrderHistoryRequest
