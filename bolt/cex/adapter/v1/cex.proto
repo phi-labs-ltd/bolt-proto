@@ -65,7 +65,7 @@ message CreateOrderResponse {
   bolt.assets.v1.Balance base = 1;
   // Amount of QUOTE asset traded.
   bolt.assets.v1.Balance quote = 2;
-  // Order statuses. Note that orders in progres (Created, PartiallyFilled) would not be returned,
+  // Order statuses. Note that orders in progress (Created, PartiallyFilled) would not be returned,
   // but order would be awaited till completion.
   OrderStatus status = 3;
 }

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bolt.cex.types.v1;
+
+// Order type
+enum OrderType {
+  // Unspecified - should never be used
+  ORDER_TYPE_UNSPECIFIED = 0;
+  // A maker order
+  ORDER_TYPE_MAKER = 1;
+  // A taker order
+  ORDER_TYPE_TAKER = 2;
+}
+
+// Journal type
+enum JournalType {
+  // Unspecified - should never be used
+  JOURNAL_TYPE_UNSPECIFIED = 0;
+  // Trading type
+  JOURNAL_TYPE_TRADING = 1;
+}
