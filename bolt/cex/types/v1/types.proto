@@ -5,11 +5,11 @@ package bolt.cex.types.v1;
 // Order type
 enum OrderType {
   // Unspecified - should never be used
-  MAKER_TAKER_SIDE_UNSPECIFIED = 0;
+  ORDER_TYPE_UNSPECIFIED = 0;
   // A maker order
-  MAKER_TAKER_SIDE_MAKER = 1;
+  ORDER_TYPE_MAKER = 1;
   // A taker order
-  MAKER_TAKER_SIDE_TAKER = 2;
+  ORDER_TYPE_TAKER = 2;
 }
 
 // Journal type
