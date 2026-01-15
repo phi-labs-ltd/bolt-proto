@@ -3,7 +3,7 @@ syntax = "proto3";
 package bolt.cex.types.v1;
 
 // Order type
-enum MakerTakerSide {
+enum OrderType {
   // Unspecified - should never be used
   MAKER_TAKER_SIDE_UNSPECIFIED = 0;
   // A maker order

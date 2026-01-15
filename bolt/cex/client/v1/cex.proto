@@ -52,7 +52,7 @@ message HistoryEntry {
   // One of exchange responses.
   oneof data {
     // An optional response from crypto.com
-    CryptoResponse crypto_response = 1;
+    CryptoResponse cdc_response = 1;
     // An optional response from gate.io
     GateResponse gate_response = 2;
   }
@@ -81,7 +81,7 @@ message CryptoResponse {
   // Client Order ID
   string client_oid = 10;
   // MAKER or TAKER or empty
-  bolt.cex.types.v1.MakerTakerSide taker_side = 11;
+  bolt.cex.types.v1.OrderType taker_side = 11;
   // BUY or SELL
   bolt.cex.adapter.v1.OrderSide side = 12;
   // e.g. BTCUSD-PERP
@@ -123,7 +123,7 @@ message GateResponse {
   // Order price
   bolt.common.numeric.v1.Fraction price = 12;
   // Trade role, not returned in public endpoints
-  bolt.cex.types.v1.MakerTakerSide role = 13;
+  bolt.cex.types.v1.OrderType role = 13;
   // Consecutive trade ID within a single market.
   string sequence_id = 14;
   // Buy or sell order
