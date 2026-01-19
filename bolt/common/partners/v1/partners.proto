@@ -6,8 +6,10 @@ package bolt.common.partners.v1;
 enum Partners {
   // Unspecified partner
   PARTNERS_UNSPECIFIED = 0;
+  // Phi Labs Market Maker
+  PARTNERS_MARKET_MAKER = 1;
   // Bolt UI provided by Phi Labs
-  PARTNERS_BOLT_UI = 1;
+  PARTNERS_BOLT_UI = 2;
   // FlowX partner integration
-  PARTNERS_FLOWX = 2;
+  PARTNERS_FLOWX = 3;
 }
