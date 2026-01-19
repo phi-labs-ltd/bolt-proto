@@ -14,6 +14,8 @@ service CEXClientService {
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
   // Queries CEX order history
   rpc GetOrderHistory(GetOrderHistoryRequest) returns (GetOrderHistoryResponse);
+  // Queries for multiple pairs prices in batch.
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
 }
 
 // Request to query balances on CEX accounts for a specific exchange.
@@ -56,6 +58,28 @@ message HistoryEntry {
     // An optional response from gate.io
     GateResponse gate_response = 2;
   }
+}
+
+// Request to retrieve multiple pairs prices for a specific exchange.
+message GetPricesRequest {
+  // exchange: The exchange for which to get the balances
+  Exchange exchange = 1;
+  // asset_pair: The specific market pair. e.g. ATOM/USDT
+  repeated bolt.assets.v1.Pair asset_pair = 2;
+}
+
+// Response to GetPricesRequest
+message GetPricesResponse {
+  // prices: The list of prices for the requested pairs.
+  repeated PriceResponse prices = 1;
+}
+
+// Price response for a specific asset pair.
+message PriceResponse {
+  // asset_pair: The pair associated with the price. e.g. ATOM/USDT
+  bolt.assets.v1.Pair asset_pair = 1;
+  // price: The price of the pair, in rational values. e.g. 1250/13
+  bolt.common.numeric.v1.Fraction price = 2;
 }
 
 // Response variant specific to crypto.com.
