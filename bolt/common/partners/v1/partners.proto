@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package bolt.common.partners.v1;
+
+// Enum defining various partners
+enum Partners {
+  // Unspecified partner
+  PARTNERS_UNSPECIFIED = 0;
+  // Bolt UI provided by Phi Labs
+  PARTNERS_BOLT_UI = 1;
+  // FlowX partner integration
+  PARTNERS_FLOWX = 2;
+}
