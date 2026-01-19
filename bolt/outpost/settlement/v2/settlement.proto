@@ -165,7 +165,7 @@ message Trade {
   // lp_fee: Liquidity provider fees collected for the trade. It is always in the BASE asset.
   bolt.assets.v1.Balance lp_fee = 10;
   // originator: The partner that originated the trade.
-  bolt.common.partners.v1.Partners originator = 11;
+  bolt.common.partners.v1.Partner originator = 11;
 }
 
 // Pool: Description of the single liquidity pool.

@@ -3,7 +3,7 @@ syntax = "proto3";
 package bolt.common.partners.v1;
 
 // Enum defining various partners
-enum Partners {
+enum Partner {
   // Unspecified partner
   PARTNERS_UNSPECIFIED = 0;
   // Phi Labs Market Maker
