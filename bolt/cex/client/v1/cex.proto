@@ -62,9 +62,9 @@ message HistoryEntry {
 
 // Request to retrieve multiple pairs prices for a specific exchange.
 message GetPricesRequest {
-  // exchange: The exchange for which to get the balances
+  // exchange: The exchange for which to get the prices
   Exchange exchange = 1;
-  // asset_pair: The specific market pair. e.g. ATOM/USDT
+  // asset_pair: The market pairs to query. e.g. ATOM/USDT, BTC/USDT
   repeated bolt.assets.v1.Pair asset_pair = 2;
 }
 
