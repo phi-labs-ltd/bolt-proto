@@ -147,9 +147,9 @@ message Trade {
   bolt.assets.v1.Balance input = 2;
   // output: Asset balance drained from the pool by the trade.
   bolt.assets.v1.Balance output = 3;
-  // source: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
+  // pool: Liquidity pool contract ID where the trade happened. Source could be the Sui pool contract ID, or the EVM
   // contract address. Each pool has a unique contract ID.
-  string source = 4;
+  string pool = 4;
   // protocol_fee: Bolt protocol fees collected for the trade. It is always in the BASE asset.
   bolt.assets.v1.Balance protocol_fee = 5;
   // sender: Address of the user who executed the trade.
