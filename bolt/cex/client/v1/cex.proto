@@ -74,6 +74,7 @@ message GetPricesResponse {
   map<string, Price> prices = 1;
 }
 
+// Price pair for bid/ask of asset.
 message Price {
    // price: The bid price of the pair, in rational values. e.g. 1250/13
   bolt.common.numeric.v1.Fraction bid = 1;
