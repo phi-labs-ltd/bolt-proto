@@ -71,13 +71,15 @@ message GetPricesRequest {
 // Response to GetPricesRequest
 message GetPricesResponse {
   // Key: asset pair string, e.g. "ATOM/USDT"
-  map<string, bolt.common.numeric.v1.Fraction> prices = 1;
+  map<string, PriceResponse> prices = 1;
 }
 
 // Price pair for bid/ask of asset.
 message PriceResponse {
-   // price: The bid price of the pair, in rational values. e.g. 1250/13
-  bolt.common.numeric.v1.Fraction price = 1;
+  // asset_pair: The pair associated with the price. e.g. ATOM/USDT
+  bolt.assets.v1.Pair asset_pair = 1;
+  // price: The price of the pair, in rational values. e.g. 1250/13
+  bolt.common.numeric.v1.Fraction price = 2;
 }
 
 // Response variant specific to crypto.com.
