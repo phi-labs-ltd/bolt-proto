@@ -71,7 +71,7 @@ message GetPricesRequest {
 // Response to GetPricesRequest
 message GetPricesResponse {
   // Key: asset pair string, e.g. "ATOM/USDT"
-  map<bolt.assets.v1.Pair, bolt.common.numeric.v1.Fraction> prices = 1;
+  map<string, bolt.common.numeric.v1.Fraction> prices = 1;
 }
 
 // Price pair for bid/ask of asset.
