@@ -100,7 +100,9 @@ message GetTradeRequest {
 // GetTradeResponse: Response for GetTradeRequest.
 message GetTradeResponse {
   // trade: Fetched trade details.
-  Trade trade = 1;
+  Trade trade = 1 [deprecated = true];
+  // trades: Fetched trade details.
+  repeated Trade trades = 2;
 }
 
 // GetTradesByBlockHeightRequest: Request fetching trades that happened at specific
