@@ -168,6 +168,8 @@ message Trade {
   bolt.assets.v1.Balance lp_fee = 10;
   // originator: The partner that originated the trade.
   bolt.common.partners.v1.Partner originator = 11;
+  // tx_id: The transaction id associated with the trade.
+  string tx_id = 12;
 }
 
 // Pool: Description of the single liquidity pool.
