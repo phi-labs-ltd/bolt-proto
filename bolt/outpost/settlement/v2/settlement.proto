@@ -278,8 +278,10 @@ service PrivateSettlementService {
   rpc SwapBuy(SwapBuyRequest) returns (SwapBuyResponse);
   // Endpoint to swap sell. Should be invoked by MM to rebalance.
   rpc SwapSell(SwapSellRequest) returns (SwapSellResponse);
-  // Endpoint for rebalancing using swap sell to reach a minimum base liquidity threshold in the pool.
+  // Endpoint for rebalancing using swap sell to reach a minimum base liquidity in the pool.
   rpc RebalanceSwapSell(RebalanceSwapSellRequest) returns (RebalanceSwapSellResponse);
+  // Endpoint for rebalancing using withdraw shares to reach a maximum base liquidity in the pool.
+  rpc RebalanceWithdrawShares(RebalanceWithdrawSharesRequest) returns (RebalanceWithdrawSharesResponse);
   // Endpoint to deposit base asset. Should be invoked by the MM to deposit the base asset.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
   // Endpoint to withdraw base asset. Should be invoked by the MM to exit the pool.
@@ -328,7 +330,7 @@ message SwapSellRequest {
   string receiver = 4;
 }
 
-// SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
+// SwapSellResponse: Response to the SwapSellRequest. Contains information about the rebalance swap sell.
 message SwapSellResponse {
   // quote_out: The amount of quote asset the user received.
   Asset quote_out = 1;
@@ -340,15 +342,15 @@ message SwapSellResponse {
   string trade_id = 4;
 }
 
-// Rebalance attempts to sell base tokens to reach a minimum base liquidity threshold in the pool.
+// Rebalance attempts to sell base tokens to reach a minimum base liquidity in the pool.
 // If the pool's base liquidity is already at the minimum threshold, it returns the base balance unchanged.
 // Otherwise, it calculates how much base can be sold while respecting the pool's quote liquidity constraints.
 message RebalanceSwapSellRequest {
-  // want_out: The asset the user wants to receive. e.g. USDT
+  // want_out: The quote asset the user wants to receive. e.g. USDT
   string want_out = 1;
   // input: The amount of asset to potentially swap. Surplus will be returned, in case it is not needed to maintain the minimum threshold.
   Asset input = 2;
-  // The minimum base liquidity threshold for the base asset in the pool in rational values e.g. 5/3
+  // The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
   // receiver: The address who will receive the swapped asset. If empty, defaults to tx sender.
   string receiver = 4;
@@ -364,6 +366,27 @@ message RebalanceSwapSellResponse {
   Asset fee = 3;
   // trade_id: The id of the trade. e.g. tx hash
   string trade_id = 4;
+}
+
+// Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
+// If the pool's base liquidity is above the maximum threshold, it calculates how much base can be withdrawn.
+message RebalanceWithdrawSharesRequest {
+  // want_out: The base asset the user wants to receive.
+  string want_out = 1;
+  // The maximum base threshold for the base asset in the pool in rational values e.g. 5/3
+  string max_base_threshold = 2;
+  // receiver: The address who will receive the withdrawn base asset. If empty, defaults to tx sender.
+  string receiver = 3;
+}
+
+// RebalanceWithdrawSharesResponse: Response to the RebalanceWithdrawSharesRequest. Contains information about the rebalance withdraw shares.
+message RebalanceWithdrawSharesResponse {
+  // base_out: The amount of base asset the user received.
+  Asset base_out = 1;
+  // The pool's current base liquidity at that time.
+  string base_liquidity = 2;
+  // trade_id: The id of the trade. e.g. tx hash
+  string trade_id = 3;
 }
 
 // DepositBaseRequest: Request to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
