@@ -371,7 +371,7 @@ message RebalanceSwapSellResponse {
 // Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
 // If the pool's base liquidity is above the maximum threshold, it calculates how much base can be withdrawn.
 message RebalanceWithdrawSharesRequest {
-  // want_out: The base asset the user wants to receive. e.g. USDT
+  // want_out: The base asset the user wants to receive.
   string want_out = 1;
   // The maximum base threshold for the base asset in the pool in rational values e.g. 5/3
   string max_base_threshold = 2;
