@@ -366,8 +366,8 @@ message RebalanceSwapSellResponse {
   Asset fee = 3;
   // trade_id: The id of the trade. e.g. tx hash
   string trade_id = 4;
-  // base_out: The unused portion of the base asset received by the user after rebalancing operations.
-  Asset base_out = 5;
+  // base_used: The used portion of the base asset received by the user after rebalancing operations.
+  Asset base_used = 5;
 }
 
 // Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
