@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package bolt.outpost.settlement.v2;
 
-import "google/protobuf/timestamp.proto";
-
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/partners/v1/partners.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 
 // Service 1: PublicSettlementService
 service PublicSettlementService {
@@ -135,7 +135,11 @@ message GetBalanceUpdatesByBlockHeightResponse {
 }
 
 // SubscribeTradesRequest: Request starting trades subscription.
-message SubscribeTradesRequest {}
+// SubscribeTradesRequest: Request starting trades subscription.
+message SubscribeTradesRequest {
+  // field_mask: Optional. Fields to include in the SubscribeTradesResponse. If not set, only trades and height are returned. Explicitly, set `base_liquidity` in the field mask to receive the total BASE liquidity in the pools at the end of the block.
+  optional google.protobuf.FieldMask field_mask = 1;
+}
 
 // SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
 message SubscribeTradesResponse {
@@ -145,7 +149,7 @@ message SubscribeTradesResponse {
   repeated Trade trades = 2;
   // height: Blockchain height at which the trades happened.
   uint64 height = 3;
-  // base_liquidity: Total BASE liquidity in the pools after the trade.
+  // base_liquidity: Total BASE liquidity in the pools after the trades.
   repeated bolt.assets.v1.Balance base_liquidity = 4;
 }
 
