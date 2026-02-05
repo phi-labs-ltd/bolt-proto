@@ -135,7 +135,6 @@ message GetBalanceUpdatesByBlockHeightResponse {
 }
 
 // SubscribeTradesRequest: Request starting trades subscription.
-// SubscribeTradesRequest: Request starting trades subscription.
 message SubscribeTradesRequest {
   // field_mask: Optional. Fields to include in the SubscribeTradesResponse. If not set, only trades and height are returned. Explicitly, set `base_liquidity` in the field mask to receive the total BASE liquidity in the pools at the end of the block.
   optional google.protobuf.FieldMask field_mask = 1;
