@@ -2,9 +2,10 @@ syntax = "proto3";
 
 package bolt.outpost.settlement.v2;
 
+import "google/protobuf/timestamp.proto";
+
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/partners/v1/partners.proto";
-import "google/protobuf/timestamp.proto";
 
 // Service 1: PublicSettlementService
 service PublicSettlementService {
@@ -140,6 +141,8 @@ message SubscribeTradesRequest {}
 message SubscribeTradesResponse {
   // trade: Details of trade that happened.
   Trade trade = 1;
+  // base_liquidity: Total BASE liquidity in the pools after the trade.
+  repeated bolt.assets.v1.Balance base_liquidity = 2;
 }
 
 // Trade: Single trade details.
