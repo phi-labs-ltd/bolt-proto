@@ -149,8 +149,6 @@ message SubscribeTradesResponse {
   repeated Trade trades = 2;
   // height: Blockchain height at which the trades happened.
   uint64 height = 3;
-  // base_liquidity: Total BASE liquidity in the pools after the trades.
-  repeated bolt.assets.v1.Balance base_liquidity = 4;
 }
 
 // Trade: Single trade details.
@@ -183,6 +181,8 @@ message Trade {
   string tx_id = 12;
   // swap_type: The type of swap - buy or sell.
   SwapType swap_type = 13;
+  // base_liquidity: Total BASE liquidity in the pool after the trade.
+  bolt.assets.v1.Balance base_liquidity = 14;
 }
 
 //  SwapType: Enum representing the type of swap.
