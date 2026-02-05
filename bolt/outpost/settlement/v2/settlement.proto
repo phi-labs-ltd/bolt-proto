@@ -181,6 +181,18 @@ message Trade {
   bolt.common.partners.v1.Partner originator = 11;
   // tx_id: The transaction id associated with the trade.
   string tx_id = 12;
+  // swap_type: The type of swap - buy or sell.
+  SwapType swap_type = 13;
+}
+
+//  SwapType: Enum representing the type of swap.
+enum SwapType {
+  //  SWAP_TYPE_UNSPECIFIED: Unknown swap type.
+  SWAP_TYPE_UNSPECIFIED = 0;
+  //  SWAP_TYPE_BUY: Swap buy type.
+  SWAP_TYPE_BUY = 1;
+  //  SWAP_TYPE_SELL: Swap sell type.
+  SWAP_TYPE_SELL = 2;
 }
 
 // Pool: Description of the single liquidity pool.
