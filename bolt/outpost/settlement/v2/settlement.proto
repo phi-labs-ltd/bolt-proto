@@ -4,6 +4,7 @@ package bolt.outpost.settlement.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/partners/v1/partners.proto";
+import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
 // Service 1: PublicSettlementService
@@ -134,12 +135,19 @@ message GetBalanceUpdatesByBlockHeightResponse {
 }
 
 // SubscribeTradesRequest: Request starting trades subscription.
-message SubscribeTradesRequest {}
+message SubscribeTradesRequest {
+  // field_mask: Optional. Fields to include in the SubscribeTradesResponse. If not set, only trades and height are returned. Explicitly, set `base_liquidity` in the field mask to receive the total BASE liquidity in the pools at the end of the block.
+  optional google.protobuf.FieldMask field_mask = 1;
+}
 
 // SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
 message SubscribeTradesResponse {
-  // trade: Details of trade that happened.
-  Trade trade = 1;
+  // trade: Details of trade that happened. (deprecated, use trades instead)
+  Trade trade = 1 [deprecated = true];
+  // trades: Details of trades that happened in a given block.
+  repeated Trade trades = 2;
+  // height: Blockchain height at which the trades happened.
+  uint64 height = 3;
 }
 
 // Trade: Single trade details.
@@ -170,6 +178,20 @@ message Trade {
   bolt.common.partners.v1.Partner originator = 11;
   // tx_id: The transaction id associated with the trade.
   string tx_id = 12;
+  // swap_type: The type of swap - buy or sell.
+  SwapType swap_type = 13;
+  // base_liquidity: Total BASE liquidity in the pool after the trade.
+  bolt.assets.v1.Balance base_liquidity = 14;
+}
+
+//  SwapType: Enum representing the type of swap.
+enum SwapType {
+  //  SWAP_TYPE_UNSPECIFIED: Unknown swap type.
+  SWAP_TYPE_UNSPECIFIED = 0;
+  //  SWAP_TYPE_BUY: Swap buy type.
+  SWAP_TYPE_BUY = 1;
+  //  SWAP_TYPE_SELL: Swap sell type.
+  SWAP_TYPE_SELL = 2;
 }
 
 // Pool: Description of the single liquidity pool.
