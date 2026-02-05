@@ -45,10 +45,10 @@ message CreateOrderRequest {
 enum OrderSide {
   // Order side is not specified - should never be used
   ORDER_SIDE_UNSPECIFIED = 0;
-  // Provided amount is the BASE asset
-  ORDER_SIDE_BASE = 1;
-  // Provided amount is the QUOTE asset
-  ORDER_SIDE_QUOTE = 2;
+  // Order is a BUY order.
+  ORDER_SIDE_BUY = 1;
+  // Order is a SELL order.
+  ORDER_SIDE_SELL = 2;
 }
 
 // Created order kind
