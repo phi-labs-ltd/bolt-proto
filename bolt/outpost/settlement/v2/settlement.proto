@@ -139,10 +139,14 @@ message SubscribeTradesRequest {}
 
 // SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
 message SubscribeTradesResponse {
-  // trade: Details of trade that happened.
-  Trade trade = 1;
+  // trade: Details of trade that happened. (deprecated, use trades instead)
+  Trade trade = 1 [deprecated = true];
+  // trades: Details of trades that happened in a given block.
+  repeated Trade trades = 2;
+  // height: Blockchain height at which the trades happened.
+  uint64 height = 3;
   // base_liquidity: Total BASE liquidity in the pools after the trade.
-  repeated bolt.assets.v1.Balance base_liquidity = 2;
+  repeated bolt.assets.v1.Balance base_liquidity = 4;
 }
 
 // Trade: Single trade details.
