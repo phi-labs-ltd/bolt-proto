@@ -367,15 +367,29 @@ message SwapSellResponse {
 // Rebalance attempts to sell base tokens to reach a minimum base liquidity in the pool.
 // If the pool's base liquidity is already at the minimum threshold, it returns the base balance unchanged.
 // Otherwise, it calculates how much base can be sold while respecting the pool's quote liquidity constraints.
+//
+// Token routing:
+// - Quote output from swap -> quote_cex_address (or receiver if not specified)
+// - Leftover base tokens not swapped -> base_cex_address (or receiver if not specified)
+// - Base output from swap (if any) -> receiver
 message RebalanceSwapSellRequest {
   // want_out: The quote asset the user wants to receive. e.g. USDT
   string want_out = 1;
-  // input: The amount of asset to potentially swap. Surplus will be returned, in case it is not needed to maintain the minimum threshold.
+  // input: The amount of base asset to potentially swap. Any portion not needed to reach min_base_threshold
+  // will be transferred to base_cex_address.
   Asset input = 2;
   // The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
-  // receiver: The address who will receive the swapped asset. If empty, defaults to tx sender.
+  // receiver: The address who will receive base output from swap (if any). Also serves as the default
+  // destination for CEX transfers if base_cex_address/quote_cex_address are not specified.
+  // If empty, defaults to tx sender.
   string receiver = 4;
+  // base_cex_address: The CEX address where leftover base tokens (not swapped) should be transferred.
+  // If empty, defaults to receiver.
+  string base_cex_address = 5;
+  // quote_cex_address: The CEX address where quote output from swap should be transferred.
+  // If empty, defaults to receiver.
+  string quote_cex_address = 6;
 }
 
 // SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
