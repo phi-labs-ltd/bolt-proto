@@ -364,33 +364,36 @@ message SwapSellResponse {
   string trade_id = 4;
 }
 
-// Rebalance attempts to sell base tokens to reach a minimum base liquidity in the pool.
-// If the pool's base liquidity is already at the minimum threshold, it returns the base balance unchanged.
-// Otherwise, it calculates how much base can be sold while respecting the pool's quote liquidity constraints.
+// RebalanceSwapSellRequest: Sells base tokens and sends quote proceeds and base surplus to their
+// respective receiver addresses. If the pool's base liquidity is already at the minimum threshold,
+// the full input is returned to the base receiver unchanged.
 message RebalanceSwapSellRequest {
-  // want_out: The quote asset the user wants to receive. e.g. USDT
+  // want_out: The quote asset the sender wants to receive. e.g. USDT
   string want_out = 1;
   // input: The amount of asset to potentially swap. Surplus will be returned, in case it is not needed to maintain the minimum threshold.
   Asset input = 2;
-  // The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
+  // min_base_threshold: The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
-  // base_receiver_address: The address who will receive the base asset. If empty, defaults to tx sender.
-  string base_receiver_address = 4;
-  // quote_receiver_address: The address who will receive the quote asset. If empty, defaults to tx sender.
-  string quote_receiver_address = 5;
+  // quote_receiver_address: The address that will receive the quote asset. If empty, defaults to tx sender.
+  string quote_receiver_address = 4;
+  // base_receiver_address: The address that will receive the base asset. If empty, defaults to tx sender.
+  string base_receiver_address = 5;
 }
 
-// SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
+// RebalanceSwapSellResponse: Response to the RebalanceSwapSellRequest. In addition to this
+// response, a RebalanceSwapSell event is emitted on-chain for every outcome — including skip
+// paths where no swap occurs (e.g. threshold already met, empty quote liquidity, min quote
+// output not met).
 message RebalanceSwapSellResponse {
-  // quote_out: The amount of quote asset the user received.
+  // quote_out: The amount of quote asset sent to the quote receiver.
   Asset quote_out = 1;
   // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
   string spot_price = 2;
-  // fee: The fee charged for the swap. includes protocol fees and lp fees
+  // fee: The fee charged for the swap. Includes protocol fees and lp fees.
   Asset fee = 3;
   // trade_id: The id of the trade. e.g. tx hash
   string trade_id = 4;
-  // base_used: The used portion of the base asset received by the user after rebalancing operations.
+  // base_used: The portion of the input base asset that was actually sold. The surplus is sent to the base receiver.
   Asset base_used = 5;
 }
 
