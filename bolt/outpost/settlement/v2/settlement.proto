@@ -368,13 +368,16 @@ message SwapSellResponse {
 // respective receiver addresses. If the pool's base liquidity is already at the minimum threshold,
 // the full input is returned to the base receiver unchanged.
 message RebalanceSwapSellRequest {
-  // want_out: The quote asset the sender wants to receive. e.g. USDT
+  // want_out: The quote asset/denom desired as the swap output, which will be sent to
+  // quote_receiver_address (which may be different from the tx sender).
   string want_out = 1;
-  // input: The amount of asset to potentially swap. Surplus will be returned, in case it is not needed to maintain the minimum threshold.
+  // input: The amount of base asset to potentially swap. Any unsold base surplus that is not
+  // needed to maintain the minimum threshold is returned to base_receiver_address (not
+  // necessarily the tx sender).
   Asset input = 2;
   // min_base_threshold: The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
-  // receiver: The address who will receive the swapped asset. If empty, defaults to tx sender.
+  // receiver (deprecated, use quote_receiver_address and base_receiver_address instead): The address who will receive the swapped asset. If empty, defaults to tx sender.
   string receiver = 4 [deprecated = true];
   // quote_receiver_address: The address that will receive the quote asset. If empty, defaults to tx sender.
   string quote_receiver_address = 5;
