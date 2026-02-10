@@ -374,8 +374,10 @@ message RebalanceSwapSellRequest {
   Asset input = 2;
   // The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
-  // receiver: The address who will receive the swapped asset. If empty, defaults to tx sender.
-  string receiver = 4;
+  // base_receiver_address: The address who will receive the base asset. If empty, defaults to tx sender.
+  string base_receiver_address = 4;
+  // quote_receiver_address: The address who will receive the quote asset. If empty, defaults to tx sender.
+  string quote_receiver_address = 5;
 }
 
 // SwapSellResponse: Response to the SwapSellRequest. Contains information about the swap.
