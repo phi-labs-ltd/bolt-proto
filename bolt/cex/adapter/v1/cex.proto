@@ -45,9 +45,9 @@ message CreateOrderRequest {
 enum OrderSide {
   // Order side is not specified - should never be used
   ORDER_SIDE_UNSPECIFIED = 0;
-  // A BUY order.
+  // A BUY order which involves buying the BASE(output) asset with QUOTE(input) asset.
   ORDER_SIDE_BUY = 1;
-  // A SELL order.
+  // A SELL order which involves selling the BASE(input) asset with QUOTE(quote) asset.
   ORDER_SIDE_SELL = 2;
 }
 
