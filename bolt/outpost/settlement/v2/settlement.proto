@@ -400,6 +400,10 @@ message RebalanceSwapSellResponse {
   string trade_id = 4;
   // base_used: The portion of the input base asset that was actually sold. The surplus is sent to the base receiver.
   Asset base_used = 5;
+  // Machine-readable status code: 6000 = swap executed, 6001+ = skip (threshold met, etc.).
+  uint64 status = 6;
+  // Base asset returned to the sender (remainder after swap, or full amount on skip paths).
+  Asset base_out = 1;
 }
 
 // Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
@@ -421,6 +425,8 @@ message RebalanceWithdrawSharesResponse {
   string base_liquidity = 2;
   // trade_id: The id of the trade. e.g. tx hash
   string trade_id = 3;
+  // Machine-readable status code: 6000 = swap executed, 6001+ = skip (threshold met, etc.).
+  uint64 status = 4;
 }
 
 // DepositBaseRequest: Request to deposit base asset. Should be invoked by the liquidity provider to deposit the base asset.
