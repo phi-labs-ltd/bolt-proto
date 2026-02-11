@@ -385,9 +385,9 @@ enum RebalanceStatusType {
   // LP shares are zero.
   REBALANCE_STATUS_TYPE_NO_WITHDRAWABLE_BASE_SHARES = 8;
   // Sender provided a zero-value base coin
-  REBALANCE_ZERO_BASE_INPUT_COIN = 9;
+  REBALANCE_STATUS_TYPE_ZERO_BASE_INPUT_COIN = 9;
   // Sender provided a nonzero coin but zero base_amount.
-  REBALANCE_ZERO_BASE_INPUT_AMOUNT = 10;
+  REBALANCE_STATUS_TYPE_ZERO_BASE_INPUT_AMOUNT = 10;
 }
 
 // RebalanceSwapSellRequest: Sells base tokens and sends quote proceeds and base surplus to their
