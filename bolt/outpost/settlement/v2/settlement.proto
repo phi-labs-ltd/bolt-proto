@@ -366,14 +366,23 @@ message SwapSellResponse {
 
 // Machine-readable status codes emitted by on-chain rebalance operations.
 enum RebalanceStatusType {
+  // Unknown or unmapped status code.
   REBALANCE_STATUS_TYPE_UNSPECIFIED = 0;
+  // Swap-sell executed successfully; base tokens were sold for quote.
   REBALANCE_STATUS_TYPE_SWAP_SELL_EXECUTED = 1;
+  // Base within threshold — no swap needed.
   REBALANCE_STATUS_TYPE_MIN_THRESHOLD_MET = 2;
+  // Pool has no quote liquidity to sell.
   REBALANCE_STATUS_TYPE_EMPTY_QUOTE_LIQUIDITY = 3;
+  // Base output is below the minimum acceptable amount.
   REBALANCE_STATUS_TYPE_MIN_QUOTE_OUTPUT_NOT_MET = 4;
+  // LP shares withdrawn successfully; base tokens returned to the pool.
   REBALANCE_STATUS_TYPE_WITHDRAW_SHARES_EXECUTED = 5;
+  // Base below max threshold — no withdrawal needed.
   REBALANCE_STATUS_TYPE_MAX_THRESHOLD_MET = 6;
+  // Pool has no base liquidity to withdraw.
   REBALANCE_STATUS_TYPE_NO_BASE_LIQUIDITY = 7;
+  // LP shares are zero.
   REBALANCE_STATUS_TYPE_NO_WITHDRAWABLE_BASE_SHARES = 8;
 }
 
@@ -390,7 +399,7 @@ message RebalanceSwapSellRequest {
   Asset input = 2;
   // min_base_threshold: The minimum base threshold for the base asset in the pool in rational values e.g. 5/3
   string min_base_threshold = 3;
-  // receiver (deprecated, use quote_receiver_address and base_receiver_address instead): The address who will receive the swapped asset. If empty, defaults to tx sender.
+  // receiver (DEPRECATED, use quote_receiver_address and base_receiver_address instead): The address who will receive the swapped asset. If empty, defaults to tx sender.
   string receiver = 4 [deprecated = true];
   // quote_receiver_address: The address that will receive the quote asset. If empty, defaults to tx sender.
   string quote_receiver_address = 5;
@@ -398,12 +407,11 @@ message RebalanceSwapSellRequest {
   string base_receiver_address = 6;
 }
 
-// RebalanceSwapSellResponse: Response to the RebalanceSwapSellRequest. In addition to this
-// response, a RebalanceSwapSell event is emitted on-chain for every outcome — including skip
-// paths where no swap occurs (e.g. threshold already met, empty quote liquidity, min quote
-// output not met).
+// RebalanceSwapSellResponse: Response to the RebalanceSwapSellRequest.
+// Note: In addition to this response, a RebalanceSwapSell event is emitted on-chain for every outcome — including status
+// (skip paths where no swap occurs, e.g. threshold already met, empty quote liquidity, min quote output not met).
 message RebalanceSwapSellResponse {
-  // quote_out: The amount of quote asset sent to the quote receiver.
+  // quote_out: The amount of quote asset sent to the quote receiver address.
   Asset quote_out = 1;
   // spot_price: The spot price of the swap as shared by the oracle at the time of the swap.
   string spot_price = 2;
@@ -415,8 +423,8 @@ message RebalanceSwapSellResponse {
   Asset base_used = 5;
   // Rebalance status code (REBALANCE_STATUS_TYPE_SWAP_SELL_EXECUTED, etc.).
   RebalanceStatusType status = 6;
-  // Base asset returned to the sender (remainder after swap, or full amount on skip paths).
-  Asset base_out = 1;
+  // Base asset returned to the base receiver address (remainder after swap, or full amount on skip paths).
+  Asset base_out = 7;
 }
 
 // Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
@@ -431,6 +439,8 @@ message RebalanceWithdrawSharesRequest {
 }
 
 // RebalanceWithdrawSharesResponse: Response to the RebalanceWithdrawSharesRequest. Contains information about the rebalance withdraw shares.
+// Note: In addition to this response, a RebalanceWithdrawShares event is emitted on-chain for every outcome — including status
+// (skip paths where no withdraw occurs, e.g. threshold already met, empty base liquidity, etc.).
 message RebalanceWithdrawSharesResponse {
   // base_out: The amount of base asset the user received.
   Asset base_out = 1;
