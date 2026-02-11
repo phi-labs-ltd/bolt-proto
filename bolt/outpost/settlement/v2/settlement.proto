@@ -384,7 +384,7 @@ enum RebalanceStatusType {
   REBALANCE_STATUS_TYPE_NO_BASE_LIQUIDITY = 7;
   // LP shares are zero.
   REBALANCE_STATUS_TYPE_NO_WITHDRAWABLE_BASE_SHARES = 8;
-  // Sender provided a zero-value base coin
+  // Sender provided a zero-value base coin.
   REBALANCE_STATUS_TYPE_ZERO_BASE_INPUT_COIN = 9;
   // Sender provided a nonzero coin but zero base_amount.
   REBALANCE_STATUS_TYPE_ZERO_BASE_INPUT_AMOUNT = 10;
