@@ -3,8 +3,8 @@ syntax = "proto3";
 package bolt.outpost.settlement.v2;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/common/partners/v1/partners.proto";
 import "bolt/cex/adapter/v2/cex.proto";
+import "bolt/common/partners/v1/partners.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
