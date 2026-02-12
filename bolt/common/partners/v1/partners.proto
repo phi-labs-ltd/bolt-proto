@@ -12,4 +12,6 @@ enum Partner {
   PARTNER_BOLT_UI = 2;
   // FlowX partner integration
   PARTNER_FLOWX = 3;
+  // Aftermath partner integration
+  PARTNER_AFTERMATH = 4;
 }
