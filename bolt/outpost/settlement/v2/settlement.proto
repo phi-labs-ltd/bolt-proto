@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.outpost.settlement.v2;
 
 import "bolt/assets/v1/assets.proto";
+import "bolt/cex/adapter/v2/cex.proto";
 import "bolt/common/partners/v1/partners.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
@@ -405,10 +406,10 @@ message RebalanceSwapSellRequest {
   string min_base_threshold = 3;
   // receiver (DEPRECATED, use quote_receiver_address and base_receiver_address instead): The address who will receive the swapped asset. If empty, defaults to tx sender.
   string receiver = 4 [deprecated = true];
-  // quote_receiver_address: The address that will receive the quote asset. If empty, defaults to tx sender.
-  string quote_receiver_address = 5;
-  // base_receiver_address: The address that will receive the base asset. If empty, defaults to tx sender.
-  string base_receiver_address = 6;
+  // quote_receiver_address: The address (includes optional memo) that will receive the quote asset.
+  bolt.cex.adapter.v2.DepositAddress quote_receiver_address = 5;
+  // base_receiver_address: The address (includes optional memo)  that will receive the base asset.
+  bolt.cex.adapter.v2.DepositAddress base_receiver_address = 6;
 }
 
 // RebalanceSwapSellResponse: Response to the RebalanceSwapSellRequest.
@@ -438,8 +439,8 @@ message RebalanceWithdrawSharesRequest {
   string want_out = 1;
   // The maximum base threshold for the base asset in the pool in rational values e.g. 5/3
   string max_base_threshold = 2;
-  // receiver: The address who will receive the withdrawn base asset. If empty, defaults to tx sender.
-  string receiver = 3;
+  // receiver: The address (includes optional memo)  who will receive the withdrawn base asset.
+  bolt.cex.adapter.v2.DepositAddress receiver = 3;
 }
 
 // RebalanceWithdrawSharesResponse: Response to the RebalanceWithdrawSharesRequest. Contains information about the rebalance withdraw shares.
