@@ -9,5 +9,3 @@ lint:
 breaking:
   use:
     - FILE
-  ignore:
-    - bolt/outpost/settlement/v2/settlement.proto
