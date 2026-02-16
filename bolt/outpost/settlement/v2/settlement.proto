@@ -36,6 +36,8 @@ service PublicSettlementService {
 message GetPoolRequest {
   // pool_identifier: The pool to fetch.
   string pool_identifier = 1;
+  // field_mask: Optional. Fields to include in the GetPoolResponse. If not set, `unclaimed_lp_fees` will not be included. Explicitly, set `unclaimed_lp_fees` in the field mask to receive the amount of unclaimed liquidity provider fees in the pool.
+  optional google.protobuf.FieldMask field_mask = 2;
 }
 
 // GetPoolResponse: Response to the GetPoolRequest.
@@ -49,6 +51,8 @@ message GetPoolResponse {
 message GetPoolByBaseAssetRequest {
   // base_asset: BASE asset we want the fetched pool to manage.
   string base_asset = 1;
+  // field_mask: Optional. Fields to include in the GetPoolResponse. If not set, `unclaimed_lp_fees` will not be included. Explicitly, set `unclaimed_lp_fees` in the field mask to receive the amount of unclaimed liquidity provider fees in the pool.
+  optional google.protobuf.FieldMask field_mask = 2;
 }
 
 // GetPoolByBaseAssetResponse: Response to the GetPoolByBaseAssetRequest.
@@ -58,7 +62,10 @@ message GetPoolByBaseAssetResponse {
 }
 
 // GetPoolsRequest: Request to query pools managed by this service.
-message GetPoolsRequest {}
+message GetPoolsRequest {
+  // field_mask: Optional. Fields to include in the GetPoolResponse. If not set, `unclaimed_lp_fees` will not be included. Explicitly, set `unclaimed_lp_fees` in the field mask to receive the amount of unclaimed liquidity provider fees in the pool.
+  optional google.protobuf.FieldMask field_mask = 1;
+}
 
 // GetPoolsResponse: Response to the GetPoolsRequest.
 message GetPoolsResponse {
