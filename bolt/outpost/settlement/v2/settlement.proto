@@ -432,6 +432,8 @@ message RebalanceSwapSellResponse {
   RebalanceStatusType status = 6;
   // Base asset returned to the base receiver address (remainder after swap, or full amount on skip paths).
   Asset base_out = 7;
+  // The pool's current base liquidity at that time.
+  Asset base_liquidity = 8;
 }
 
 // Rebalance attempts to withdraw base tokens to reach a maximum base liquidity in the pool.
