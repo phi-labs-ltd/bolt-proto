@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package bolt.analytics.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
+
+// Service collecting metrics form market maker service
+service MarketMakerAnalyticsService {
+  // Push market maker metrics
+  rpc PushMarketMakerMetrics(PushMarketMakerMetricsRequest) returns (PushMarketMakerMetricsResponse);
+}
+
+// Request to push market maker metrics
+// This would be called by market maker service to push metrics
+message PushMarketMakerMetricsRequest {
+  // Pool contract id this metrics adhere to
+  string transaction_id = 1;
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 2;
+  // Address of the market maker
+  string market_maker_address = 3;
+  // CEX id
+  string cex_id = 4;
+  // CEX transaction id
+  string cex_transaction_id = 5;
+  // Input asset balance
+  bolt.assets.v1.Balance input = 6;
+  // Output asset balance
+  bolt.assets.v1.Balance output = 7;
+  // Outpost id
+  string outpost = 8;
+}
+
+// Response to PushMarketMakerMetrics
+message PushMarketMakerMetricsResponse {
+  // Success status
+  bool success = 1;
+}
