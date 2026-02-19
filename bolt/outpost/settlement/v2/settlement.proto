@@ -108,8 +108,8 @@ message GetTradeRequest {
 
 // GetTradeResponse: Response for GetTradeRequest.
 message GetTradeResponse {
-  // trade: Fetched trade details.
-  Trade trade = 1 [deprecated = true];
+  reserved 1;
+  reserved "trade";
   // trades: Fetched trade details.
   repeated Trade trades = 2;
 }
@@ -150,8 +150,8 @@ message SubscribeTradesRequest {
 
 // SubscribeTradesResponse: Streamed response for SubscribeTradesRequest.
 message SubscribeTradesResponse {
-  // trade: Details of trade that happened. (deprecated, use trades instead)
-  Trade trade = 1 [deprecated = true];
+  reserved 1;
+  reserved "trade";
   // trades: Details of trades that happened in a given block.
   repeated Trade trades = 2;
   // height: Blockchain height at which the trades happened.
