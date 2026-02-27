@@ -57,6 +57,8 @@ message HistoryEntry {
     CryptoResponse cdc_response = 1;
     // An optional response from gate.io
     GateResponse gate_response = 2;
+    // An optional response from Binance
+    BinanceResponse binance_response = 3;
   }
 }
 
@@ -156,6 +158,32 @@ message GateResponse {
   string text = 16;
 }
 
+// Response variant specific to Binance.
+message BinanceResponse {
+  // Trade ID
+  int64 id = 1;
+  // Order ID
+  int64 order_id = 2;
+  // Trading pair symbol, e.g. "SUIUSDC"
+  string symbol = 3;
+  // Base asset price in quote currency
+  bolt.common.numeric.v1.Fraction price = 4;
+  // Base asset quantity
+  bolt.common.numeric.v1.Fraction qty = 5;
+  // Quote asset quantity
+  bolt.common.numeric.v1.Fraction quote_qty = 6;
+  // Commission amount
+  bolt.common.numeric.v1.Fraction commission = 7;
+  // Asset in which commission was charged
+  string commission_asset = 8;
+  // Trade timestamp, millisecond precision
+  google.protobuf.Timestamp time = 9;
+  // True if the order was on the buy side
+  bool is_buyer = 10;
+  // True if the order was the maker
+  bool is_maker = 11;
+}
+
 // Supported exchanges
 enum Exchange {
   // Exchange is not specified - should never be used
@@ -164,4 +192,6 @@ enum Exchange {
   EXCHANGE_CRYPTODOTCOM = 1;
   // Gate.io exchange
   EXCHANGE_GATEIO = 2;
+  // Binance exchange
+  EXCHANGE_BINANCE = 3;
 }
