@@ -17,7 +17,7 @@ service CEXClientService {
   // Queries for multiple pairs prices in batch.
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
   // Service to request latest order book for an instrument.
-  rpc GetBook(GetBookRequest) returns (GetBookResponse);
+  rpc GetOrderBook(GetOrderBookRequest) returns (GetOrderBookResponse);
 }
 
 // Request to query balances on CEX accounts for a specific exchange.
@@ -199,7 +199,7 @@ enum Exchange {
 }
 
 // Request order book snapshot for an instrument on an exchange.
-message GetBookRequest {
+message GetOrderBookRequest {
   // The exchange to request from.
   Exchange exchange = 1;
   // The instrument of interest.
@@ -207,7 +207,7 @@ message GetBookRequest {
 }
 
 // Response to an order book request.
-message GetBookResponse {
+message GetOrderBookResponse {
   // Specific shape for an order snapshot.
   OrderBookResponse order_book = 1;
 }
