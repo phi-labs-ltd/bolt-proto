@@ -16,7 +16,7 @@ service CEXClientService {
   rpc GetOrderHistory(GetOrderHistoryRequest) returns (GetOrderHistoryResponse);
   // Queries for multiple pairs prices in batch.
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
-  //
+  // Service to request latest order book for an instrument.
   rpc GetBook(GetBookRequest) returns(GetBookResponse);
 }
 
