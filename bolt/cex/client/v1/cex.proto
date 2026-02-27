@@ -198,38 +198,36 @@ enum Exchange {
   EXCHANGE_BINANCE = 3;
 }
 
-//
+// Request order book snapshot for an instrument on an exchange.
 message GetBookRequest {
-  //
+  // The exchange to request from.
   Exchange exchange = 1;
-  //
+  // The instrument of interest.
   bolt.assets.v1.Pair asset_pair = 2;
 }
 
-//
+// Response to an order book request.
 message GetBookResponse {
-  //
+  // Specific shape for an order snapshot.
   OrderBookResponse order_book = 1;
 }
 
-// 
+// Order book response for the requested instrument.
 message OrderBookResponse {
-  //
-  int64 id = 1;
-  //
-  int64 current = 2;
-  //
-  int64 update = 3;
-  //
-  repeated OrderBookLevel asks = 4;
-  //
-  repeated OrderBookLevel bids = 5;
+  // The timestamp of the response data being generated (in milliseconds).
+  int64 current_ms = 1;
+  // The timestamp of when the orderbook last changed (in milliseconds).
+  int64 update_ms = 2;
+  // Ask depth.
+  repeated OrderBookLevel asks = 3;
+  // Bid depth.
+  repeated OrderBookLevel bids = 4;
 }
 
-//
+// Price / quantity pair for bid or ask at a specific level.
 message OrderBookLevel {
-  //
+  // Level price.
   string price = 1;
-  //
+  // Level quantity.
   string quantity = 2;
 }
