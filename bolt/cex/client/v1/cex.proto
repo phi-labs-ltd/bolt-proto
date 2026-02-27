@@ -16,6 +16,8 @@ service CEXClientService {
   rpc GetOrderHistory(GetOrderHistoryRequest) returns (GetOrderHistoryResponse);
   // Queries for multiple pairs prices in batch.
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+  //
+  rpc GetBook(GetBookRequest) returns(GetBookResponse);
 }
 
 // Request to query balances on CEX accounts for a specific exchange.
@@ -194,4 +196,40 @@ enum Exchange {
   EXCHANGE_GATEIO = 2;
   // Binance exchange
   EXCHANGE_BINANCE = 3;
+}
+
+//
+message GetBookRequest {
+  //
+  Exchange exchange = 1;
+  //
+  bolt.assets.v1.Pair asset_pair = 2;
+}
+
+//
+message GetBookResponse {
+  //
+  OrderBookResponse order_book = 1;
+}
+
+// 
+message OrderBookResponse {
+  //
+  int64 id = 1;
+  //
+  int64 current = 2;
+  //
+  int64 update = 3;
+  //
+  repeated OrderBookLevel asks = 4;
+  //
+  repeated OrderBookLevel bids = 5;
+}
+
+//
+message OrderBookLevel {
+  //
+  string price = 1;
+  //
+  string quantity = 2;
 }
