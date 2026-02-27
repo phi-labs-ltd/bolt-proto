@@ -17,7 +17,7 @@ service CEXClientService {
   // Queries for multiple pairs prices in batch.
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
   // Service to request latest order book for an instrument.
-  rpc GetBook(GetBookRequest) returns(GetBookResponse);
+  rpc GetBook(GetBookRequest) returns (GetBookResponse);
 }
 
 // Request to query balances on CEX accounts for a specific exchange.
@@ -214,14 +214,10 @@ message GetBookResponse {
 
 // Order book response for the requested instrument.
 message OrderBookResponse {
-  // The timestamp of the response data being generated (in milliseconds).
-  int64 current_ms = 1;
-  // The timestamp of when the orderbook last changed (in milliseconds).
-  int64 update_ms = 2;
   // Ask depth.
-  repeated OrderBookLevel asks = 3;
+  repeated OrderBookLevel asks = 1;
   // Bid depth.
-  repeated OrderBookLevel bids = 4;
+  repeated OrderBookLevel bids = 2;
 }
 
 // Price / quantity pair for bid or ask at a specific level.
