@@ -322,6 +322,8 @@ service PrivateSettlementService {
   rpc Info(InfoRequest) returns (InfoResponse);
   // Endpoint to transfer assets to another address
   rpc Transfer(TransferRequest) returns (TransferResponse);
+  // Endpoint to get the balance of a specific asset in the settlement client wallet.
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
 }
 
 // SwapBuyRequest: Request to swap assets. Should be invoked by the user to swap assets.
@@ -545,6 +547,18 @@ message TransferRequest {
 message TransferResponse {
   // tx_id: The hash of the transfer transaction.
   string tx_id = 1;
+}
+
+// GetBalanceRequest: Request to get the balance of a specific asset in the settlement client wallet.
+message GetBalanceRequest {
+  // denom: The denomination of the asset to query. e.g. USDT
+  string denom = 1;
+}
+
+// GetBalanceResponse: Response to the GetBalanceRequest.
+message GetBalanceResponse {
+  // balance: The balance of the queried asset.
+  Asset balance = 1;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
