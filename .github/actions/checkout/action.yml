@@ -28,6 +28,6 @@ runs:
       with:
         sparse-checkout: ${{ inputs.sparse-checkout }}
 
-    - name: Setup Buf
+    - name: Authenticate with Buf registry
       shell: bash
       run: cargo login --registry buf "Bearer ${{ inputs.buf-token }}"
