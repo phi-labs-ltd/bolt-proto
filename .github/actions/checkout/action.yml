@@ -1,0 +1,33 @@
+name: "Checkout with Buf"
+description: "Checkout code and authenticate with the Buf schema registry"
+
+# Usage:
+#
+#   steps:
+#     - name: Checkout with Buf
+#       uses: phi-labs-ltd/bolt-proto/.github/actions/checkout@main
+#       with:
+#         buf-token: ${{ secrets.CARGO_REGISTRIES_BUF_TOKEN }}
+#         sparse-checkout: |
+#           src
+#           grpc
+
+inputs:
+  buf-token:
+    description: "Token for authenticating with the Buf cargo registry"
+    required: true
+  sparse-checkout:
+    description: "Cone patterns for sparse checkout (one per line). If not set, the full repo is checked out."
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: ${{ inputs.sparse-checkout }}
+
+    - name: Authenticate with Buf registry
+      shell: bash
+      run: cargo login --registry buf "Bearer ${{ inputs.buf-token }}"
