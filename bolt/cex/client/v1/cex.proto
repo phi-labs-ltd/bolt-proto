@@ -194,4 +194,8 @@ enum Exchange {
   EXCHANGE_GATEIO = 2;
   // Binance exchange
   EXCHANGE_BINANCE = 3;
+  // Bybit exchange
+  EXCHANGE_BYBIT = 4;
+  // OKX exchange
+  EXCHANGE_OKX = 5;
 }
