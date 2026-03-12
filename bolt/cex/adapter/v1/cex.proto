@@ -35,10 +35,24 @@ message CreateOrderRequest {
   bolt.assets.v1.Pair pair = 1;
   // Amount of the asset to be traded
   string amount = 2;
-  // Determines which assets is the traded amount
+  // Determines which asset is the traded amount
   OrderSide side = 3;
-  // Determines order kind
-  OrderKind kind = 4;
+  // Determines order kind and its parameters
+  oneof kind {
+    // Execute immediately at the best available price
+    MarketOrder market = 4;
+    // Execute only at the specified price
+    LimitOrder limit = 5;
+  }
+}
+
+// Market order — executes immediately at the best available price
+message MarketOrder {}
+
+// Limit order — executes only at the specified price
+message LimitOrder {
+  // The price at which to execute the order
+  string price = 1;
 }
 
 // Order side - determines if requested amount is the BASE or QUOTE
@@ -49,14 +63,6 @@ enum OrderSide {
   ORDER_SIDE_BUY = 1;
   // A SELL order which involves selling the BASE(input) asset with QUOTE(quote) asset.
   ORDER_SIDE_SELL = 2;
-}
-
-// Created order kind
-enum OrderKind {
-  // Order kind is not specified - should never be used
-  ORDER_KIND_UNSPECIFIED = 0;
-  // Market order
-  ORDER_KIND_MARKET = 1;
 }
 
 // Response to CreateOrderRequest
