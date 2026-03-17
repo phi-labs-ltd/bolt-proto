@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package bolt.outpost.market_ledger.v1;
 
+import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/partners/v1/partners.proto";
 import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
 import "google/protobuf/duration.proto";
@@ -54,6 +56,42 @@ message EngineConfig {
   repeated TimeoutStep timeout_ladder = 5;
 }
 
+// SwapEvent: A single swap event ingested from the on-chain pool.
+message SwapEvent {
+  // id: Unique on-chain event identifier: "{tx_digest}-{event_index}".
+  string id = 1;
+  // tx_id: Transaction digest that contained this swap.
+  string tx_id = 2;
+  // base_asset: Base asset of the pool (e.g. "SUI").
+  string base_asset = 3;
+  // height: Block height at which the swap was included.
+  uint64 height = 4;
+  // source: Pool identifier (source of the swap event).
+  string source = 5;
+  // sender: Wallet address that initiated the swap.
+  string sender = 6;
+  // input: Asset and amount sent into the pool.
+  bolt.assets.v1.Balance input = 7;
+  // output: Asset and amount received from the pool.
+  bolt.assets.v1.Balance output = 8;
+  // protocol_fee: Protocol fee taken on this swap (denominated in base asset).
+  bolt.assets.v1.Balance protocol_fee = 9;
+  // lp_fee: LP fee distributed to liquidity providers (denominated in base asset).
+  bolt.assets.v1.Balance lp_fee = 10;
+  // price: Execution price (base asset per quote unit).
+  bolt.common.numeric.v1.Fraction price = 11;
+  // base_liquidity: Pool's base asset liquidity depth at swap time.
+  bolt.assets.v1.Balance base_liquidity = 12;
+  // swap_type: Whether this was a buy (pool gives base) or sell (pool receives base).
+  bolt.outpost.settlement.v2.SwapType swap_type = 13;
+  // originator: The partner that originated the swap.
+  bolt.common.partners.v1.Partner originator = 14;
+  // timestamp: On-chain timestamp if present in the event; absent for older event formats.
+  optional google.protobuf.Timestamp timestamp = 15;
+  // created_at: When this row was inserted into the DB.
+  google.protobuf.Timestamp created_at = 16;
+}
+
 // HedgeOrder: A CEX hedge order placed for a market ledger cycle.
 message HedgeOrder {
   // id: DB primary key.
@@ -98,8 +136,8 @@ message MarketLedgerEvent {
   google.protobuf.Timestamp updated_at = 2;
   // created_at: When this ledger row was first created.
   google.protobuf.Timestamp created_at = 3;
-  // swaps accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
-  repeated bolt.outpost.settlement.v2.Trade swaps = 4;
+  // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
+  repeated SwapEvent swaps = 4;
   // orders: Hedge orders placed for this ledger cycle, ordered by level. Omitted unless requested via field_mask.
   repeated HedgeOrder orders = 5;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
