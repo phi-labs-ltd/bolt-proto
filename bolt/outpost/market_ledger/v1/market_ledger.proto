@@ -2,8 +2,10 @@ syntax = "proto3";
 
 package bolt.outpost.market_ledger.v1;
 
-import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
+import "google/protobuf/duration.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -30,70 +32,10 @@ service MarketLedgerService {
   rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
 }
 
-// AssetType: Known base assets supported by the MM engine.
-enum AssetType {
-  // ASSET_TYPE_UNSPECIFIED: Unknown asset type.
-  ASSET_TYPE_UNSPECIFIED = 0;
-  // ASSET_TYPE_SUI: SUI base asset.
-  ASSET_TYPE_SUI = 1;
-  // ASSET_TYPE_USDC: USDC base asset.
-  ASSET_TYPE_USDC = 2;
-}
-
-// Direction: MM position direction for which an engine config applies.
-enum Direction {
-  // DIRECTION_UNSPECIFIED: Unknown direction.
-  DIRECTION_UNSPECIFIED = 0;
-  // DIRECTION_LONG: MM is long (net sold base to pool; needs to buy on CEX).
-  DIRECTION_LONG = 1;
-  // DIRECTION_SHORT: MM is short (net bought base from pool; needs to sell on CEX).
-  DIRECTION_SHORT = 2;
-}
-
-// LedgerStatus: Lifecycle state of a market ledger cycle.
-enum LedgerStatus {
-  // LEDGER_STATUS_UNSPECIFIED: Unknown status.
-  LEDGER_STATUS_UNSPECIFIED = 0;
-  // LEDGER_STATUS_RUNNING: Active cycle — accumulating swaps and/or processing a hedge order.
-  LEDGER_STATUS_RUNNING = 1;
-  // LEDGER_STATUS_CLOSED: Hedge order reached a terminal state (filled, partial fill, or failed).
-  LEDGER_STATUS_CLOSED = 2;
-}
-
-// CexOrderStatus: Lifecycle status of a CEX hedge order.
-enum CexOrderStatus {
-  // CEX_ORDER_STATUS_UNSPECIFIED: Unknown status.
-  CEX_ORDER_STATUS_UNSPECIFIED = 0;
-  // CEX_ORDER_STATUS_PENDING: Order placed on CEX; awaiting fill.
-  CEX_ORDER_STATUS_PENDING = 1;
-  // CEX_ORDER_STATUS_PARTIAL_FILL: Order partially filled; terminal if remainder was cancelled.
-  CEX_ORDER_STATUS_PARTIAL_FILL = 2;
-  // CEX_ORDER_STATUS_FILLED: Order fully filled.
-  CEX_ORDER_STATUS_FILLED = 3;
-  // CEX_ORDER_STATUS_ERROR: CEX rejected or errored; response_msg may carry the reason.
-  CEX_ORDER_STATUS_ERROR = 4;
-  // CEX_ORDER_STATUS_CANCELLED: Order cancelled by MM; ledger resets for retry.
-  CEX_ORDER_STATUS_CANCELLED = 5;
-}
-
-// CexOrderType: CEX order execution strategy.
-enum CexOrderType {
-  // CEX_ORDER_TYPE_UNSPECIFIED: Unknown order type.
-  CEX_ORDER_TYPE_UNSPECIFIED = 0;
-  // CEX_ORDER_TYPE_LIMIT_BUY: Limit order to buy base asset.
-  CEX_ORDER_TYPE_LIMIT_BUY = 1;
-  // CEX_ORDER_TYPE_LIMIT_SELL: Limit order to sell base asset.
-  CEX_ORDER_TYPE_LIMIT_SELL = 2;
-  // CEX_ORDER_TYPE_SPOT_BUY: Spot (market) order to buy base asset.
-  CEX_ORDER_TYPE_SPOT_BUY = 3;
-  // CEX_ORDER_TYPE_SPOT_SELL: Spot (market) order to sell base asset.
-  CEX_ORDER_TYPE_SPOT_SELL = 4;
-}
-
 // TimeoutStep: One rung of the hedge timeout ladder.
 message TimeoutStep {
-  // delay: Seconds to wait after threshold is crossed before placing this step's order.
-  uint32 delay = 1;
+  // delay: Duration to wait after threshold is crossed before placing this step's order.
+  google.protobuf.Duration delay = 1;
   // strategy: Pricing strategy name (e.g. "profitable_vwap", "breakeven_vwap", "taker").
   string strategy = 2;
 }
@@ -101,51 +43,15 @@ message TimeoutStep {
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
 message EngineConfig {
   // asset: Asset this config applies to.
-  AssetType asset = 1;
+  string asset = 1;
   // direction: Position direction (Long or Short) this config applies to.
   Direction direction = 2;
-  // threshold: Minimum absolute delta before a hedge order is placed (decimal string).
-  string threshold = 3;
-  // hard_cap: Maximum absolute delta; forces hedging regardless of ladder timing (decimal string).
-  string hard_cap = 4;
+  // threshold: Minimum absolute delta before a hedge order is placed.
+  bolt.common.numeric.v1.Fraction threshold = 3;
+  // hard_cap: Maximum absolute delta; forces hedging regardless of ladder timing.
+  bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
-}
-
-// SwapEvent: A single swap event ingested from the on-chain pool.
-message SwapEvent {
-  // id: Unique on-chain event identifier: "{tx_digest}-{event_index}".
-  string id = 1;
-  // tx_id: Transaction digest that contained this swap.
-  string tx_id = 2;
-  // base_asset: Base asset of the pool (e.g. "SUI").
-  string base_asset = 3;
-  // height: Block height at which the swap was included.
-  uint64 height = 4;
-  // source: Pool identifier (source of the swap event).
-  string source = 5;
-  // sender: Wallet address that initiated the swap.
-  string sender = 6;
-  // input: Asset and amount sent into the pool.
-  bolt.assets.v1.Balance input = 7;
-  // output: Asset and amount received from the pool.
-  bolt.assets.v1.Balance output = 8;
-  // protocol_fee: Protocol fee taken on this swap (denominated in base asset).
-  bolt.assets.v1.Balance protocol_fee = 9;
-  // lp_fee: LP fee distributed to liquidity providers (denominated in base asset).
-  bolt.assets.v1.Balance lp_fee = 10;
-  // price: Execution price (base asset per quote unit) as a decimal string.
-  string price = 11;
-  // base_liquidity: Pool's base asset liquidity depth at swap time.
-  bolt.assets.v1.Balance base_liquidity = 12;
-  // swap_type: Whether this was a buy (pool gives base) or sell (pool receives base).
-  bolt.outpost.settlement.v2.SwapType swap_type = 13;
-  // originator: On-chain originator tag.
-  int32 originator = 14;
-  // timestamp: On-chain timestamp if present in the event; absent for older event formats.
-  optional google.protobuf.Timestamp timestamp = 15;
-  // created_at: When this row was inserted into the DB.
-  google.protobuf.Timestamp created_at = 16;
 }
 
 // HedgeOrder: A CEX hedge order placed for a market ledger cycle.
@@ -157,19 +63,19 @@ message HedgeOrder {
   // order_id: CEX-assigned order identifier.
   string order_id = 3;
   // asset: Base asset being hedged (e.g. "SUI").
-  AssetType asset = 4;
-  // price: Limit price at placement (base/quote, decimal string).
-  string price = 5;
-  // quantity: Base amount ordered (decimal string).
-  string quantity = 6;
-  // filled_amount: Base amount actually received so far (decimal string).
-  string filled_amount = 7;
-  // exec_amount: Quote committed at placement — quantity × price (decimal string).
-  string exec_amount = 8;
-  // avg_price: Volume-weighted average fill price; "0" until at least one fill (decimal string).
-  string avg_price = 9;
-  // residual: Unhedged base amount after cycle close — quantity − filled_amount (decimal string).
-  string residual = 10;
+  string asset = 4;
+  // price: Limit price at placement (base/quote).
+  bolt.common.numeric.v1.Fraction price = 5;
+  // quantity: Base amount ordered.
+  bolt.common.numeric.v1.Fraction quantity = 6;
+  // filled_amount: Base amount actually received so far.
+  bolt.common.numeric.v1.Fraction filled_amount = 7;
+  // exec_amount: Quote committed at placement — quantity × price.
+  bolt.common.numeric.v1.Fraction exec_amount = 8;
+  // avg_price: Volume-weighted average fill price; 0/1 until at least one fill.
+  bolt.common.numeric.v1.Fraction avg_price = 9;
+  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
+  bolt.common.numeric.v1.Fraction residual = 10;
   // level: Zero-based index into timeout_ladder for the step that produced this order.
   uint32 level = 11;
   // order_status: Lifecycle status of the CEX order.
@@ -186,34 +92,18 @@ message HedgeOrder {
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
 message MarketLedgerEvent {
-  // id: DB primary key of this ledger cycle row.
-  int64 id = 1;
-  // asset: Base asset (e.g. "SUI").
-  AssetType asset = 2;
-  // delta: Net signed position in base units; positive = MM long, negative = MM short (decimal string).
-  string delta = 3;
-  // vwap: Volume-weighted average price of the accumulated delta (decimal string).
-  string vwap = 4;
-  // status: Lifecycle state of this cycle.
-  LedgerStatus status = 5;
-  // previous_id: id of the previous cycle row; absent for the first cycle of this asset.
-  optional int64 previous_id = 6;
-  // previous_residual: Unhedged residual carried in from the previous cycle's partial fill (decimal string).
-  string previous_residual = 7;
-  // initial_height: Block height of the first swap in this cycle.
-  uint64 initial_height = 8;
-  // last_height: Block height of the most recent swap in this cycle.
-  uint64 last_height = 9;
+  // ledger: Current state of the ledger cycle for this asset.
+  MarketLedger ledger = 1;
   // updated_at: When this ledger row was last modified.
-  google.protobuf.Timestamp updated_at = 10;
+  google.protobuf.Timestamp updated_at = 2;
   // created_at: When this ledger row was first created.
-  google.protobuf.Timestamp created_at = 11;
-  // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
-  repeated SwapEvent swaps = 12;
+  google.protobuf.Timestamp created_at = 3;
+  // swaps accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
+  repeated bolt.outpost.settlement.v2.Trade swaps = 4;
   // orders: Hedge orders placed for this ledger cycle, ordered by level. Omitted unless requested via field_mask.
-  repeated HedgeOrder orders = 13;
+  repeated HedgeOrder orders = 5;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
-  repeated EngineConfig engine_configs = 14;
+  repeated EngineConfig engine_configs = 6;
 }
 
 // MarketLedger: A market ledger record returned by query RPCs (no swaps or orders attached).
@@ -221,17 +111,17 @@ message MarketLedger {
   // id: DB primary key.
   int64 id = 1;
   // asset: Base asset (e.g. "SUI").
-  AssetType asset = 2;
-  // delta: Net signed position in base units (decimal string).
-  string delta = 3;
-  // vwap: Volume-weighted average price of the accumulated delta (decimal string).
-  string vwap = 4;
+  string asset = 2;
+  // delta: Net signed position in base units.
+  bolt.common.numeric.v1.Fraction delta = 3;
+  // vwap: Volume-weighted average price of the accumulated delta.
+  bolt.common.numeric.v1.Fraction vwap = 4;
   // status: Lifecycle state of this cycle.
   LedgerStatus status = 5;
   // previous_id: id of the previous cycle row; absent for the first cycle of this asset.
   optional int64 previous_id = 6;
-  // previous_residual: Unhedged residual carried in from the previous cycle (decimal string).
-  string previous_residual = 7;
+  // previous_residual: Unhedged residual carried in from the previous cycle.
+  bolt.common.numeric.v1.Fraction previous_residual = 7;
   // initial_height: Block height of the first swap in this cycle.
   uint64 initial_height = 8;
   // last_height: Block height of the most recent swap in this cycle.
@@ -267,7 +157,7 @@ message UpsertEngineConfigResponse {
 // GetEngineConfigsForAssetRequest: Returns all configs for a given asset.
 message GetEngineConfigsForAssetRequest {
   // asset: Asset to query configs for.
-  AssetType asset = 1;
+  string asset = 1;
 }
 
 // GetEngineConfigsForAssetResponse: Returns up to two configs (one per direction) for the requested asset.
@@ -286,7 +176,7 @@ message GetEngineConfigsResponse {
 }
 
 // UpsertHedgeOrderRequest: Insert or update a hedge order identified by order_id.
-// swap_event_ids must not be empty. On INSERT (Pending), each swap must be unassigned
+// swap_ids must not be empty. On INSERT (Pending), each swap must be unassigned
 // and belong to the given ledger_id. On UPDATE (non-Pending), each swap must be
 // assigned to this order.
 message UpsertHedgeOrderRequest {
@@ -295,19 +185,19 @@ message UpsertHedgeOrderRequest {
   // order_id: CEX-assigned order identifier; used as the upsert key.
   string order_id = 2;
   // asset: Base asset being hedged.
-  AssetType asset = 3;
-  // price: Limit price at placement (decimal string).
-  string price = 4;
-  // quantity: Base amount ordered (decimal string).
-  string quantity = 5;
-  // filled_amount: Base amount filled so far (decimal string).
-  string filled_amount = 6;
-  // exec_amount: Quote committed at placement — quantity × price (decimal string).
-  string exec_amount = 7;
-  // avg_price: Volume-weighted average fill price; "0" until at least one fill (decimal string).
-  string avg_price = 8;
-  // residual: Unhedged base amount after close — quantity − filled_amount (decimal string).
-  string residual = 9;
+  string asset = 3;
+  // price: Limit price at placement.
+  bolt.common.numeric.v1.Fraction price = 4;
+  // quantity: Base amount ordered.
+  bolt.common.numeric.v1.Fraction quantity = 5;
+  // filled_amount: Base amount filled so far.
+  bolt.common.numeric.v1.Fraction filled_amount = 6;
+  // exec_amount: Quote committed at placement — quantity × price.
+  bolt.common.numeric.v1.Fraction exec_amount = 7;
+  // avg_price: Volume-weighted average fill price; 0/1 until at least one fill.
+  bolt.common.numeric.v1.Fraction avg_price = 8;
+  // residual: Unhedged base amount after close — quantity − filled_amount.
+  bolt.common.numeric.v1.Fraction residual = 9;
   // level: Timeout-ladder step that produced this order: "0"=profitable_vwap … "4"=taker.
   uint32 level = 10;
   // order_status: New status to record.
@@ -316,8 +206,8 @@ message UpsertHedgeOrderRequest {
   CexOrderType order_type = 12;
   // response_msg: CEX response payload as JSON string; optional.
   optional string response_msg = 13;
-  // swap_event_ids: IDs of swap events claimed by or already assigned to this order.
-  repeated string swap_event_ids = 14;
+  // swap_ids: Swap IDs claimed by or already assigned to this order.
+  repeated string swap_ids = 14;
 }
 
 // UpsertHedgeOrderResponse: Returns the inserted/updated order and the active ledger id.
@@ -331,7 +221,7 @@ message UpsertHedgeOrderResponse {
 // GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
 message GetOpenMarketLedgerRequest {
   // asset: Base asset to query (e.g. "SUI").
-  AssetType asset = 1;
+  string asset = 1;
 }
 
 // GetOpenMarketLedgerResponse: Returns the running ledger, or absent if no running cycle exists.

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bolt.common.numeric.v1;
 
-// For representing irrational numbers.
+// For representing rational numbers.
 message Fraction {
   // The top bit
   int64 numerator = 1;

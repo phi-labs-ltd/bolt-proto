@@ -3,7 +3,7 @@
 ## Tooling
 
 - **Buf** enforces lint (`STANDARD`, `COMMENTS`, `FILE_LOWER_SNAKE_CASE`) and breaking-change detection (`FILE`)
-- Run `buf lint` before committing; all violations are errors
+- Run `buf format -w` then `buf lint` before committing; lint violations are errors
 
 ---
 
@@ -14,6 +14,8 @@
 - File names: `lower_snake_case.proto`
 - One file per service; place at `bolt/{domain}/{subdomain}/v{N}/{name}.proto`
 - Package must match the directory path exactly: `bolt/outpost/market_ledger/v1/` → `package bolt.outpost.market_ledger.v1;`
+- Enums live in `types.proto` in the same directory as the service file; import via `"bolt/{domain}/{subdomain}/v{N}/types.proto"`
+- Asset identifiers are `string` (e.g. `"SUI"`, `"USDC"`) — never a hardcoded enum; new assets must not require a proto release
 
 ### Enums
 
@@ -39,7 +41,7 @@
 ### Fields
 
 - Names: `snake_case`
-- Decimal/financial values: `string` (supports arbitrary precision and rational notation)
+- Decimal/financial values: `bolt.common.numeric.v1.Fraction` — never plain `string`; avoids cross-system decimal ambiguity
 - Block heights: `uint64`
 - DB primary keys: `int64 id`; foreign keys: `int64 {table}_id`
 - External system IDs (CEX order IDs, tx digests): `string`
