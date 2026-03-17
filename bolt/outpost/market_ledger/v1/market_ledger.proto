@@ -17,7 +17,7 @@ service MarketLedgerService {
   // Inserts or replaces the engine config for a single (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
   // Returns all configs for the given asset (both Long and Short directions).
-  rpc GetEngineConfig(GetEngineConfigRequest) returns (GetEngineConfigResponse);
+  rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
   // Returns all engine configs across all assets and directions.
   rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
   // Inserts or updates a hedge order keyed on order_id.
@@ -30,7 +30,7 @@ service MarketLedgerService {
   rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
 }
 
-// AssetType: Asset discriminant used in engine config keys.
+// AssetType: Known base assets supported by the MM engine.
 enum AssetType {
   // ASSET_TYPE_UNSPECIFIED: Unknown asset type.
   ASSET_TYPE_UNSPECIFIED = 0;
@@ -134,8 +134,8 @@ message SwapEvent {
   bolt.assets.v1.Balance protocol_fee = 9;
   // lp_fee: LP fee distributed to liquidity providers (denominated in base asset).
   bolt.assets.v1.Balance lp_fee = 10;
-  // price: Execution price (base asset per quote unit).
-  bolt.assets.v1.Balance price = 11;
+  // price: Execution price (base asset per quote unit) as a decimal string.
+  string price = 11;
   // base_liquidity: Pool's base asset liquidity depth at swap time.
   bolt.assets.v1.Balance base_liquidity = 12;
   // swap_type: Whether this was a buy (pool gives base) or sell (pool receives base).
@@ -157,7 +157,7 @@ message HedgeOrder {
   // order_id: CEX-assigned order identifier.
   string order_id = 3;
   // asset: Base asset being hedged (e.g. "SUI").
-  string asset = 4;
+  AssetType asset = 4;
   // price: Limit price at placement (base/quote, decimal string).
   string price = 5;
   // quantity: Base amount ordered (decimal string).
@@ -170,8 +170,8 @@ message HedgeOrder {
   string avg_price = 9;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount (decimal string).
   string residual = 10;
-  // level: Timeout-ladder step that produced this order: "0"=profitable_vwap … "4"=taker.
-  string level = 11;
+  // level: Zero-based index into timeout_ladder for the step that produced this order.
+  uint32 level = 11;
   // order_status: Lifecycle status of the CEX order.
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
@@ -189,7 +189,7 @@ message MarketLedgerEvent {
   // id: DB primary key of this ledger cycle row.
   int64 id = 1;
   // asset: Base asset (e.g. "SUI").
-  string asset = 2;
+  AssetType asset = 2;
   // delta: Net signed position in base units; positive = MM long, negative = MM short (decimal string).
   string delta = 3;
   // vwap: Volume-weighted average price of the accumulated delta (decimal string).
@@ -201,9 +201,9 @@ message MarketLedgerEvent {
   // previous_residual: Unhedged residual carried in from the previous cycle's partial fill (decimal string).
   string previous_residual = 7;
   // initial_height: Block height of the first swap in this cycle.
-  int64 initial_height = 8;
+  uint64 initial_height = 8;
   // last_height: Block height of the most recent swap in this cycle.
-  int64 last_height = 9;
+  uint64 last_height = 9;
   // updated_at: When this ledger row was last modified.
   google.protobuf.Timestamp updated_at = 10;
   // created_at: When this ledger row was first created.
@@ -221,7 +221,7 @@ message MarketLedger {
   // id: DB primary key.
   int64 id = 1;
   // asset: Base asset (e.g. "SUI").
-  string asset = 2;
+  AssetType asset = 2;
   // delta: Net signed position in base units (decimal string).
   string delta = 3;
   // vwap: Volume-weighted average price of the accumulated delta (decimal string).
@@ -233,9 +233,9 @@ message MarketLedger {
   // previous_residual: Unhedged residual carried in from the previous cycle (decimal string).
   string previous_residual = 7;
   // initial_height: Block height of the first swap in this cycle.
-  int64 initial_height = 8;
+  uint64 initial_height = 8;
   // last_height: Block height of the most recent swap in this cycle.
-  int64 last_height = 9;
+  uint64 last_height = 9;
 }
 
 // SubscribeMarketLedgerRequest: Subscribe to live ledger state updates for all assets.
@@ -264,14 +264,14 @@ message UpsertEngineConfigResponse {
   EngineConfig config = 1;
 }
 
-// GetEngineConfigRequest: Returns all configs for a given asset.
-message GetEngineConfigRequest {
+// GetEngineConfigsForAssetRequest: Returns all configs for a given asset.
+message GetEngineConfigsForAssetRequest {
   // asset: Asset to query configs for.
   AssetType asset = 1;
 }
 
-// GetEngineConfigResponse: Returns up to two configs (one per direction) for the requested asset.
-message GetEngineConfigResponse {
+// GetEngineConfigsForAssetResponse: Returns up to two configs (one per direction) for the requested asset.
+message GetEngineConfigsForAssetResponse {
   // configs: Engine configs for the requested asset.
   repeated EngineConfig configs = 1;
 }
@@ -295,7 +295,7 @@ message UpsertHedgeOrderRequest {
   // order_id: CEX-assigned order identifier; used as the upsert key.
   string order_id = 2;
   // asset: Base asset being hedged.
-  string asset = 3;
+  AssetType asset = 3;
   // price: Limit price at placement (decimal string).
   string price = 4;
   // quantity: Base amount ordered (decimal string).
@@ -308,8 +308,8 @@ message UpsertHedgeOrderRequest {
   string avg_price = 8;
   // residual: Unhedged base amount after close — quantity − filled_amount (decimal string).
   string residual = 9;
-  // level: Timeout-ladder step: "0"=profitable_vwap … "4"=taker.
-  string level = 10;
+  // level: Timeout-ladder step that produced this order: "0"=profitable_vwap … "4"=taker.
+  uint32 level = 10;
   // order_status: New status to record.
   CexOrderStatus order_status = 11;
   // order_type: Execution strategy.
@@ -331,7 +331,7 @@ message UpsertHedgeOrderResponse {
 // GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
 message GetOpenMarketLedgerRequest {
   // asset: Base asset to query (e.g. "SUI").
-  string asset = 1;
+  AssetType asset = 1;
 }
 
 // GetOpenMarketLedgerResponse: Returns the running ledger, or absent if no running cycle exists.
