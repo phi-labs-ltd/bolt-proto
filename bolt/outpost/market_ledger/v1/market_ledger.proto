@@ -1,0 +1,302 @@
+syntax = "proto3";
+
+package bolt.outpost.market_ledger.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/partners/v1/partners.proto";
+import "bolt/outpost/market_ledger/v1/types.proto";
+import "bolt/outpost/settlement/v2/settlement.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+// MarketLedgerService: Internal MM service that tracks swap deltas, manages
+// hedge-order lifecycle, and streams live ledger state.
+service MarketLedgerService {
+  // Streams the current ledger snapshot (all assets) as the first message,
+  // then one message per block as new swaps are processed.
+  // field_mask paths "swaps" and/or "orders" opt in to those fields.
+  rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
+  // Inserts or replaces the engine config for a single (asset, direction) pair.
+  rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
+  // Returns all configs for the given asset (both Long and Short directions).
+  rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
+  // Returns all engine configs across all assets and directions.
+  rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
+  // Inserts or updates a hedge order keyed on order_id.
+  rpc UpsertHedgeOrder(UpsertHedgeOrderRequest) returns (UpsertHedgeOrderResponse);
+  // Returns the current Running ledger for the given asset, or absent if none exists.
+  rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
+  // Returns all Running ledgers across every asset, ordered by asset name.
+  rpc GetOpenMarketLedgers(GetOpenMarketLedgersRequest) returns (GetOpenMarketLedgersResponse);
+  // Returns the ledger with the given id.
+  rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
+}
+
+// TimeoutStep: One rung of the hedge timeout ladder.
+message TimeoutStep {
+  // delay: Duration to wait after threshold is crossed before placing this step's order.
+  google.protobuf.Duration delay = 1;
+  // strategy: Pricing strategy name (e.g. "profitable_vwap", "breakeven_vwap", "taker").
+  string strategy = 2;
+}
+
+// EngineConfig: Hedging parameters for a single (asset, direction) pair.
+message EngineConfig {
+  // asset: Asset this config applies to.
+  string asset = 1;
+  // direction: Position direction (Long or Short) this config applies to.
+  Direction direction = 2;
+  // threshold: Minimum absolute delta before a hedge order is placed.
+  bolt.common.numeric.v1.Fraction threshold = 3;
+  // hard_cap: Maximum absolute delta; forces hedging regardless of ladder timing.
+  bolt.common.numeric.v1.Fraction hard_cap = 4;
+  // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
+  repeated TimeoutStep timeout_ladder = 5;
+}
+
+// SwapEvent: A single swap event ingested from the on-chain pool.
+message SwapEvent {
+  // id: Unique on-chain event identifier: "{tx_digest}-{event_index}".
+  string id = 1;
+  // tx_id: Transaction digest that contained this swap.
+  string tx_id = 2;
+  // base_asset: Base asset of the pool (e.g. "SUI").
+  string base_asset = 3;
+  // height: Block height at which the swap was included.
+  uint64 height = 4;
+  // source: Pool identifier (source of the swap event).
+  string source = 5;
+  // sender: Wallet address that initiated the swap.
+  string sender = 6;
+  // input: Asset and amount sent into the pool.
+  bolt.assets.v1.Balance input = 7;
+  // output: Asset and amount received from the pool.
+  bolt.assets.v1.Balance output = 8;
+  // protocol_fee: Protocol fee taken on this swap (denominated in base asset).
+  bolt.assets.v1.Balance protocol_fee = 9;
+  // lp_fee: LP fee distributed to liquidity providers (denominated in base asset).
+  bolt.assets.v1.Balance lp_fee = 10;
+  // price: Execution price (base asset per quote unit).
+  bolt.common.numeric.v1.Fraction price = 11;
+  // base_liquidity: Pool's base asset liquidity depth at swap time.
+  bolt.assets.v1.Balance base_liquidity = 12;
+  // swap_type: Whether this was a buy (pool gives base) or sell (pool receives base).
+  bolt.outpost.settlement.v2.SwapType swap_type = 13;
+  // originator: The partner that originated the swap.
+  bolt.common.partners.v1.Partner originator = 14;
+  // timestamp: On-chain timestamp if present in the event; absent for older event formats.
+  optional google.protobuf.Timestamp timestamp = 15;
+  // created_at: When this row was inserted into the DB.
+  google.protobuf.Timestamp created_at = 16;
+}
+
+// HedgeOrder: A CEX hedge order placed for a market ledger cycle.
+message HedgeOrder {
+  // id: DB primary key.
+  int64 id = 1;
+  // ledger_id: FK to the parent bolt_market_ledgers row.
+  int64 ledger_id = 2;
+  // order_id: CEX-assigned order identifier.
+  string order_id = 3;
+  // asset: Base asset being hedged (e.g. "SUI").
+  string asset = 4;
+  // price: Limit price at placement (base/quote).
+  bolt.common.numeric.v1.Fraction price = 5;
+  // quantity: Base amount ordered.
+  bolt.common.numeric.v1.Fraction quantity = 6;
+  // filled_amount: Base amount executed so far (buy or sell).
+  bolt.common.numeric.v1.Fraction filled_amount = 7;
+  // exec_amount: Quote committed at placement — quantity × price.
+  bolt.common.numeric.v1.Fraction exec_amount = 8;
+  // avg_price: Volume-weighted average fill price; "0" ("0/1" as fraction) until first fill.
+  bolt.common.numeric.v1.Fraction avg_price = 9;
+  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
+  bolt.common.numeric.v1.Fraction residual = 10;
+  // level: Zero-based index into the timeout_ladder that produced this order.
+  uint32 level = 11;
+  // order_status: Lifecycle status of the CEX order.
+  CexOrderStatus order_status = 12;
+  // order_type: Execution strategy (limit/spot × buy/sell).
+  CexOrderType order_type = 13;
+  // filled_total: Total filled value.
+  bolt.common.numeric.v1.Fraction filled_total = 14;
+  // fee: Fee deducted for this order; absent until order is filled or closed.
+  optional bolt.common.numeric.v1.Fraction fee = 15;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
+  optional string fee_currency = 16;
+  // response_msg: CEX response payload as a JSON string; absent until a status response arrives.
+  optional string response_msg = 17;
+  // updated_at: When this order row was last updated.
+  google.protobuf.Timestamp updated_at = 18;
+  // created_at: When this order row was first inserted.
+  google.protobuf.Timestamp created_at = 19;
+}
+
+// MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
+message MarketLedgerEvent {
+  // ledger: Current state of the ledger cycle for this asset.
+  MarketLedger ledger = 1;
+  // updated_at: When this ledger row was last modified.
+  google.protobuf.Timestamp updated_at = 2;
+  // created_at: When this ledger row was first created.
+  google.protobuf.Timestamp created_at = 3;
+  // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
+  repeated SwapEvent swaps = 4;
+  // orders: Hedge orders placed for this ledger cycle, ordered by level. Omitted unless requested via field_mask.
+  repeated HedgeOrder orders = 5;
+  // engine_configs: Engine configs for this asset (up to two entries: one per direction).
+  repeated EngineConfig engine_configs = 6;
+}
+
+// MarketLedger: A market ledger record returned by query RPCs (no swaps or orders attached).
+message MarketLedger {
+  // id: DB primary key.
+  int64 id = 1;
+  // asset: Base asset (e.g. "SUI").
+  string asset = 2;
+  // delta: Net signed position in base units.
+  bolt.common.numeric.v1.Fraction delta = 3;
+  // vwap: Volume-weighted average price of the accumulated delta.
+  bolt.common.numeric.v1.Fraction vwap = 4;
+  // status: Lifecycle state of this cycle.
+  LedgerStatus status = 5;
+  // previous_id: id of the previous cycle row; absent for the first cycle of this asset.
+  optional int64 previous_id = 6;
+  // previous_residual: Unhedged residual carried in from the previous cycle.
+  bolt.common.numeric.v1.Fraction previous_residual = 7;
+  // initial_height: Block height of the first swap in this cycle.
+  uint64 initial_height = 8;
+  // last_height: Block height of the most recent swap in this cycle.
+  uint64 last_height = 9;
+}
+
+// SubscribeMarketLedgerRequest: Subscribe to live ledger state updates for all assets.
+message SubscribeMarketLedgerRequest {
+  // field_mask: When absent, swaps and orders are omitted from each event.
+  // Set paths to ["swaps"], ["orders"], or both to opt in.
+  optional google.protobuf.FieldMask field_mask = 1;
+}
+
+// SubscribeMarketLedgerResponse: Streaming response — first message is the current snapshot
+// (all assets), then one message per block as new swaps are processed.
+message SubscribeMarketLedgerResponse {
+  // events: One event per asset updated in this block, or all assets on the snapshot message.
+  repeated MarketLedgerEvent events = 1;
+}
+
+// UpsertEngineConfigRequest: Inserts or replaces the engine config for a single (asset, direction) pair.
+message UpsertEngineConfigRequest {
+  // config: The engine config to upsert.
+  EngineConfig config = 1;
+}
+
+// UpsertEngineConfigResponse: Returns the upserted config.
+message UpsertEngineConfigResponse {
+  // config: The upserted engine config.
+  EngineConfig config = 1;
+}
+
+// GetEngineConfigsForAssetRequest: Returns all configs for a given asset.
+message GetEngineConfigsForAssetRequest {
+  // asset: Asset to query configs for.
+  string asset = 1;
+}
+
+// GetEngineConfigsForAssetResponse: Returns up to two configs (one per direction) for the requested asset.
+message GetEngineConfigsForAssetResponse {
+  // configs: Engine configs for the requested asset.
+  repeated EngineConfig configs = 1;
+}
+
+// GetEngineConfigsRequest: Returns all engine configs across all assets and directions.
+message GetEngineConfigsRequest {}
+
+// GetEngineConfigsResponse: Returns every stored engine config across all (asset, direction) pairs.
+message GetEngineConfigsResponse {
+  // configs: All engine configs.
+  repeated EngineConfig configs = 1;
+}
+
+// UpsertHedgeOrderRequest: Insert or update a hedge order identified by order_id.
+// swap_ids must not be empty. On INSERT (Pending), each swap must be unassigned
+// and belong to the given ledger_id. On UPDATE (non-Pending), each swap must be
+// assigned to this order.
+message UpsertHedgeOrderRequest {
+  // ledger_id: Ledger cycle this order belongs to.
+  int64 ledger_id = 1;
+  // order_id: CEX-assigned order identifier; used as the upsert key.
+  string order_id = 2;
+  // asset: Base asset being hedged.
+  string asset = 3;
+  // price: Limit price at placement.
+  bolt.common.numeric.v1.Fraction price = 4;
+  // quantity: Base amount ordered.
+  bolt.common.numeric.v1.Fraction quantity = 5;
+  // filled_amount: Base amount executed so far (buy or sell); derived as quantity − left.
+  bolt.common.numeric.v1.Fraction filled_amount = 6;
+  // exec_amount: Quote committed at placement — quantity × price.
+  bolt.common.numeric.v1.Fraction exec_amount = 7;
+  // avg_price: Volume-weighted average fill price; "0" ("0/1" in fraction) until first fill.
+  bolt.common.numeric.v1.Fraction avg_price = 8;
+  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
+  bolt.common.numeric.v1.Fraction residual = 9;
+  // level: Zero-based index into the timeout_ladder that produced this order.
+  uint32 level = 10;
+  // order_status: New status to record.
+  CexOrderStatus order_status = 11;
+  // order_type: Execution strategy.
+  CexOrderType order_type = 12;
+  // filled_total: Total filled value.
+  bolt.common.numeric.v1.Fraction filled_total = 13;
+  // fee: Fee deducted for this order; absent until order is filled or closed.
+  optional bolt.common.numeric.v1.Fraction fee = 14;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
+  optional string fee_currency = 15;
+  // response_msg: CEX response payload as JSON string; optional.
+  optional string response_msg = 16;
+  // swap_ids: Swap IDs claimed by or already assigned to this order.
+  repeated string swap_ids = 17;
+}
+
+// UpsertHedgeOrderResponse: Returns the inserted/updated order and the active ledger id.
+message UpsertHedgeOrderResponse {
+  // order: The inserted or updated hedge order row.
+  HedgeOrder order = 1;
+  // new_ledger_id: The ledger id after the operation; new cycle id if one was created.
+  int64 new_ledger_id = 2;
+}
+
+// GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
+message GetOpenMarketLedgerRequest {
+  // asset: Base asset to query (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetOpenMarketLedgerResponse: Returns the running ledger, or absent if no running cycle exists.
+message GetOpenMarketLedgerResponse {
+  // ledger: The running ledger for the requested asset; absent if none.
+  optional MarketLedger ledger = 1;
+}
+
+// GetOpenMarketLedgersRequest: Returns all Running ledgers across every asset.
+message GetOpenMarketLedgersRequest {}
+
+// GetOpenMarketLedgersResponse: Returns all running ledgers, ordered by asset name.
+message GetOpenMarketLedgersResponse {
+  // ledgers: All running ledgers.
+  repeated MarketLedger ledgers = 1;
+}
+
+// GetMarketLedgerByIdRequest: Returns the ledger with the given id.
+message GetMarketLedgerByIdRequest {
+  // id: DB primary key of the ledger to fetch.
+  int64 id = 1;
+}
+
+// GetMarketLedgerByIdResponse: Returns the requested ledger.
+message GetMarketLedgerByIdResponse {
+  // ledger: The requested ledger.
+  MarketLedger ledger = 1;
+}

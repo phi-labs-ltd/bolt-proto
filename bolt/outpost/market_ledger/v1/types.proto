@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package bolt.outpost.market_ledger.v1;
+
+// Direction: MM position direction for which an engine config applies.
+enum Direction {
+  // DIRECTION_UNSPECIFIED: Unknown direction.
+  DIRECTION_UNSPECIFIED = 0;
+  // DIRECTION_LONG: MM is long (net sold base to pool; needs to buy on CEX).
+  DIRECTION_LONG = 1;
+  // DIRECTION_SHORT: MM is short (net bought base from pool; needs to sell on CEX).
+  DIRECTION_SHORT = 2;
+}
+
+// LedgerStatus: Lifecycle state of a market ledger cycle.
+enum LedgerStatus {
+  // LEDGER_STATUS_UNSPECIFIED: Unknown status.
+  LEDGER_STATUS_UNSPECIFIED = 0;
+  // LEDGER_STATUS_RUNNING: Active cycle — accumulating swaps and/or processing a hedge order.
+  LEDGER_STATUS_RUNNING = 1;
+  // LEDGER_STATUS_CLOSED: Hedge order reached a terminal state (filled, partial fill, or failed).
+  LEDGER_STATUS_CLOSED = 2;
+}
+
+// CexOrderStatus: Lifecycle status of a CEX hedge order.
+enum CexOrderStatus {
+  // CEX_ORDER_STATUS_UNSPECIFIED: Unknown status.
+  CEX_ORDER_STATUS_UNSPECIFIED = 0;
+  // CEX_ORDER_STATUS_PENDING: Order placed on CEX; awaiting fill.
+  CEX_ORDER_STATUS_PENDING = 1;
+  // CEX_ORDER_STATUS_PARTIALLY_FILLED: Order partially filled; terminal if remainder was cancelled.
+  CEX_ORDER_STATUS_PARTIALLY_FILLED = 2;
+  // CEX_ORDER_STATUS_FILLED: Order fully filled.
+  CEX_ORDER_STATUS_FILLED = 3;
+  // CEX_ORDER_STATUS_ERROR: CEX rejected or errored; response_msg may carry the reason.
+  CEX_ORDER_STATUS_ERROR = 4;
+  // CEX_ORDER_STATUS_CANCELLED: Order cancelled by MM; ledger resets for retry.
+  CEX_ORDER_STATUS_CANCELLED = 5;
+}
+
+// CexOrderType: CEX order execution strategy.
+enum CexOrderType {
+  // CEX_ORDER_TYPE_UNSPECIFIED: Unknown order type.
+  CEX_ORDER_TYPE_UNSPECIFIED = 0;
+  // CEX_ORDER_TYPE_LIMIT_BUY: Limit order to buy base asset.
+  CEX_ORDER_TYPE_LIMIT_BUY = 1;
+  // CEX_ORDER_TYPE_LIMIT_SELL: Limit order to sell base asset.
+  CEX_ORDER_TYPE_LIMIT_SELL = 2;
+  // CEX_ORDER_TYPE_SPOT_BUY: Spot (market) order to buy base asset.
+  CEX_ORDER_TYPE_SPOT_BUY = 3;
+  // CEX_ORDER_TYPE_SPOT_SELL: Spot (market) order to sell base asset.
+  CEX_ORDER_TYPE_SPOT_SELL = 4;
+}
