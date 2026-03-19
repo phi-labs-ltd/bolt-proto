@@ -66,7 +66,6 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 
 ### Imports
 
-- Order: Google standard library imports first, then local bolt imports
 - Use fully qualified paths: `"bolt/assets/v1/assets.proto"`
 
 ### Breaking Changes

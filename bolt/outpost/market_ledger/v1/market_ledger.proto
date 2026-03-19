@@ -106,26 +106,32 @@ message HedgeOrder {
   bolt.common.numeric.v1.Fraction price = 5;
   // quantity: Base amount ordered.
   bolt.common.numeric.v1.Fraction quantity = 6;
-  // filled_amount: Base amount actually received so far.
+  // filled_amount: Base amount executed so far (buy or sell).
   bolt.common.numeric.v1.Fraction filled_amount = 7;
   // exec_amount: Quote committed at placement — quantity × price.
   bolt.common.numeric.v1.Fraction exec_amount = 8;
-  // avg_price: Volume-weighted average fill price; 0/1 until at least one fill.
+  // avg_price: Volume-weighted average fill price; "0" ("0/1" as fraction) until first fill.
   bolt.common.numeric.v1.Fraction avg_price = 9;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 10;
-  // level: Zero-based index into timeout_ladder for the step that produced this order.
+  // level: Zero-based index into the timeout_ladder that produced this order.
   uint32 level = 11;
   // order_status: Lifecycle status of the CEX order.
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
   CexOrderType order_type = 13;
+  // filled_total: Total filled value.
+  bolt.common.numeric.v1.Fraction filled_total = 14;
+  // fee: Fee deducted for this order; absent until order is filled or closed.
+  optional bolt.common.numeric.v1.Fraction fee = 15;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
+  optional string fee_currency = 16;
   // response_msg: CEX response payload as a JSON string; absent until a status response arrives.
-  optional string response_msg = 14;
+  optional string response_msg = 17;
   // updated_at: When this order row was last updated.
-  google.protobuf.Timestamp updated_at = 15;
+  google.protobuf.Timestamp updated_at = 18;
   // created_at: When this order row was first inserted.
-  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp created_at = 19;
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -228,24 +234,30 @@ message UpsertHedgeOrderRequest {
   bolt.common.numeric.v1.Fraction price = 4;
   // quantity: Base amount ordered.
   bolt.common.numeric.v1.Fraction quantity = 5;
-  // filled_amount: Base amount filled so far.
+  // filled_amount: Base amount executed so far (buy or sell); derived as quantity − left.
   bolt.common.numeric.v1.Fraction filled_amount = 6;
   // exec_amount: Quote committed at placement — quantity × price.
   bolt.common.numeric.v1.Fraction exec_amount = 7;
-  // avg_price: Volume-weighted average fill price; 0/1 until at least one fill.
+  // avg_price: Volume-weighted average fill price; "0" ("0/1" in fraction) until first fill.
   bolt.common.numeric.v1.Fraction avg_price = 8;
-  // residual: Unhedged base amount after close — quantity − filled_amount.
+  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 9;
-  // level: Timeout-ladder step that produced this order: "0"=profitable_vwap … "4"=taker.
+  // level: Zero-based index into the timeout_ladder that produced this order.
   uint32 level = 10;
   // order_status: New status to record.
   CexOrderStatus order_status = 11;
   // order_type: Execution strategy.
   CexOrderType order_type = 12;
+  // filled_total: Total filled value.
+  bolt.common.numeric.v1.Fraction filled_total = 13;
+  // fee: Fee deducted for this order; absent until order is filled or closed.
+  optional bolt.common.numeric.v1.Fraction fee = 14;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
+  optional string fee_currency = 15;
   // response_msg: CEX response payload as JSON string; optional.
-  optional string response_msg = 13;
+  optional string response_msg = 16;
   // swap_ids: Swap IDs claimed by or already assigned to this order.
-  repeated string swap_ids = 14;
+  repeated string swap_ids = 17;
 }
 
 // UpsertHedgeOrderResponse: Returns the inserted/updated order and the active ledger id.

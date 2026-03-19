@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(buf lint:*)"
+      "Bash(buf lint:*)",
+      "Bash(buf format:*)"
     ]
   }
 }

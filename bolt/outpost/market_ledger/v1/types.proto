@@ -28,8 +28,8 @@ enum CexOrderStatus {
   CEX_ORDER_STATUS_UNSPECIFIED = 0;
   // CEX_ORDER_STATUS_PENDING: Order placed on CEX; awaiting fill.
   CEX_ORDER_STATUS_PENDING = 1;
-  // CEX_ORDER_STATUS_PARTIAL_FILL: Order partially filled; terminal if remainder was cancelled.
-  CEX_ORDER_STATUS_PARTIAL_FILL = 2;
+  // CEX_ORDER_STATUS_PARTIALLY_FILLED: Order partially filled; terminal if remainder was cancelled.
+  CEX_ORDER_STATUS_PARTIALLY_FILLED = 2;
   // CEX_ORDER_STATUS_FILLED: Order fully filled.
   CEX_ORDER_STATUS_FILLED = 3;
   // CEX_ORDER_STATUS_ERROR: CEX rejected or errored; response_msg may carry the reason.
