@@ -39,7 +39,7 @@ message TimeoutStep {
   // delay: Duration to wait after threshold is crossed before placing this step's order.
   google.protobuf.Duration delay = 1;
   // strategy: Pricing strategy used when placing the hedge order at this ladder step.
-  HedgeStrategy strategy = 2;
+  HedgeStrategyType strategy = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -54,7 +54,7 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
-  // spread_bps: Spread in basis points applied only to ladder steps whose strategy is HEDGE_STRATEGY_PROFITABLE_VWAP
+  // spread_bps: Spread in basis points applied only to ladder steps whose strategy is HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP
   // (typically the first step). The effective quote price is vwap * (1 + spread_bps / 10_000).
   // Ignored for all other strategies. Absent if not configured.
   optional uint32 spread_bps = 6;
@@ -121,7 +121,7 @@ message HedgeOrder {
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 10;
   // strategy: Pricing strategy used when this order was placed.
-  HedgeStrategy strategy = 11;
+  HedgeStrategyType strategy = 11;
   // order_status: Lifecycle status of the CEX order.
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
@@ -251,7 +251,7 @@ message UpsertHedgeOrderRequest {
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 9;
   // strategy: Pricing strategy used when this order was placed.
-  HedgeStrategy strategy = 10;
+  HedgeStrategyType strategy = 10;
   // order_status: New status to record.
   CexOrderStatus order_status = 11;
   // order_type: Execution strategy.

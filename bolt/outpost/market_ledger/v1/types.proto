@@ -38,22 +38,22 @@ enum CexOrderStatus {
   CEX_ORDER_STATUS_CANCELLED = 5;
 }
 
-// HedgeStrategy: Pricing strategy used when placing a CEX hedge order.
-enum HedgeStrategy {
-  // HEDGE_STRATEGY_UNSPECIFIED: Unknown strategy.
-  HEDGE_STRATEGY_UNSPECIFIED = 0;
-  // HEDGE_STRATEGY_PROFITABLE_VWAP: Price at vwap adjusted by spread_bps; only places if profitable.
-  HEDGE_STRATEGY_PROFITABLE_VWAP = 1;
-  // HEDGE_STRATEGY_BREAKEVEN_VWAP: Price at vwap; only places if at break-even or better.
-  HEDGE_STRATEGY_BREAKEVEN_VWAP = 2;
-  // HEDGE_STRATEGY_MID_PRICE: Price at mid-market price.
-  HEDGE_STRATEGY_MID_PRICE = 3;
-  // HEDGE_STRATEGY_BEST_BID_ASK: Price at best bid or ask.
-  HEDGE_STRATEGY_BEST_BID_ASK = 4;
-  // HEDGE_STRATEGY_CROSS_SPREAD: Price crosses the spread to guarantee fill.
-  HEDGE_STRATEGY_CROSS_SPREAD = 5;
-  // HEDGE_STRATEGY_TAKER: Market taker order; fills immediately at any price.
-  HEDGE_STRATEGY_TAKER = 6;
+// HedgeStrategyType: Pricing strategy used when placing a CEX hedge order.
+enum HedgeStrategyType {
+  // HEDGE_STRATEGY_TYPE_UNSPECIFIED: Unknown strategy.
+  HEDGE_STRATEGY_TYPE_UNSPECIFIED = 0;
+  // HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP: Price at vwap adjusted by spread_bps; only places if profitable.
+  HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP = 1;
+  // HEDGE_STRATEGY_TYPE_BREAKEVEN_VWAP: Price at vwap; only places if at break-even or better.
+  HEDGE_STRATEGY_TYPE_BREAKEVEN_VWAP = 2;
+  // HEDGE_STRATEGY_TYPE_MID_PRICE: Price at mid-market price.
+  HEDGE_STRATEGY_TYPE_MID_PRICE = 3;
+  // HEDGE_STRATEGY_TYPE_BEST_BID_ASK: Price at best bid or ask.
+  HEDGE_STRATEGY_TYPE_BEST_BID_ASK = 4;
+  // HEDGE_STRATEGY_TYPE_CROSS_SPREAD: Price crosses the spread to guarantee fill.
+  HEDGE_STRATEGY_TYPE_CROSS_SPREAD = 5;
+  // HEDGE_STRATEGY_TYPE_TAKER: Market taker order; fills immediately at any price.
+  HEDGE_STRATEGY_TYPE_TAKER = 6;
 }
 
 // CexOrderType: CEX order execution strategy.
