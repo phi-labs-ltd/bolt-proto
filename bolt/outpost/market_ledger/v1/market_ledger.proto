@@ -38,8 +38,8 @@ service MarketLedgerService {
 message TimeoutStep {
   // delay: Duration to wait after threshold is crossed before placing this step's order.
   google.protobuf.Duration delay = 1;
-  // strategy: Pricing strategy name (e.g. "profitable_vwap", "breakeven_vwap", "taker").
-  string strategy = 2;
+  // strategy: Pricing strategy used when placing the hedge order at this ladder step.
+  HedgeStrategyType strategy = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -54,6 +54,10 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
+  // spread_bps: Spread in basis points applied only to ladder steps whose strategy is HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP
+  // (typically the first step). The effective quote price is vwap * (1 + spread_bps / 10_000).
+  // Ignored for all other strategies. Absent if not configured.
+  optional uint32 spread_bps = 6;
 }
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
@@ -100,8 +104,10 @@ message HedgeOrder {
   int64 ledger_id = 2;
   // order_id: CEX-assigned order identifier.
   string order_id = 3;
-  // asset: Base asset being hedged (e.g. "SUI").
-  string asset = 4;
+  // base_asset: Base asset being hedged (e.g. "SUI").
+  string base_asset = 4;
+  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  string quote_asset = 20;
   // price: Limit price at placement (base/quote).
   bolt.common.numeric.v1.Fraction price = 5;
   // quantity: Base amount ordered.
@@ -114,8 +120,8 @@ message HedgeOrder {
   bolt.common.numeric.v1.Fraction avg_price = 9;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 10;
-  // level: Zero-based index into the timeout_ladder that produced this order.
-  uint32 level = 11;
+  // strategy: Pricing strategy used when this order was placed.
+  HedgeStrategyType strategy = 11;
   // order_status: Lifecycle status of the CEX order.
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
@@ -144,7 +150,7 @@ message MarketLedgerEvent {
   google.protobuf.Timestamp created_at = 3;
   // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
   repeated SwapEvent swaps = 4;
-  // orders: Hedge orders placed for this ledger cycle, ordered by level. Omitted unless requested via field_mask.
+  // orders: Hedge orders placed for this ledger cycle, in insertion order. Omitted unless requested via field_mask.
   repeated HedgeOrder orders = 5;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 6;
@@ -228,8 +234,10 @@ message UpsertHedgeOrderRequest {
   int64 ledger_id = 1;
   // order_id: CEX-assigned order identifier; used as the upsert key.
   string order_id = 2;
-  // asset: Base asset being hedged.
-  string asset = 3;
+  // base_asset: Base asset being hedged (e.g. "SUI").
+  string base_asset = 3;
+  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  string quote_asset = 18;
   // price: Limit price at placement.
   bolt.common.numeric.v1.Fraction price = 4;
   // quantity: Base amount ordered.
@@ -242,8 +250,8 @@ message UpsertHedgeOrderRequest {
   bolt.common.numeric.v1.Fraction avg_price = 8;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 9;
-  // level: Zero-based index into the timeout_ladder that produced this order.
-  uint32 level = 10;
+  // strategy: Pricing strategy used when this order was placed.
+  HedgeStrategyType strategy = 10;
   // order_status: New status to record.
   CexOrderStatus order_status = 11;
   // order_type: Execution strategy.
