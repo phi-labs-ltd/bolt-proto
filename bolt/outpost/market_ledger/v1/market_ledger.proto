@@ -54,6 +54,8 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
+  // spread_bps: Spread in basis points added to vwap for the profitable_vwap ladder step (level 0). Absent if not configured.
+  optional uint32 spread_bps = 6;
 }
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
