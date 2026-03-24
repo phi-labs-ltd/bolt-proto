@@ -104,8 +104,10 @@ message HedgeOrder {
   int64 ledger_id = 2;
   // order_id: CEX-assigned order identifier.
   string order_id = 3;
-  // asset: Base asset being hedged (e.g. "SUI").
-  string asset = 4;
+  // base_asset: Base asset being hedged (e.g. "SUI").
+  string base_asset = 4;
+  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  optional string quote_asset = 20;
   // price: Limit price at placement (base/quote).
   bolt.common.numeric.v1.Fraction price = 5;
   // quantity: Base amount ordered.
@@ -232,8 +234,10 @@ message UpsertHedgeOrderRequest {
   int64 ledger_id = 1;
   // order_id: CEX-assigned order identifier; used as the upsert key.
   string order_id = 2;
-  // asset: Base asset being hedged.
-  string asset = 3;
+  // base_asset: Base asset being hedged (e.g. "SUI").
+  string base_asset = 3;
+  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  string quote_asset = 18;
   // price: Limit price at placement.
   bolt.common.numeric.v1.Fraction price = 4;
   // quantity: Base amount ordered.
