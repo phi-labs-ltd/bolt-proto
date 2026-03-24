@@ -107,7 +107,7 @@ message HedgeOrder {
   // base_asset: Base asset being hedged (e.g. "SUI").
   string base_asset = 4;
   // quote_asset: Quote asset used for pricing (e.g. "USDT").
-  optional string quote_asset = 20;
+  string quote_asset = 20;
   // price: Limit price at placement (base/quote).
   bolt.common.numeric.v1.Fraction price = 5;
   // quantity: Base amount ordered.
