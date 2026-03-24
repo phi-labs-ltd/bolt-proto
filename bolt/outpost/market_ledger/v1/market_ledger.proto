@@ -54,7 +54,9 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
-  // spread_bps: Spread in basis points added to vwap for the profitable_vwap ladder step (level 0). Absent if not configured.
+  // spread_bps: Spread in basis points applied only to ladder steps whose strategy is "profitable_vwap"
+  // (typically the level-0/first step). The effective quote price is vwap * (1 + spread_bps / 10_000).
+  // Ignored for all other strategies. Absent if not configured.
   optional uint32 spread_bps = 6;
 }
 
