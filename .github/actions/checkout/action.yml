@@ -8,14 +8,33 @@ description: "Checkout code and authenticate with the Buf schema registry"
 #       uses: phi-labs-ltd/bolt-proto/.github/actions/checkout@main
 #       with:
 #         buf-token: ${{ secrets.CARGO_REGISTRIES_BUF_TOKEN }}
+#         kellnr-token: ${{ secrets.CARGO_REGISTRIES_KELLNR_TOKEN }}
 #         sparse-checkout: |
 #           src
 #           grpc
 
 inputs:
+  # Authentication tokens for cargo registries. If not set, the action will skip authentication for that registry.
   buf-token:
     description: "Token for authenticating with the Buf cargo registry"
-    required: true
+    required: false
+  kellnr-token:
+    description: "Token for authenticating with the Kellnr cargo registry"
+    required: false
+
+  # Passthrough values for actions/checkout
+  repository:
+    description: "The repository to checkout. If not set, the current repository is used."
+    required: false
+  ref:
+    description: "The branch, tag, or commit to checkout. If not set, the default branch is used."
+    required: false
+  token:
+    description: "The token to use for authentication. If not set, the GITHUB_TOKEN is used."
+    required: false
+  path:
+    description: "The directory to checkout the code into. If not set, the root of the workspace is used."
+    required: false
   sparse-checkout:
     description: "Cone patterns for sparse checkout (one per line). If not set, the full repo is checked out."
     required: false
@@ -24,10 +43,18 @@ runs:
   using: "composite"
   steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         sparse-checkout: ${{ inputs.sparse-checkout }}
+        repository: ${{ inputs.repository }}
+        ref: ${{ inputs.ref }}
+        token: ${{ inputs.token }}
+        path: ${{ inputs.path }}
 
     - name: Authenticate with Buf registry
       shell: bash
       run: cargo login --registry buf "Bearer ${{ inputs.buf-token }}"
+
+    - name: Authenticate with Kellnr registry
+      shell: bash
+      run: cargo login --registry kellnr "${{ inputs.kellnr-token }}"
