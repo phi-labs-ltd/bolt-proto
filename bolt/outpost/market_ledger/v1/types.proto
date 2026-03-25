@@ -6,9 +6,9 @@ package bolt.outpost.market_ledger.v1;
 enum Direction {
   // DIRECTION_UNSPECIFIED: Unknown direction.
   DIRECTION_UNSPECIFIED = 0;
-  // DIRECTION_LONG: MM is long (net sold base to pool; needs to buy on CEX).
+  // DIRECTION_LONG: MM is long (net sold base to pool; needs to buy base on CEX).
   DIRECTION_LONG = 1;
-  // DIRECTION_SHORT: MM is short (net bought base from pool; needs to sell on CEX).
+  // DIRECTION_SHORT: MM is short (net bought base from pool; needs to sell base on CEX).
   DIRECTION_SHORT = 2;
 }
 

@@ -62,7 +62,7 @@ message EngineConfig {
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
 message SwapEvent {
-  // id: Unique on-chain event identifier: "{tx_digest}-{event_index}".
+  // id: Unique swap identifier: "{tx_digest}-{event_index}".
   string id = 1;
   // tx_id: Transaction digest that contained this swap.
   string tx_id = 2;
@@ -70,23 +70,23 @@ message SwapEvent {
   string base_asset = 3;
   // height: Block height at which the swap was included.
   uint64 height = 4;
-  // source: Pool identifier (source of the swap event).
+  // source: Pool contract ID where the swap occurred.
   string source = 5;
-  // sender: Wallet address that initiated the swap.
+  // sender: Address of the trader who executed the swap.
   string sender = 6;
-  // input: Asset and amount sent into the pool.
+  // input: Asset and amount sent into the pool by this swap.
   bolt.assets.v1.Balance input = 7;
-  // output: Asset and amount received from the pool.
+  // output: Asset and amount received from the pool by this swap.
   bolt.assets.v1.Balance output = 8;
-  // protocol_fee: Protocol fee taken on this swap (denominated in base asset).
+  // protocol_fee: Bolt protocol fee collected for this swap (base asset).
   bolt.assets.v1.Balance protocol_fee = 9;
-  // lp_fee: LP fee distributed to liquidity providers (denominated in base asset).
+  // lp_fee: Liquidity provider fee collected for this swap (base asset).
   bolt.assets.v1.Balance lp_fee = 10;
-  // price: Execution price (base asset per quote unit).
+  // price: Execution price used by the pool (base/quote rational). Derived from SwapExecuted.price_used (implicit denominator 10^21).
   bolt.common.numeric.v1.Fraction price = 11;
-  // base_liquidity: Pool's base asset liquidity depth at swap time.
+  // base_liquidity: Pool's base asset liquidity after this swap. Zero for events emitted before SwapExecuted gained this field.
   bolt.assets.v1.Balance base_liquidity = 12;
-  // swap_type: Whether this was a buy (pool gives base) or sell (pool receives base).
+  // swap_type: Buy if pool gave base asset (quote->base); Sell if pool received base asset (base->quote).
   bolt.outpost.settlement.v2.SwapType swap_type = 13;
   // originator: The partner that originated the swap.
   bolt.common.partners.v1.Partner originator = 14;
@@ -126,13 +126,13 @@ message HedgeOrder {
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
   CexOrderType order_type = 13;
-  // filled_total: Total filled value.
+  // filled_total: Total quote value of all fills for this order.
   bolt.common.numeric.v1.Fraction filled_total = 14;
   // fee: Fee deducted for this order; absent until order is filled or closed.
   optional bolt.common.numeric.v1.Fraction fee = 15;
   // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
   optional string fee_currency = 16;
-  // response_msg: CEX response payload as a JSON string; absent until a status response arrives.
+  // response_msg: Raw CEX response payload as JSON; absent until first CEX acknowledgement.
   optional string response_msg = 17;
   // updated_at: When this order row was last updated.
   google.protobuf.Timestamp updated_at = 18;
@@ -262,7 +262,7 @@ message UpsertHedgeOrderRequest {
   optional bolt.common.numeric.v1.Fraction fee = 14;
   // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
   optional string fee_currency = 15;
-  // response_msg: CEX response payload as JSON string; optional.
+  // response_msg: Raw CEX response payload as JSON; absent until first CEX acknowledgement.
   optional string response_msg = 16;
   // swap_ids: Swap IDs claimed by or already assigned to this order.
   repeated string swap_ids = 17;
