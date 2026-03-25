@@ -38,8 +38,8 @@ service MarketLedgerService {
 message TimeoutStep {
   // delay: Duration to wait after threshold is crossed before placing this step's order.
   google.protobuf.Duration delay = 1;
-  // strategy: Pricing strategy used when placing the hedge order at this ladder step.
-  HedgeStrategyType strategy = 2;
+  // strategy_type: Pricing strategy used when placing the hedge order at this ladder step.
+  HedgeStrategyType strategy_type = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -120,8 +120,8 @@ message HedgeOrder {
   bolt.common.numeric.v1.Fraction avg_price = 9;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 10;
-  // strategy: Pricing strategy used when this order was placed.
-  HedgeStrategyType strategy = 11;
+  // strategy_type: Pricing strategy used when this order was placed.
+  HedgeStrategyType strategy_type = 11;
   // order_status: Lifecycle status of the CEX order.
   CexOrderStatus order_status = 12;
   // order_type: Execution strategy (limit/spot × buy/sell).
@@ -250,8 +250,8 @@ message UpsertHedgeOrderRequest {
   bolt.common.numeric.v1.Fraction avg_price = 8;
   // residual: Unhedged base amount after cycle close — quantity − filled_amount.
   bolt.common.numeric.v1.Fraction residual = 9;
-  // strategy: Pricing strategy used when this order was placed.
-  HedgeStrategyType strategy = 10;
+  // strategy_type: Pricing strategy used when this order was placed.
+  HedgeStrategyType strategy_type = 10;
   // order_status: New status to record.
   CexOrderStatus order_status = 11;
   // order_type: Execution strategy.
