@@ -97,6 +97,33 @@ message SwapEvent {
 }
 
 // HedgeOrder: A CEX hedge order placed for a market ledger cycle.
+//
+// Field relationships:
+//   exec_amount  = quantity × price          (quote committed at placement; 0 for market orders)
+//   filled_total = avg_price × filled_amount (quote value of fills so far)
+//   residual     = quantity − filled_amount  (unhedged amount after cycle close)
+//
+// Examples:
+//
+//   Limit buy GTC (filled):
+//     order_type: LimitBuy  price: 1.0357 USDC/SUI
+//     quantity: 3.02 SUI    exec_amount: 3.127814 USDC  (= quantity × price)
+//     filled_amount: 3.02 SUI  avg_price: 0.9651 USDC/SUI
+//     filled_total: 2.914602 USDC  residual: 0 SUI  fee: 0.000906 SUI
+//
+//   Market sell FOK (filled):
+//     order_type: SpotSell  price: 0 (market — no limit)
+//     quantity: 5 SUI       exec_amount: 0 (meaningless for market orders)
+//     filled_amount: 5 SUI  avg_price: 0.9616 USDC/SUI
+//     filled_total: 4.808 USDC  residual: 0 SUI  fee: 0.0014424 USDC
+//
+//   Market buy FOK — quantity unit flip:
+//     order_type: SpotBuy  price: 0 (market — no limit)
+//     quantity: 9.9618 USDC  ← quote, not base (CEX market-buy: amount = quote to spend)
+//     filled_amount: 10.36 SUI  avg_price: 0.9614 USDC/SUI
+//     filled_total: 9.960104 USDC
+//     residual: 0.001696 USDC  ← also quote; tiny unspent amount from lot-size rounding
+//     fee: 0.003108 SUI
 message HedgeOrder {
   // id: DB primary key.
   int64 id = 1;
@@ -106,19 +133,21 @@ message HedgeOrder {
   string order_id = 3;
   // base_asset: Base asset being hedged (e.g. "SUI").
   string base_asset = 4;
-  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  // quote_asset: Quote asset used for pricing (e.g. "USDC").
   string quote_asset = 20;
-  // price: Limit price at placement (base/quote).
+  // price: Limit price at placement (base/quote). 0 for market orders.
   bolt.common.numeric.v1.Fraction price = 5;
-  // quantity: Base amount ordered.
+  // quantity: Amount ordered. Base asset for limit and market-sell orders.
+  // For market-buy orders, this is in quote asset (the CEX takes quote as the order size).
   bolt.common.numeric.v1.Fraction quantity = 6;
   // filled_amount: Base amount executed so far (buy or sell).
   bolt.common.numeric.v1.Fraction filled_amount = 7;
-  // exec_amount: Quote committed at placement — quantity × price.
+  // exec_amount: Quote committed at placement — quantity × price. Always 0 for market orders.
   bolt.common.numeric.v1.Fraction exec_amount = 8;
   // avg_price: Volume-weighted average fill price; "0" ("0/1" as fraction) until first fill.
   bolt.common.numeric.v1.Fraction avg_price = 9;
-  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
+  // residual: Unhedged amount after cycle close — quantity − filled_amount.
+  // In quote asset for market-buy orders; in base asset for all others.
   bolt.common.numeric.v1.Fraction residual = 10;
   // strategy_type: Pricing strategy used when this order was placed.
   HedgeStrategyType strategy_type = 11;
@@ -150,7 +179,11 @@ message MarketLedgerEvent {
   google.protobuf.Timestamp created_at = 3;
   // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
   repeated SwapEvent swaps = 4;
-  // orders: Hedge orders placed for this ledger cycle, in insertion order. Omitted unless requested via field_mask.
+  // orders: Hedge orders placed for this ledger cycle, in insertion order. Multiple entries occur when earlier attempts
+  // reached a terminal non-closing state (Error or Cancelled) and the ledger stayed Running for a retry.
+  // orders[0] is the oldest attempt; orders[last] is the most recent.
+  // Example: [Cancelled(id=10), Error(id=11), Filled(id=12)] — first two retried, third closed the cycle.
+  // Omitted unless requested via field_mask.
   repeated HedgeOrder orders = 5;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 6;
