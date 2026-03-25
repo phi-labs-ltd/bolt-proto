@@ -13,29 +13,35 @@ service OracleService {
   rpc Info(InfoRequest) returns (InfoResponse);
 }
 
-// PostPricesRequest: Request to given prices to the oracle. Should be invoked by pricefeeder
+// PostPricesRequest: Request to given prices to the oracle. Should be invoked
+// by pricefeeder
 message PostPricesRequest {
   // price_updates: List of price updates to be posted to the oracle
   repeated PriceUpdate price_updates = 1;
 }
 
-// PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
+// PostPricesResponse: Response to the PostPricesRequest. Doesn't respond
+// anything on success.
 message PostPricesResponse {}
 
-// InfoRequest: Request to get information about the oracle. Should be invoked by pricefeeder
+// InfoRequest: Request to get information about the oracle. Should be invoked
+// by pricefeeder
 message InfoRequest {}
 
-// InfoResponse: Response to the InfoRequest. Contains information about which chain the oracle is running on and the address of the signer.
+// InfoResponse: Response to the InfoRequest. Contains information about which
+// chain the oracle is running on and the address of the signer.
 message InfoResponse {
-  // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1
+  // chain_id: The chain id of the chain the oracle is running on. e.g.
+  // archway-1
   string chain_id = 1;
-  // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  // whoami: The address of the signer who will be submitting the prices. e.g.
+  // archway1qwertyuiopasdfghjklzxcvbnm
   string whoami = 2;
 }
 
 // PriceUpdate: Price update for a given pair
 message PriceUpdate {
-  reserved 3; // Prevents reuse of field number 3
+  reserved 3;           // Prevents reuse of field number 3
   reserved "timestamp"; // Prevents reuse of the field name "timestamp"
   // pair: The pair for which the price is being updated. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
@@ -43,4 +49,9 @@ message PriceUpdate {
   string price = 2;
   // duration: The duration for which the price is valid
   google.protobuf.Duration duration = 4;
+  // actual_base: The actual base to which this price refers to.
+  // Since both bid and ask prices base on the same asset, but are represented
+  // as inversion of each other we have to point out explicitly which one of
+  // them is the actual base.
+  string actual_base = 5;
 }
