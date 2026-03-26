@@ -99,18 +99,22 @@ message SwapEvent {
 // HedgeStrategy: One pricing attempt for a hedge order — initial placement or a re-price.
 // Steps are ordered chronologically (id ASC); the last step with finished_at = null is active.
 message HedgeStrategy {
+  // id: DB primary key of this step row.
+  int64 id = 1;
+  // order_id: FK to the parent bolt_hedge_orders row.
+  int64 order_id = 2;
   // strategy_type: Pricing strategy used for this step.
-  HedgeStrategyType strategy_type = 1;
+  HedgeStrategyType strategy_type = 3;
   // started_at: When this step became active (server-assigned on insert).
-  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp started_at = 4;
   // finished_at: When this step was superseded; null while step is active.
-  optional google.protobuf.Timestamp finished_at = 3;
+  optional google.protobuf.Timestamp finished_at = 5;
   // memo: Optional human-readable note for this step.
-  optional string memo = 4;
+  optional string memo = 6;
   // amount: Order quantity for this step (base asset, or quote for market-buy).
-  bolt.common.numeric.v1.Fraction amount = 5;
+  bolt.common.numeric.v1.Fraction amount = 7;
   // price: Limit price for this step (base/quote). 0 for market steps.
-  bolt.common.numeric.v1.Fraction price = 6;
+  bolt.common.numeric.v1.Fraction price = 8;
 }
 
 // HedgeOrder: A CEX hedge order placed for a market ledger cycle.
@@ -289,11 +293,12 @@ message UpsertHedgeOrderRequest {
   string cex_order_id = 2;
   // base_asset: Base asset being hedged (e.g. "SUI").
   string base_asset = 3;
-  // quote_asset: Quote asset used for pricing (e.g. "USDT").
+  // quote_asset: Quote asset used for pricing (e.g. "USDC").
   string quote_asset = 4;
   // price: Limit price at placement.
   bolt.common.numeric.v1.Fraction price = 5;
-  // quantity: Base amount ordered.
+  // quantity: Amount ordered. Base asset for limit and market-sell orders.
+  // For market-buy orders, this is in quote asset (the CEX takes quote as the order size).
   bolt.common.numeric.v1.Fraction quantity = 6;
   // filled_amount: Base amount executed so far (buy or sell); derived as quantity − left.
   bolt.common.numeric.v1.Fraction filled_amount = 7;
