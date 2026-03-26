@@ -129,8 +129,8 @@ message HedgeOrder {
   int64 id = 1;
   // ledger_id: FK to the parent bolt_market_ledgers row.
   int64 ledger_id = 2;
-  // order_id: CEX-assigned order identifier.
-  string order_id = 3;
+  // cex_order_id: CEX-assigned order identifier.
+  string cex_order_id = 3;
   // base_asset: Base asset being hedged (e.g. "SUI").
   string base_asset = 4;
   // quote_asset: Quote asset used for pricing (e.g. "USDC").
@@ -258,15 +258,15 @@ message GetEngineConfigsResponse {
   repeated EngineConfig configs = 1;
 }
 
-// UpsertHedgeOrderRequest: Insert or update a hedge order identified by order_id.
-// swap_ids must not be empty. On INSERT (Pending), each swap must be unassigned
-// and belong to the given ledger_id. On UPDATE (non-Pending), each swap must be
+// UpsertHedgeOrderRequest: Insert or update a hedge order identified by cex_order_id.
+// swap_ids must not be empty. On INSERT (Open), each swap must be unassigned
+// and belong to the given ledger_id. On UPDATE (non-Open), each swap must be
 // assigned to this order.
 message UpsertHedgeOrderRequest {
   // ledger_id: Ledger cycle this order belongs to.
   int64 ledger_id = 1;
-  // order_id: CEX-assigned order identifier; used as the upsert key.
-  string order_id = 2;
+  // cex_order_id: CEX-assigned order identifier; used as the upsert key.
+  string cex_order_id = 2;
   // base_asset: Base asset being hedged (e.g. "SUI").
   string base_asset = 3;
   // quote_asset: Quote asset used for pricing (e.g. "USDT").

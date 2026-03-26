@@ -26,8 +26,8 @@ enum LedgerStatus {
 enum CexOrderStatus {
   // CEX_ORDER_STATUS_UNSPECIFIED: Unknown status.
   CEX_ORDER_STATUS_UNSPECIFIED = 0;
-  // CEX_ORDER_STATUS_PENDING: Order placed on CEX; awaiting fill.
-  CEX_ORDER_STATUS_PENDING = 1;
+  // CEX_ORDER_STATUS_OPEN: Order placed on CEX; awaiting fill.
+  CEX_ORDER_STATUS_OPEN = 1;
   // CEX_ORDER_STATUS_PARTIALLY_FILLED: Order partially filled; terminal if remainder was cancelled.
   CEX_ORDER_STATUS_PARTIALLY_FILLED = 2;
   // CEX_ORDER_STATUS_FILLED: Order fully filled.
@@ -36,6 +36,10 @@ enum CexOrderStatus {
   CEX_ORDER_STATUS_ERROR = 4;
   // CEX_ORDER_STATUS_CANCELLED: Order cancelled by MM; ledger resets for retry.
   CEX_ORDER_STATUS_CANCELLED = 5;
+  // CEX_ORDER_STATUS_PARTIALLY_FILLED_CANCELLED: Order partially filled and the remainder was cancelled.
+  CEX_ORDER_STATUS_PARTIALLY_FILLED_CANCELLED = 6;
+  // CEX_ORDER_STATUS_CLOSED: Order closed (terminal).
+  CEX_ORDER_STATUS_CLOSED = 7;
 }
 
 // HedgeStrategyType: Pricing strategy used when placing a CEX hedge order.
