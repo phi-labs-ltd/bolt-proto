@@ -124,8 +124,10 @@ message HedgeStep {
   bolt.common.numeric.v1.Fraction amount = 9;
   // memo: Optional free-text note (e.g. reason for retry).
   optional string memo = 10;
-  // created_at: When this step was executed (MM-provided timestamp, stored as created_at in DB).
+  // created_at: When this step row was inserted into the DB (service-generated).
   google.protobuf.Timestamp created_at = 11;
+  // executed_at: When this order was placed on the CEX (MM-provided).
+  google.protobuf.Timestamp executed_at = 12;
 }
 
 // HedgeOrder: Terminal CEX hedge order for a ledger cycle. Every row is a closed fill.
@@ -216,6 +218,8 @@ message HedgeOrder {
   ExecutionStrategy strategy = 20;
   // level: Timeout ladder level at which this fill occurred (derived from the last hedge step).
   int32 level = 21;
+  // finished_at: When this fill completed on the CEX (MM-provided).
+  google.protobuf.Timestamp finished_at = 22;
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -389,8 +393,8 @@ message RecordHedgeFillRequest {
   // swap_ids: Swap IDs that make up the delta triggering this hedge.
   // All must belong to this ledger_id and be unassigned (hedge_order_id IS NULL).
   repeated string swap_ids = 17;
-  // executed_at: When this fill was executed on the CEX (MM-provided).
-  google.protobuf.Timestamp executed_at = 18;
+  // finished_at: When this fill completed on the CEX (MM-provided).
+  google.protobuf.Timestamp finished_at = 18;
 }
 
 // RecordHedgeStepResponse: Returns the inserted step.
