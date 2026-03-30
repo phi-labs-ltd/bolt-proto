@@ -301,9 +301,7 @@ message GetEngineConfigsResponse {
 
 // RecordHedgeStepRequest: Records a new CEX order placement attempt for a ledger hedge cycle.
 // Does not create a HedgeOrder row — that happens only at RecordHedgeFill.
-//
-// swap_ids is required on the first call for a ledger (must be non-empty, unassigned, belong to
-// this ledger). Providing swap_ids on subsequent calls for the same ledger is an error.
+// Swap assignment happens at fill time, not here.
 message RecordHedgeStepRequest {
   // ledger_id: Ledger cycle this step belongs to.
   int64 ledger_id = 1;
@@ -319,9 +317,7 @@ message RecordHedgeStepRequest {
   bolt.common.numeric.v1.Fraction amount = 5;
   // cex_order_id: CEX-assigned order ID; omit if not yet confirmed.
   optional string cex_order_id = 6;
-  // swap_ids: Swap IDs that make up the delta triggering this hedge.
-  // Required on first call; must be empty on subsequent calls for the same ledger.
-  repeated string swap_ids = 7;
+  reserved 7; // formerly swap_ids — moved to RecordHedgeFillRequest
   // strategy: Pricing/execution strategy applied at this step. Required.
   ExecutionStrategy strategy = 9;
   // memo: Optional free-text note.
@@ -375,6 +371,9 @@ message RecordHedgeFillRequest {
   optional string response_msg = 15;
   // memo: Optional order-level note.
   optional string memo = 16;
+  // swap_ids: Swap IDs that make up the delta triggering this hedge.
+  // All must belong to this ledger_id and be unassigned (hedge_order_id IS NULL).
+  repeated string swap_ids = 17;
 }
 
 // GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
