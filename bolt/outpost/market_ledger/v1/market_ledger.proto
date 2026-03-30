@@ -25,9 +25,9 @@ service MarketLedgerService {
   // Returns all engine configs across all assets and directions.
   rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
   // Records a new CEX order placement attempt for a ledger hedge cycle.
-  rpc RecordHedgeStep(RecordHedgeStepRequest) returns (HedgeStep);
+  rpc RecordHedgeStep(RecordHedgeStepRequest) returns (RecordHedgeStepResponse);
   // Records a terminal fill, closes the ledger cycle, and returns the completed order with all steps.
-  rpc RecordHedgeFill(RecordHedgeFillRequest) returns (HedgeOrder);
+  rpc RecordHedgeFill(RecordHedgeFillRequest) returns (RecordHedgeFillResponse);
   // Returns the current Running ledger for the given asset, or absent if none exists.
   rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
   // Returns all Running ledgers across every asset, ordered by asset name.
@@ -385,6 +385,18 @@ message RecordHedgeFillRequest {
   // swap_ids: Swap IDs that make up the delta triggering this hedge.
   // All must belong to this ledger_id and be unassigned (hedge_order_id IS NULL).
   repeated string swap_ids = 17;
+}
+
+// RecordHedgeStepResponse: Returns the inserted step.
+message RecordHedgeStepResponse {
+  // step: The inserted hedge step.
+  HedgeStep step = 1;
+}
+
+// RecordHedgeFillResponse: Returns the completed terminal order.
+message RecordHedgeFillResponse {
+  // order: The inserted hedge order.
+  HedgeOrder order = 1;
 }
 
 // GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
