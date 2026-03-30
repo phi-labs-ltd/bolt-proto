@@ -106,26 +106,28 @@ message HedgeStep {
   int64 id = 1;
   // ledger_id: FK to the parent bolt_market_ledgers row.
   int64 ledger_id = 2;
-  // index: 0-based insertion order per ledger; assigned by the service, not the caller.
-  int32 index = 3;
+  // level: 0-based timeout ladder level per ledger; assigned by the service, not the caller.
+  int32 level = 3;
   // cex_order_id: CEX-assigned order ID; absent when MM does not yet have confirmation.
   optional string cex_order_id = 4;
-  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  // cex_order_type: Order type (limit/spot x buy/sell).
   CexOrderType cex_order_type = 5;
   // status: State of this placement attempt. Required; any value may repeat across steps.
   HedgeStepStatus status = 6;
+  // strategy: Pricing/execution strategy the engine applied at this step (e.g. ProfitableVwap, Taker).
+  ExecutionStrategy strategy = 7;
   // price: Limit price at placement (base/quote). 0 for market orders.
-  bolt.common.numeric.v1.Fraction price = 7;
+  bolt.common.numeric.v1.Fraction price = 8;
   // amount: Amount placed — always in base asset (e.g. SUI).
   // MM is responsible for any conversion required by the specific CEX and order type
   // before calling the exchange; the ledger always stores the base amount.
-  bolt.common.numeric.v1.Fraction amount = 8;
-  // strategy: Pricing/execution strategy the engine applied at this step (e.g. ProfitableVwap, Taker).
-  ExecutionStrategy strategy = 11;
+  bolt.common.numeric.v1.Fraction amount = 9;
   // memo: Optional free-text note (e.g. reason for retry).
-  optional string memo = 9;
-  // created_at: When this step row was inserted.
-  google.protobuf.Timestamp created_at = 10;
+  optional string memo = 10;
+  // created_at: When this step row was inserted into the DB (service-generated).
+  google.protobuf.Timestamp created_at = 11;
+  // executed_at: When this order was placed on the CEX (MM-provided).
+  google.protobuf.Timestamp executed_at = 12;
 }
 
 // HedgeOrder: Terminal CEX hedge order for a ledger cycle. Every row is a closed fill.
@@ -212,7 +214,12 @@ message HedgeOrder {
   google.protobuf.Timestamp created_at = 18;
   // swap_ids: Swap event IDs covered by this order — loaded from bolt_hedge_order_swaps.
   repeated string swap_ids = 19;
-  // Steps are fetched separately via MarketLedgerEvent field_mask path "hedge_steps".
+  // strategy: Pricing/execution strategy that produced this fill (derived from the last hedge step).
+  ExecutionStrategy strategy = 20;
+  // level: Timeout ladder level at which this fill occurred (derived from the last hedge step).
+  int32 level = 21;
+  // finished_at: When this fill completed on the CEX (MM-provided).
+  google.protobuf.Timestamp finished_at = 22;
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -311,7 +318,7 @@ message GetEngineConfigsResponse {
 message RecordHedgeStepRequest {
   // ledger_id: Ledger cycle this step belongs to.
   int64 ledger_id = 1;
-  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  // cex_order_type: Order type (limit/spot x buy/sell).
   CexOrderType cex_order_type = 2;
   // status: State of this placement attempt. Required; any value may repeat across steps.
   HedgeStepStatus status = 3;
@@ -323,11 +330,12 @@ message RecordHedgeStepRequest {
   bolt.common.numeric.v1.Fraction amount = 5;
   // cex_order_id: CEX-assigned order ID; omit if not yet confirmed.
   optional string cex_order_id = 6;
-  reserved 7; // formerly swap_ids — moved to RecordHedgeFillRequest
   // strategy: Pricing/execution strategy applied at this step. Required.
-  ExecutionStrategy strategy = 9;
+  ExecutionStrategy strategy = 7;
   // memo: Optional free-text note.
-  optional string memo = 10;
+  optional string memo = 8;
+  // executed_at: When this step was executed on the CEX (MM-provided).
+  google.protobuf.Timestamp executed_at = 9;
 }
 
 // RecordHedgeFillRequest: Records a terminal fill, inserts the hedge_orders row,
@@ -385,6 +393,8 @@ message RecordHedgeFillRequest {
   // swap_ids: Swap IDs that make up the delta triggering this hedge.
   // All must belong to this ledger_id and be unassigned (hedge_order_id IS NULL).
   repeated string swap_ids = 17;
+  // finished_at: When this fill completed on the CEX (MM-provided).
+  google.protobuf.Timestamp finished_at = 18;
 }
 
 // RecordHedgeStepResponse: Returns the inserted step.
