@@ -40,8 +40,8 @@ service MarketLedgerService {
 message TimeoutStep {
   // delay: Duration to wait after threshold is crossed before placing this step's order.
   google.protobuf.Duration delay = 1;
-  // cex_order_type: Execution strategy used when placing the hedge order at this ladder step.
-  CexOrderType cex_order_type = 2;
+  // strategy: Pricing and execution strategy used when placing the hedge order at this ladder step.
+  ExecutionStrategy strategy = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -56,9 +56,9 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
-  // spread_bps: Spread in basis points applied only to limit ladder steps (typically the first step).
+  // spread_bps: Spread in basis points applied only to EXECUTION_STRATEGY_PROFITABLE_VWAP steps.
   // The effective quote price is vwap * (1 + spread_bps / 10_000).
-  // Ignored for market (spot) order types. Absent if not configured.
+  // Ignored for all other strategies. Absent if not configured.
   optional uint32 spread_bps = 6;
 }
 
@@ -120,6 +120,8 @@ message HedgeStep {
   // MM is responsible for any conversion required by the specific CEX and order type
   // before calling the exchange; the ledger always stores the base amount.
   bolt.common.numeric.v1.Fraction amount = 8;
+  // strategy: Pricing/execution strategy the engine applied at this step (e.g. ProfitableVwap, Taker).
+  ExecutionStrategy strategy = 11;
   // memo: Optional free-text note (e.g. reason for retry).
   optional string memo = 9;
   // created_at: When this step row was inserted.
@@ -320,8 +322,10 @@ message RecordHedgeStepRequest {
   // swap_ids: Swap IDs that make up the delta triggering this hedge.
   // Required on first call; must be empty on subsequent calls for the same ledger.
   repeated string swap_ids = 7;
+  // strategy: Pricing/execution strategy applied at this step. Required.
+  ExecutionStrategy strategy = 9;
   // memo: Optional free-text note.
-  optional string memo = 8;
+  optional string memo = 10;
 }
 
 // RecordHedgeFillRequest: Records a terminal fill, inserts the hedge_orders row,

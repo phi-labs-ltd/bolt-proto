@@ -48,6 +48,25 @@ enum HedgeFillStatus {
   HEDGE_FILL_STATUS_PARTIALLY_FILLED = 2;
 }
 
+// ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
+// Replaces HedgeStrategyType (renamed for clarity).
+enum ExecutionStrategy {
+  // EXECUTION_STRATEGY_UNSPECIFIED: Unknown strategy.
+  EXECUTION_STRATEGY_UNSPECIFIED = 0;
+  // EXECUTION_STRATEGY_PROFITABLE_VWAP: Limit order at VWAP adjusted by spread_bps; only places if profitable.
+  EXECUTION_STRATEGY_PROFITABLE_VWAP = 1;
+  // EXECUTION_STRATEGY_BREAKEVEN_VWAP: Limit order at VWAP; only places if at break-even or better.
+  EXECUTION_STRATEGY_BREAKEVEN_VWAP = 2;
+  // EXECUTION_STRATEGY_MID_PRICE: Limit order at mid-market price.
+  EXECUTION_STRATEGY_MID_PRICE = 3;
+  // EXECUTION_STRATEGY_BEST_BID_ASK: Limit order at best bid or ask.
+  EXECUTION_STRATEGY_BEST_BID_ASK = 4;
+  // EXECUTION_STRATEGY_CROSS_SPREAD: Limit order that crosses the spread to guarantee fill.
+  EXECUTION_STRATEGY_CROSS_SPREAD = 5;
+  // EXECUTION_STRATEGY_TAKER: Market taker order; fills immediately at any price.
+  EXECUTION_STRATEGY_TAKER = 6;
+}
+
 // CexOrderType: CEX order execution strategy.
 enum CexOrderType {
   // CEX_ORDER_TYPE_UNSPECIFIED: Unknown order type.
