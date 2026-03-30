@@ -16,7 +16,7 @@ import "google/protobuf/timestamp.proto";
 service MarketLedgerService {
   // Streams the current ledger snapshot (all assets) as the first message,
   // then one message per block as new swaps are processed.
-  // field_mask paths "swaps" and/or "orders" opt in to those fields.
+  // field_mask paths: "swaps", "hedge_order", "hedge_steps" opt in to those fields.
   rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
   // Inserts or replaces the engine config for a single (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
@@ -24,8 +24,10 @@ service MarketLedgerService {
   rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
   // Returns all engine configs across all assets and directions.
   rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
-  // Inserts or updates a hedge order keyed on order_id.
-  rpc UpsertHedgeOrder(UpsertHedgeOrderRequest) returns (UpsertHedgeOrderResponse);
+  // Records a new CEX order placement attempt for a ledger hedge cycle.
+  rpc RecordHedgeStep(RecordHedgeStepRequest) returns (HedgeStep);
+  // Records a terminal fill, closes the ledger cycle, and returns the completed order with all steps.
+  rpc RecordHedgeFill(RecordHedgeFillRequest) returns (HedgeOrder);
   // Returns the current Running ledger for the given asset, or absent if none exists.
   rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
   // Returns all Running ledgers across every asset, ordered by asset name.
@@ -38,8 +40,8 @@ service MarketLedgerService {
 message TimeoutStep {
   // delay: Duration to wait after threshold is crossed before placing this step's order.
   google.protobuf.Duration delay = 1;
-  // strategy_type: Pricing strategy used when placing the hedge order at this ladder step.
-  HedgeStrategyType strategy_type = 2;
+  // cex_order_type: Execution strategy used when placing the hedge order at this ladder step.
+  CexOrderType cex_order_type = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -54,9 +56,9 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered ladder steps; each step is tried after the previous times out.
   repeated TimeoutStep timeout_ladder = 5;
-  // spread_bps: Spread in basis points applied only to ladder steps whose strategy is HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP
-  // (typically the first step). The effective quote price is vwap * (1 + spread_bps / 10_000).
-  // Ignored for all other strategies. Absent if not configured.
+  // spread_bps: Spread in basis points applied only to limit ladder steps (typically the first step).
+  // The effective quote price is vwap * (1 + spread_bps / 10_000).
+  // Ignored for market (spot) order types. Absent if not configured.
   optional uint32 spread_bps = 6;
 }
 
@@ -96,101 +98,113 @@ message SwapEvent {
   google.protobuf.Timestamp created_at = 16;
 }
 
-// HedgeStrategy: One pricing attempt for a hedge order — initial placement or a re-price.
-// Steps are ordered chronologically (id ASC); the last step with finished_at = null is active.
-message HedgeStrategy {
-  // id: DB primary key of this step row.
+// HedgeStep: A single CEX order placement attempt for a ledger hedge cycle.
+// Non-terminal — terminal fills are recorded in HedgeOrder.
+// Immutable once inserted; index is 0-based per ledger, assigned by the service.
+message HedgeStep {
+  // id: DB primary key.
   int64 id = 1;
-  // order_id: FK to the parent bolt_hedge_orders row.
-  int64 order_id = 2;
-  // strategy_type: Pricing strategy used for this step.
-  HedgeStrategyType strategy_type = 3;
-  // started_at: When this step became active (server-assigned on insert).
-  google.protobuf.Timestamp started_at = 4;
-  // finished_at: When this step was superseded; null while step is active.
-  optional google.protobuf.Timestamp finished_at = 5;
-  // memo: Optional human-readable note for this step.
-  optional string memo = 6;
-  // amount: Order quantity for this step (base asset, or quote for market-buy).
-  bolt.common.numeric.v1.Fraction amount = 7;
-  // price: Limit price for this step (base/quote). 0 for market steps.
-  bolt.common.numeric.v1.Fraction price = 8;
+  // ledger_id: FK to the parent bolt_market_ledgers row.
+  int64 ledger_id = 2;
+  // index: 0-based insertion order per ledger; assigned by the service, not the caller.
+  int32 index = 3;
+  // cex_order_id: CEX-assigned order ID; absent when MM does not yet have confirmation.
+  optional string cex_order_id = 4;
+  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  CexOrderType cex_order_type = 5;
+  // status: State of this placement attempt. Required; any value may repeat across steps.
+  HedgeStepStatus status = 6;
+  // price: Limit price at placement (base/quote). 0 for market orders.
+  bolt.common.numeric.v1.Fraction price = 7;
+  // amount: Amount placed — always in base asset (e.g. SUI).
+  // MM is responsible for any conversion required by the specific CEX and order type
+  // before calling the exchange; the ledger always stores the base amount.
+  bolt.common.numeric.v1.Fraction amount = 8;
+  // memo: Optional free-text note (e.g. reason for retry).
+  optional string memo = 9;
+  // created_at: When this step row was inserted.
+  google.protobuf.Timestamp created_at = 10;
 }
 
-// HedgeOrder: A CEX hedge order placed for a market ledger cycle.
+// HedgeOrder: Terminal CEX hedge order for a ledger cycle. Every row is a closed fill.
+//
+// All amount fields are in base asset (e.g. SUI) except filled_total (always quote).
 //
 // Field relationships:
-//   exec_amount  = quantity × price          (quote committed at placement; 0 for market orders)
-//   filled_total = avg_price × filled_amount (quote value of fills so far)
-//   residual     = quantity − filled_amount  (unhedged amount after cycle close)
+//   exec_amount  = quantity × price     (quote committed at placement; 0 for market orders)
+//   filled_total = avg_price × filled_amount
+//   residual     = quantity − filled_amount
+//
+// Gate.io SpotBuy quirk: Gate's response `amount` and `left` are in quote (USDC) for
+// market-buy orders. MM must convert to base before calling RecordHedgeFill.
+// See: https://www.gate.com/docs/developers/apiv4/en/#create-an-order
+//      https://www.gate.com/en-eu/docs/developers/apiv4/#create-an-order
+//
+//   Gate response (SpotBuy):  amount="65.4194 USDC"  filled_amount="77.11 SUI"  left="0.006987 USDC"
+//
+//   RecordHedgeFill fields:
+//     quantity      = CexOrder.amount          →  77.76 SUI  (MM's original intent, not Gate's USDC amount)
+//     filled_amount = Gate.filled_amount        →  77.11 SUI  (already base — use directly)
+//     residual      = quantity − filled_amount  →   0.65 SUI  (do NOT use Gate.left directly)
+//     filled_total  = Gate.filled_total         →  65.41 USDC (always quote — use directly)
+//
+// Raw Gate JSON is preserved in response_msg for audit.
 //
 // Examples:
 //
-//   Limit buy GTC (filled):
-//     order_type: LimitBuy  price: 1.0357 USDC/SUI
-//     quantity: 3.02 SUI    exec_amount: 3.127814 USDC  (= quantity × price)
-//     filled_amount: 3.02 SUI  avg_price: 0.9651 USDC/SUI
-//     filled_total: 2.914602 USDC  residual: 0 SUI  fee: 0.000906 SUI
-//
 //   Market sell FOK (filled):
-//     order_type: SpotSell  price: 0 (market — no limit)
-//     quantity: 5 SUI       exec_amount: 0 (meaningless for market orders)
-//     filled_amount: 5 SUI  avg_price: 0.9616 USDC/SUI
-//     filled_total: 4.808 USDC  residual: 0 SUI  fee: 0.0014424 USDC
+//     cex_order_type: SpotSell  price: 0 (market — no limit)
+//     quantity: 4 SUI           exec_amount: 0 (market order)
+//     filled_amount: 4 SUI      avg_price: 0.8898 USDC/SUI
+//     filled_total: 3.5592 USDC  residual: 0 SUI  fee: 0.00106776 USDC
 //
-//   Market buy FOK — quantity unit flip:
-//     order_type: SpotBuy  price: 0 (market — no limit)
-//     quantity: 9.9618 USDC  ← quote, not base (CEX market-buy: amount = quote to spend)
-//     filled_amount: 10.36 SUI  avg_price: 0.9614 USDC/SUI
-//     filled_total: 9.960104 USDC
-//     residual: 0.001696 USDC  ← also quote; tiny unspent amount from lot-size rounding
-//     fee: 0.003108 SUI
+//   Market buy FOK (filled):
+//     cex_order_type: SpotBuy  price: 0 (market — no limit)
+//     quantity: 77.76 SUI  ← always base (CexOrder.amount); Gate processes as ~65.42 USDC internally
+//     filled_amount: 77.11 SUI   avg_price: 0.8483 USDC/SUI
+//     filled_total: 65.412413 USDC
+//     residual: 0.65 SUI  ← base (quantity − filled_amount); Gate.left is USDC — do not use directly
+//     fee: 0.023133 SUI
 message HedgeOrder {
   // id: DB primary key.
   int64 id = 1;
   // ledger_id: FK to the parent bolt_market_ledgers row.
   int64 ledger_id = 2;
-  // cex_order_id: CEX-assigned order identifier.
-  string cex_order_id = 3;
   // base_asset: Base asset being hedged (e.g. "SUI").
-  string base_asset = 4;
+  string base_asset = 3;
   // quote_asset: Quote asset used for pricing (e.g. "USDC").
-  string quote_asset = 5;
-  // price: Limit price at placement (base/quote). 0 for market orders.
-  bolt.common.numeric.v1.Fraction price = 6;
-  // quantity: Amount ordered. Base asset for limit and market-sell orders.
-  // For market-buy orders, this is in quote asset (the CEX takes quote as the order size).
-  bolt.common.numeric.v1.Fraction quantity = 7;
-  // filled_amount: Base amount filled so far.
-  bolt.common.numeric.v1.Fraction filled_amount = 8;
-  // exec_amount: Quote committed at placement — quantity × price. Always 0 for market orders.
-  bolt.common.numeric.v1.Fraction exec_amount = 9;
-  // avg_price: Volume-weighted average fill price; 0 until first fill.
-  bolt.common.numeric.v1.Fraction avg_price = 10;
-  // residual: Unhedged amount after cycle close — quantity − filled_amount.
-  // In quote asset for market-buy orders; in base asset for all others.
-  bolt.common.numeric.v1.Fraction residual = 11;
-  // order_status: Lifecycle status of the CEX order.
-  CexOrderStatus order_status = 12;
-  // order_type: Execution strategy (limit/spot × buy/sell).
-  CexOrderType order_type = 13;
-  // filled_total: Total quote value of all fills for this order.
-  bolt.common.numeric.v1.Fraction filled_total = 14;
-  // fee: Fee deducted for this order; absent until order is filled or closed.
-  optional bolt.common.numeric.v1.Fraction fee = 15;
-  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
-  optional string fee_currency = 16;
-  // response_msg: Raw CEX response payload as JSON; absent until first CEX acknowledgement.
-  optional string response_msg = 17;
-  // updated_at: When this order row was last updated.
-  google.protobuf.Timestamp updated_at = 18;
-  // created_at: When this order row was first inserted.
-  google.protobuf.Timestamp created_at = 19;
-  // steps: Full pricing history — one entry per placement or re-price, ordered by id ascending.
-  // steps[0] is the initial placement; steps[last] is the current (active) step.
-  repeated HedgeStrategy steps = 20;
-  // memo: Optional order-level note (e.g. reason for re-price or cancellation).
-  optional string memo = 21;
+  string quote_asset = 4;
+  // quantity: Amount originally ordered — always base asset (e.g. SUI).
+  // Use CexOrder.amount, not the CEX response `amount` field (which is in quote for SpotBuy market orders).
+  bolt.common.numeric.v1.Fraction quantity = 5;
+  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  CexOrderType cex_order_type = 6;
+  // fill_status: Terminal fill status — always Filled or PartiallyFilled.
+  HedgeFillStatus fill_status = 7;
+  // cex_order_id: CEX-assigned order identifier; required at close.
+  string cex_order_id = 8;
+  // filled_amount: Base amount actually filled (e.g. SUI). Gate `filled_amount` — always base asset.
+  bolt.common.numeric.v1.Fraction filled_amount = 9;
+  // exec_amount: Quote committed at placement = quantity × price. Always 0 for market orders.
+  bolt.common.numeric.v1.Fraction exec_amount = 10;
+  // avg_price: Volume-weighted average fill price (quote/base, e.g. USDC/SUI).
+  bolt.common.numeric.v1.Fraction avg_price = 11;
+  // residual: Unhedged base remainder = quantity − filled_amount. Always base asset.
+  // Computed by MM; do not use Gate `left` directly for SpotBuy (it is in quote).
+  bolt.common.numeric.v1.Fraction residual = 12;
+  // filled_total: Total quote value of all fills = avg_price × filled_amount. Always quote asset.
+  bolt.common.numeric.v1.Fraction filled_total = 13;
+  // fee: Fee deducted; currency given by fee_currency.
+  optional bolt.common.numeric.v1.Fraction fee = 14;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI" or "USDC").
+  optional string fee_currency = 15;
+  // response_msg: Raw CEX response payload as JSON; preserved for audit.
+  optional string response_msg = 16;
+  // memo: Optional order-level note.
+  optional string memo = 17;
+  // created_at: When this order row was inserted.
+  google.protobuf.Timestamp created_at = 18;
+  // Steps are fetched separately via MarketLedgerEvent field_mask "hedge_steps".
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -201,16 +215,17 @@ message MarketLedgerEvent {
   google.protobuf.Timestamp updated_at = 2;
   // created_at: When this ledger row was first created.
   google.protobuf.Timestamp created_at = 3;
-  // swaps: Swap events accumulated in this cycle, in insertion order. Omitted unless requested via field_mask.
+  // swaps: Swap events accumulated in this cycle, in insertion order.
+  // Omitted unless requested via field_mask path "swaps".
   repeated SwapEvent swaps = 4;
-  // orders: Hedge orders placed for this ledger cycle, in insertion order. Multiple entries occur when earlier attempts
-  // reached a terminal non-closing state (Error or Cancelled) and the ledger stayed Running for a retry.
-  // orders[0] is the oldest attempt; orders[last] is the most recent.
-  // Example: [Cancelled(id=10), Error(id=11), Filled(id=12)] — first two retried, third closed the cycle.
-  // Omitted unless requested via field_mask.
-  repeated HedgeOrder orders = 5;
+  // order: Terminal hedge order for this cycle; absent if the ledger has not yet been closed.
+  // Omitted unless requested via field_mask path "hedge_order".
+  optional HedgeOrder order = 5;
+  // steps: CEX placement attempts for this cycle, ordered by index ascending.
+  // Omitted unless requested via field_mask path "hedge_steps".
+  repeated HedgeStep steps = 6;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
-  repeated EngineConfig engine_configs = 6;
+  repeated EngineConfig engine_configs = 7;
 }
 
 // MarketLedger: A market ledger record returned by query RPCs (no swaps or orders attached).
@@ -237,8 +252,8 @@ message MarketLedger {
 
 // SubscribeMarketLedgerRequest: Subscribe to live ledger state updates for all assets.
 message SubscribeMarketLedgerRequest {
-  // field_mask: When absent, swaps and orders are omitted from each event.
-  // Set paths to ["swaps"], ["orders"], or both to opt in.
+  // field_mask: When absent, swaps, order, and steps are omitted from each event.
+  // Set paths to any combination of "swaps", "hedge_order", "hedge_steps" to opt in.
   optional google.protobuf.FieldMask field_mask = 1;
 }
 
@@ -282,56 +297,80 @@ message GetEngineConfigsResponse {
   repeated EngineConfig configs = 1;
 }
 
-// UpsertHedgeOrderRequest: Insert or update a hedge order identified by cex_order_id.
-// swap_ids must not be empty. On INSERT (Open), each swap must be unassigned
-// and belong to the given ledger_id. On UPDATE (non-Open), each swap must be
-// assigned to this order.
-message UpsertHedgeOrderRequest {
-  // ledger_id: Ledger cycle this order belongs to.
+// RecordHedgeStepRequest: Records a new CEX order placement attempt for a ledger hedge cycle.
+// Does not create a HedgeOrder row — that happens only at RecordHedgeFill.
+//
+// swap_ids is required on the first call for a ledger (must be non-empty, unassigned, belong to
+// this ledger). Providing swap_ids on subsequent calls for the same ledger is an error.
+message RecordHedgeStepRequest {
+  // ledger_id: Ledger cycle this step belongs to.
   int64 ledger_id = 1;
-  // cex_order_id: CEX-assigned order identifier; used as the upsert key.
-  string cex_order_id = 2;
-  // base_asset: Base asset being hedged (e.g. "SUI").
-  string base_asset = 3;
-  // quote_asset: Quote asset used for pricing (e.g. "USDC").
-  string quote_asset = 4;
-  // price: Limit price at placement.
-  bolt.common.numeric.v1.Fraction price = 5;
-  // quantity: Amount ordered. Base asset for limit and market-sell orders.
-  // For market-buy orders, this is in quote asset (the CEX takes quote as the order size).
-  bolt.common.numeric.v1.Fraction quantity = 6;
-  // filled_amount: Base amount executed so far (buy or sell); derived as quantity − left.
-  bolt.common.numeric.v1.Fraction filled_amount = 7;
-  // exec_amount: Quote committed at placement — quantity × price.
-  bolt.common.numeric.v1.Fraction exec_amount = 8;
-  // avg_price: Volume-weighted average fill price; 0 until first fill.
-  bolt.common.numeric.v1.Fraction avg_price = 9;
-  // residual: Unhedged base amount after cycle close — quantity − filled_amount.
-  bolt.common.numeric.v1.Fraction residual = 10;
-  // strategy: Pricing step for this upsert — always required. Server assigns started_at/finished_at.
-  HedgeStrategy strategy = 11;
-  // order_status: New status to record.
-  CexOrderStatus order_status = 12;
-  // order_type: Execution strategy.
-  CexOrderType order_type = 13;
-  // filled_total: Total filled value.
-  bolt.common.numeric.v1.Fraction filled_total = 14;
-  // fee: Fee deducted for this order; absent until order is filled or closed.
-  optional bolt.common.numeric.v1.Fraction fee = 15;
-  // fee_currency: Asset in which the fee was taken (e.g. "SUI"); absent until fee is known.
-  optional string fee_currency = 16;
-  // response_msg: Raw CEX response payload as JSON; absent until first CEX acknowledgement.
-  optional string response_msg = 17;
-  // swap_ids: Swap IDs claimed by or already assigned to this order.
-  repeated string swap_ids = 18;
+  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  CexOrderType cex_order_type = 2;
+  // status: State of this placement attempt. Required; any value may repeat across steps.
+  HedgeStepStatus status = 3;
+  // price: Limit price at placement (base/quote). 0 for market orders.
+  bolt.common.numeric.v1.Fraction price = 4;
+  // amount: Amount placed — always base asset (e.g. SUI).
+  // MM is responsible for any conversion required by the specific CEX and order type
+  // before calling the exchange; the ledger always stores the base amount.
+  bolt.common.numeric.v1.Fraction amount = 5;
+  // cex_order_id: CEX-assigned order ID; omit if not yet confirmed.
+  optional string cex_order_id = 6;
+  // swap_ids: Swap IDs that make up the delta triggering this hedge.
+  // Required on first call; must be empty on subsequent calls for the same ledger.
+  repeated string swap_ids = 7;
+  // memo: Optional free-text note.
+  optional string memo = 8;
 }
 
-// UpsertHedgeOrderResponse: Returns the inserted/updated order and the active ledger id.
-message UpsertHedgeOrderResponse {
-  // order: The inserted or updated hedge order row.
-  HedgeOrder order = 1;
-  // new_ledger_id: The ledger id after the operation; new cycle id if one was created.
-  int64 new_ledger_id = 2;
+// RecordHedgeFillRequest: Records a terminal fill, inserts the hedge_orders row,
+// and closes the ledger cycle. Requires at least one prior RecordHedgeStep for this ledger.
+//
+// All amount fields must be in base asset (e.g. SUI) except filled_total (always quote).
+//
+// Gate.io SpotBuy: Gate's response `amount` and `left` are in quote (USDC) for market-buy.
+// See: https://www.gate.com/docs/developers/apiv4/en/#create-an-order
+//      https://www.gate.com/en-eu/docs/developers/apiv4/#create-an-order
+//   quantity      = CexOrder.amount           (77.76 SUI — MM's original intent)
+//   filled_amount = Gate.filled_amount         (77.11 SUI — already base, use directly)
+//   residual      = quantity − filled_amount   ( 0.65 SUI — do NOT use Gate.left directly)
+//   filled_total  = Gate.filled_total          (65.41 USDC — always quote, use directly)
+message RecordHedgeFillRequest {
+  // ledger_id: Ledger cycle this fill closes.
+  int64 ledger_id = 1;
+  // base_asset: Base asset being hedged (e.g. "SUI").
+  string base_asset = 2;
+  // quote_asset: Quote asset used for pricing (e.g. "USDC").
+  string quote_asset = 3;
+  // cex_order_type: Execution strategy (limit/spot × buy/sell).
+  CexOrderType cex_order_type = 4;
+  // quantity: Amount originally ordered — always base asset.
+  // Use CexOrder.amount, not Gate response `amount` (which is in quote for SpotBuy market orders).
+  bolt.common.numeric.v1.Fraction quantity = 5;
+  // cex_order_id: CEX-assigned order identifier; required.
+  string cex_order_id = 6;
+  // fill_status: Terminal fill status — Filled or PartiallyFilled.
+  HedgeFillStatus fill_status = 7;
+  // filled_amount: Base amount actually filled. Gate `filled_amount` — always base, use directly.
+  bolt.common.numeric.v1.Fraction filled_amount = 8;
+  // exec_amount: Quote committed at placement = quantity × price. Always 0 for market orders.
+  bolt.common.numeric.v1.Fraction exec_amount = 9;
+  // avg_price: Volume-weighted average fill price (quote/base, e.g. USDC/SUI).
+  bolt.common.numeric.v1.Fraction avg_price = 10;
+  // residual: Unhedged base remainder = quantity − filled_amount. Always base asset.
+  // Do not use Gate `left` directly for SpotBuy (it is in quote on Gate.io).
+  bolt.common.numeric.v1.Fraction residual = 11;
+  // filled_total: Total quote value of all fills = avg_price × filled_amount. Always quote asset.
+  bolt.common.numeric.v1.Fraction filled_total = 12;
+  // fee: Fee deducted; currency given by fee_currency.
+  optional bolt.common.numeric.v1.Fraction fee = 13;
+  // fee_currency: Asset in which the fee was taken (e.g. "SUI" or "USDC").
+  optional string fee_currency = 14;
+  // response_msg: Raw CEX response payload as JSON; preserved for audit.
+  optional string response_msg = 15;
+  // memo: Optional order-level note.
+  optional string memo = 16;
 }
 
 // GetOpenMarketLedgerRequest: Returns the current Running ledger for the given asset.
