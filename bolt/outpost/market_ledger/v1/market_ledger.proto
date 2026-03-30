@@ -130,10 +130,14 @@ message HedgeStep {
 
 // HedgeOrder: Terminal CEX hedge order for a ledger cycle. Every row is a closed fill.
 //
-// All amount fields are in base asset (e.g. SUI) except filled_total (always quote).
+// Field units:
+//   Base (SUI):       quantity, filled_amount, residual
+//   Quote (USDC):     exec_amount (quantity × price; 0 for market orders), filled_total (avg_price × filled_amount)
+//   Quote/base ratio: avg_price
+//   Currency-tagged:  fee (see fee_currency)
 //
 // Field relationships:
-//   exec_amount  = quantity × price     (quote committed at placement; 0 for market orders)
+//   exec_amount  = quantity × price
 //   filled_total = avg_price × filled_amount
 //   residual     = quantity − filled_amount
 //
@@ -329,13 +333,18 @@ message RecordHedgeStepRequest {
 // RecordHedgeFillRequest: Records a terminal fill, inserts the hedge_orders row,
 // and closes the ledger cycle. Requires at least one prior RecordHedgeStep for this ledger.
 //
-// All amount fields must be in base asset (e.g. SUI) except filled_total (always quote).
+// Field units:
+//   Base (SUI):       quantity, filled_amount, residual
+//   Quote (USDC):     exec_amount (quantity × price), filled_total (avg_price × filled_amount)
+//   Quote/base ratio: avg_price
+//   Currency-tagged:  fee (see fee_currency)
 //
 // Gate.io SpotBuy: Gate's response `amount` and `left` are in quote (USDC) for market-buy.
 // See: https://www.gate.com/docs/developers/apiv4/en/#create-an-order
 //      https://www.gate.com/en-eu/docs/developers/apiv4/#create-an-order
 //   quantity      = CexOrder.amount           (77.76 SUI — MM's original intent)
 //   filled_amount = Gate.filled_amount         (77.11 SUI — already base, use directly)
+//   exec_amount   = quantity × avg_price       (65.41 USDC — compute from base, not Gate.amount)
 //   residual      = quantity − filled_amount   ( 0.65 SUI — do NOT use Gate.left directly)
 //   filled_total  = Gate.filled_total          (65.41 USDC — always quote, use directly)
 message RecordHedgeFillRequest {
