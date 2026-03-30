@@ -18,46 +18,53 @@ enum LedgerStatus {
   LEDGER_STATUS_UNSPECIFIED = 0;
   // LEDGER_STATUS_RUNNING: Active cycle — accumulating swaps and/or processing a hedge order.
   LEDGER_STATUS_RUNNING = 1;
-  // LEDGER_STATUS_CLOSED: Hedge order reached a terminal state (filled, partial fill, or failed).
+  // LEDGER_STATUS_CLOSED: Hedge fill reached a terminal state (Filled or PartiallyFilled).
   LEDGER_STATUS_CLOSED = 2;
 }
 
-// CexOrderStatus: Lifecycle status of a CEX hedge order.
-enum CexOrderStatus {
-  // CEX_ORDER_STATUS_UNSPECIFIED: Unknown status.
-  CEX_ORDER_STATUS_UNSPECIFIED = 0;
-  // CEX_ORDER_STATUS_OPEN: Order placed on CEX; awaiting fill.
-  CEX_ORDER_STATUS_OPEN = 1;
-  // CEX_ORDER_STATUS_PARTIALLY_FILLED: Order partially filled; terminal if remainder was cancelled.
-  CEX_ORDER_STATUS_PARTIALLY_FILLED = 2;
-  // CEX_ORDER_STATUS_FILLED: Order fully filled.
-  CEX_ORDER_STATUS_FILLED = 3;
-  // CEX_ORDER_STATUS_ERROR: CEX rejected or errored; response_msg may carry the reason.
-  CEX_ORDER_STATUS_ERROR = 4;
-  // CEX_ORDER_STATUS_CANCELLED: Order cancelled by MM; ledger resets for retry.
-  CEX_ORDER_STATUS_CANCELLED = 5;
-  // CEX_ORDER_STATUS_PARTIALLY_FILLED_CANCELLED: Order partially filled and the remainder was cancelled.
-  CEX_ORDER_STATUS_PARTIALLY_FILLED_CANCELLED = 6;
-  // CEX_ORDER_STATUS_CLOSED: Order closed (terminal).
-  CEX_ORDER_STATUS_CLOSED = 7;
+// HedgeStepStatus: Non-terminal status of a single CEX order placement attempt.
+// Any value may appear multiple times across steps for the same ledger — this provides
+// an audit trail of why each attempt was superseded.
+enum HedgeStepStatus {
+  // HEDGE_STEP_STATUS_UNSPECIFIED: Unknown status.
+  HEDGE_STEP_STATUS_UNSPECIFIED = 0;
+  // HEDGE_STEP_STATUS_OPEN: Order placed on CEX; awaiting fill.
+  HEDGE_STEP_STATUS_OPEN = 1;
+  // HEDGE_STEP_STATUS_CANCELLED: Order cancelled by MM; a new step may follow.
+  HEDGE_STEP_STATUS_CANCELLED = 2;
+  // HEDGE_STEP_STATUS_CLOSED: Order closed without a terminal fill; a new step may follow.
+  HEDGE_STEP_STATUS_CLOSED = 3;
+  // HEDGE_STEP_STATUS_ERROR: CEX rejected or errored; a new step may follow.
+  HEDGE_STEP_STATUS_ERROR = 4;
 }
 
-// HedgeStrategyType: Pricing strategy used when placing a CEX hedge order.
-enum HedgeStrategyType {
-  // HEDGE_STRATEGY_TYPE_UNSPECIFIED: Unknown strategy.
-  HEDGE_STRATEGY_TYPE_UNSPECIFIED = 0;
-  // HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP: Price at vwap adjusted by spread_bps; only places if profitable.
-  HEDGE_STRATEGY_TYPE_PROFITABLE_VWAP = 1;
-  // HEDGE_STRATEGY_TYPE_BREAKEVEN_VWAP: Price at vwap; only places if at break-even or better.
-  HEDGE_STRATEGY_TYPE_BREAKEVEN_VWAP = 2;
-  // HEDGE_STRATEGY_TYPE_MID_PRICE: Price at mid-market price.
-  HEDGE_STRATEGY_TYPE_MID_PRICE = 3;
-  // HEDGE_STRATEGY_TYPE_BEST_BID_ASK: Price at best bid or ask.
-  HEDGE_STRATEGY_TYPE_BEST_BID_ASK = 4;
-  // HEDGE_STRATEGY_TYPE_CROSS_SPREAD: Price crosses the spread to guarantee fill.
-  HEDGE_STRATEGY_TYPE_CROSS_SPREAD = 5;
-  // HEDGE_STRATEGY_TYPE_TAKER: Market taker order; fills immediately at any price.
-  HEDGE_STRATEGY_TYPE_TAKER = 6;
+// HedgeFillStatus: Terminal fill status stored on a closed HedgeOrder.
+enum HedgeFillStatus {
+  // HEDGE_FILL_STATUS_UNSPECIFIED: Unknown status.
+  HEDGE_FILL_STATUS_UNSPECIFIED = 0;
+  // HEDGE_FILL_STATUS_FILLED: Order fully filled.
+  HEDGE_FILL_STATUS_FILLED = 1;
+  // HEDGE_FILL_STATUS_PARTIALLY_FILLED: Exchange auto-closed the remainder; final.
+  HEDGE_FILL_STATUS_PARTIALLY_FILLED = 2;
+}
+
+// ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
+// Replaces HedgeStrategyType (renamed for clarity).
+enum ExecutionStrategy {
+  // EXECUTION_STRATEGY_UNSPECIFIED: Unknown strategy.
+  EXECUTION_STRATEGY_UNSPECIFIED = 0;
+  // EXECUTION_STRATEGY_PROFITABLE_VWAP: Limit order at VWAP adjusted by spread_bps; only places if profitable.
+  EXECUTION_STRATEGY_PROFITABLE_VWAP = 1;
+  // EXECUTION_STRATEGY_BREAKEVEN_VWAP: Limit order at VWAP; only places if at break-even or better.
+  EXECUTION_STRATEGY_BREAKEVEN_VWAP = 2;
+  // EXECUTION_STRATEGY_MID_PRICE: Limit order at mid-market price.
+  EXECUTION_STRATEGY_MID_PRICE = 3;
+  // EXECUTION_STRATEGY_BEST_BID_ASK: Limit order at best bid or ask.
+  EXECUTION_STRATEGY_BEST_BID_ASK = 4;
+  // EXECUTION_STRATEGY_CROSS_SPREAD: Limit order that crosses the spread to guarantee fill.
+  EXECUTION_STRATEGY_CROSS_SPREAD = 5;
+  // EXECUTION_STRATEGY_TAKER: Market taker order; fills immediately at any price.
+  EXECUTION_STRATEGY_TAKER = 6;
 }
 
 // CexOrderType: CEX order execution strategy.
