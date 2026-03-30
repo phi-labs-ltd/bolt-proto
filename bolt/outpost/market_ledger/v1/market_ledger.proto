@@ -212,10 +212,6 @@ message HedgeOrder {
   google.protobuf.Timestamp created_at = 18;
   // swap_ids: Swap event IDs covered by this order — loaded from bolt_hedge_order_swaps.
   repeated string swap_ids = 19;
-  // strategy: Pricing/execution strategy that produced this fill (copied from the winning step).
-  ExecutionStrategy strategy = 20;
-  // level: Timeout ladder level at which this fill occurred (copied from the winning step).
-  int32 level = 21;
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -391,10 +387,6 @@ message RecordHedgeFillRequest {
   repeated string swap_ids = 17;
   // executed_at: When this fill was executed on the CEX (MM-provided).
   google.protobuf.Timestamp executed_at = 18;
-  // strategy: Pricing/execution strategy that produced this fill.
-  ExecutionStrategy strategy = 19;
-  // level: Timeout ladder level at which this fill occurred.
-  int32 level = 20;
 }
 
 // RecordHedgeStepResponse: Returns the inserted step.
