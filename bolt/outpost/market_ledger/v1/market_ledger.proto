@@ -206,6 +206,8 @@ message HedgeOrder {
   optional string memo = 17;
   // created_at: When this order row was inserted.
   google.protobuf.Timestamp created_at = 18;
+  // swap_ids: Swap event IDs covered by this order — loaded from bolt_hedge_order_swaps.
+  repeated string swap_ids = 19;
   // Steps are fetched separately via MarketLedgerEvent field_mask "hedge_steps".
 }
 
