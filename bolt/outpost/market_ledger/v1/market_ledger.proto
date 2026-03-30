@@ -212,7 +212,7 @@ message HedgeOrder {
   google.protobuf.Timestamp created_at = 18;
   // swap_ids: Swap event IDs covered by this order — loaded from bolt_hedge_order_swaps.
   repeated string swap_ids = 19;
-  // Steps are fetched separately via MarketLedgerEvent field_mask "hedge_steps".
+  // Steps are fetched separately via MarketLedgerEvent field_mask path "hedge_steps".
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
@@ -226,12 +226,12 @@ message MarketLedgerEvent {
   // swaps: Swap events accumulated in this cycle, in insertion order.
   // Omitted unless requested via field_mask path "swaps".
   repeated SwapEvent swaps = 4;
-  // order: Terminal hedge order for this cycle; absent if the ledger has not yet been closed.
+  // hedge_order: Terminal hedge order for this cycle; absent if the ledger has not yet been closed.
   // Omitted unless requested via field_mask path "hedge_order".
-  optional HedgeOrder order = 5;
-  // steps: CEX placement attempts for this cycle, ordered by index ascending.
+  optional HedgeOrder hedge_order = 5;
+  // hedge_steps: CEX placement attempts for this cycle, ordered by index ascending.
   // Omitted unless requested via field_mask path "hedge_steps".
-  repeated HedgeStep steps = 6;
+  repeated HedgeStep hedge_steps = 6;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 7;
 }
