@@ -212,6 +212,10 @@ message HedgeOrder {
   google.protobuf.Timestamp created_at = 18;
   // swap_ids: Swap event IDs covered by this order — loaded from bolt_hedge_order_swaps.
   repeated string swap_ids = 19;
+  // strategy: Pricing/execution strategy that produced this fill (derived from the last hedge step).
+  ExecutionStrategy strategy = 20;
+  // level: Timeout ladder level at which this fill occurred (derived from the last hedge step).
+  int32 level = 21;
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block.
