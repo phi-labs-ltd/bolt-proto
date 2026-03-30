@@ -342,9 +342,9 @@ message RecordHedgeStepRequest {
 // Gate.io SpotBuy: Gate's response `amount` and `left` are in quote (USDC) for market-buy.
 // See: https://www.gate.com/docs/developers/apiv4/en/#create-an-order
 //      https://www.gate.com/en-eu/docs/developers/apiv4/#create-an-order
-//   quantity      = CexOrder.amount           (77.76 SUI — MM's original intent)
+//   quantity      = CexOrder.amount           (77.76 SUI — MM's original intent, not Gate.amount)
 //   filled_amount = Gate.filled_amount         (77.11 SUI — already base, use directly)
-//   exec_amount   = quantity × avg_price       (65.41 USDC — compute from base, not Gate.amount)
+//   exec_amount   = 0                          (market order — no limit price was committed)
 //   residual      = quantity − filled_amount   ( 0.65 SUI — do NOT use Gate.left directly)
 //   filled_total  = Gate.filled_total          (65.41 USDC — always quote, use directly)
 message RecordHedgeFillRequest {
