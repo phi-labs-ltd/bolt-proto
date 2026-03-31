@@ -118,12 +118,12 @@ message HedgeStep {
   HedgeStepStatus status = 6;
   // strategy: Pricing/execution strategy the engine applied at this step (e.g. ProfitableVwap, Taker).
   ExecutionStrategy strategy = 7;
-  // price: Limit price at placement (base/quote). 0 for market orders.
-  bolt.common.numeric.v1.Fraction price = 8;
-  // amount: Amount placed — always in base asset (e.g. SUI).
-  // MM is responsible for any conversion required by the specific CEX and order type
-  // before calling the exchange; the ledger always stores the base amount.
-  bolt.common.numeric.v1.Fraction amount = 9;
+  // price: Limit price at placement (base/quote). Absent for market orders.
+  // If present, denominator must be non-zero.
+  optional bolt.common.numeric.v1.Fraction price = 8;
+  // amount: Amount placed — always in base asset (e.g. SUI). Absent when not known at placement.
+  // If present, denominator must be non-zero.
+  optional bolt.common.numeric.v1.Fraction amount = 9;
   // memo: Optional free-text note (e.g. reason for retry).
   optional string memo = 10;
   // created_at: When this step row was inserted into the DB (service-generated).
