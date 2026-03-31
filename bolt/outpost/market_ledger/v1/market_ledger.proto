@@ -118,12 +118,12 @@ message HedgeStep {
   HedgeStepStatus status = 6;
   // strategy: Pricing/execution strategy the engine applied at this step (e.g. ProfitableVwap, Taker).
   ExecutionStrategy strategy = 7;
-  // price: Limit price at placement (base/quote). 0 for market orders.
-  bolt.common.numeric.v1.Fraction price = 8;
-  // amount: Amount placed — always in base asset (e.g. SUI).
-  // MM is responsible for any conversion required by the specific CEX and order type
-  // before calling the exchange; the ledger always stores the base amount.
-  bolt.common.numeric.v1.Fraction amount = 9;
+  // price: Limit price at placement (base/quote). Absent for market orders.
+  // If present, denominator must be non-zero.
+  optional bolt.common.numeric.v1.Fraction price = 8;
+  // amount: Amount placed — always in base asset (e.g. SUI). Absent when not known at placement.
+  // If present, denominator must be non-zero.
+  optional bolt.common.numeric.v1.Fraction amount = 9;
   // memo: Optional free-text note (e.g. reason for retry).
   optional string memo = 10;
   // created_at: When this step row was inserted into the DB (service-generated).
@@ -324,12 +324,14 @@ message RecordHedgeStepRequest {
   CexOrderType cex_order_type = 2;
   // status: State of this placement attempt. Required; any value may repeat across steps.
   HedgeStepStatus status = 3;
-  // price: Limit price at placement (base/quote). 0 for market orders.
-  bolt.common.numeric.v1.Fraction price = 4;
-  // amount: Amount placed — always base asset (e.g. SUI).
+  // price: Limit price at placement (base/quote). Omit for market orders.
+  // If provided, denominator must be non-zero (e.g. 0/1 for zero price, never 0/0).
+  optional bolt.common.numeric.v1.Fraction price = 4;
+  // amount: Amount placed — always base asset (e.g. SUI). Omit when not yet known.
+  // If provided, denominator must be non-zero.
   // MM is responsible for any conversion required by the specific CEX and order type
   // before calling the exchange; the ledger always stores the base amount.
-  bolt.common.numeric.v1.Fraction amount = 5;
+  optional bolt.common.numeric.v1.Fraction amount = 5;
   // cex_order_id: CEX-assigned order ID; omit if not yet confirmed.
   optional string cex_order_id = 6;
   // strategy: Pricing/execution strategy applied at this step. Required.
