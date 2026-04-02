@@ -4,79 +4,71 @@ package bolt.outpost.market_ledger.v1;
 
 // Direction: MM position direction for which an engine config applies.
 enum Direction {
-  // DIRECTION_UNSPECIFIED: Unknown direction.
+  // DIRECTION_UNSPECIFIED: Default zero value; must not be used explicitly.
   DIRECTION_UNSPECIFIED = 0;
-  // DIRECTION_LONG: MM is long (net sold base to pool; needs to buy base on CEX).
+  // DIRECTION_LONG: Net-long exposure (bought more base than sold).
   DIRECTION_LONG = 1;
-  // DIRECTION_SHORT: MM is short (net bought base from pool; needs to sell base on CEX).
+  // DIRECTION_SHORT: Net-short exposure (sold more base than bought).
   DIRECTION_SHORT = 2;
 }
 
-// LedgerStatus: Lifecycle state of a market ledger cycle.
+// LedgerStatus: Lifecycle state of a market ledger row.
 enum LedgerStatus {
-  // LEDGER_STATUS_UNSPECIFIED: Unknown status.
+  // LEDGER_STATUS_UNSPECIFIED: Default zero value; must not be used explicitly.
   LEDGER_STATUS_UNSPECIFIED = 0;
-  // LEDGER_STATUS_RUNNING: Active cycle — accumulating swaps and/or processing a hedge order.
+  // LEDGER_STATUS_RUNNING: One per asset, accumulates swaps continuously.
   LEDGER_STATUS_RUNNING = 1;
-  // LEDGER_STATUS_CLOSED: Hedge fill reached a terminal state (Filled or PartiallyFilled).
+  // LEDGER_STATUS_CLOSED: CloseHedging transitioned an in_progress row to closed.
   LEDGER_STATUS_CLOSED = 2;
+  // LEDGER_STATUS_IN_PROGRESS: Created by StartHedging — snapshot of hedged delta/vwap.
+  LEDGER_STATUS_IN_PROGRESS = 3;
 }
 
-// HedgeStepStatus: Non-terminal status of a single CEX order placement attempt.
-// Any value may appear multiple times across steps for the same ledger — this provides
-// an audit trail of why each attempt was superseded.
-enum HedgeStepStatus {
-  // HEDGE_STEP_STATUS_UNSPECIFIED: Unknown status.
-  HEDGE_STEP_STATUS_UNSPECIFIED = 0;
-  // HEDGE_STEP_STATUS_OPEN: Order placed on CEX; awaiting fill.
-  HEDGE_STEP_STATUS_OPEN = 1;
-  // HEDGE_STEP_STATUS_CANCELLED: Order cancelled by MM; a new step may follow.
-  HEDGE_STEP_STATUS_CANCELLED = 2;
-  // HEDGE_STEP_STATUS_CLOSED: Order closed without a terminal fill; a new step may follow.
-  HEDGE_STEP_STATUS_CLOSED = 3;
-  // HEDGE_STEP_STATUS_ERROR: CEX rejected or errored; a new step may follow.
-  HEDGE_STEP_STATUS_ERROR = 4;
-}
-
-// HedgeFillStatus: Terminal fill status stored on a closed HedgeOrder.
-enum HedgeFillStatus {
-  // HEDGE_FILL_STATUS_UNSPECIFIED: Unknown status.
-  HEDGE_FILL_STATUS_UNSPECIFIED = 0;
-  // HEDGE_FILL_STATUS_FILLED: Order fully filled.
-  HEDGE_FILL_STATUS_FILLED = 1;
-  // HEDGE_FILL_STATUS_PARTIALLY_FILLED: Exchange auto-closed the remainder; final.
-  HEDGE_FILL_STATUS_PARTIALLY_FILLED = 2;
+// HedgeOrderStatus: Lifecycle state of a hedge order.
+// Replaces HedgeFillStatus (terminal-only) and HedgeStepStatus (removed).
+enum HedgeOrderStatus {
+  // HEDGE_ORDER_STATUS_UNSPECIFIED: Default zero value; must not be used explicitly.
+  HEDGE_ORDER_STATUS_UNSPECIFIED = 0;
+  // HEDGE_ORDER_STATUS_STARTED: StartHedging called, hedge in-flight on CEX.
+  HEDGE_ORDER_STATUS_STARTED = 1;
+  // HEDGE_ORDER_STATUS_FILLED: CEX fully filled the order.
+  HEDGE_ORDER_STATUS_FILLED = 2;
+  // HEDGE_ORDER_STATUS_PARTIALLY_FILLED: CEX partially filled; unfilled portion added back to running ledger.
+  HEDGE_ORDER_STATUS_PARTIALLY_FILLED = 3;
+  // HEDGE_ORDER_STATUS_CANCELLED: MM cancelled the CEX order; hedged_delta added back to running ledger.
+  HEDGE_ORDER_STATUS_CANCELLED = 4;
+  // HEDGE_ORDER_STATUS_ERROR: CEX error; hedged_delta added back to running ledger.
+  HEDGE_ORDER_STATUS_ERROR = 5;
 }
 
 // ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
-// Replaces HedgeStrategyType (renamed for clarity).
 enum ExecutionStrategy {
-  // EXECUTION_STRATEGY_UNSPECIFIED: Unknown strategy.
+  // EXECUTION_STRATEGY_UNSPECIFIED: Default zero value; must not be used explicitly.
   EXECUTION_STRATEGY_UNSPECIFIED = 0;
-  // EXECUTION_STRATEGY_PROFITABLE_VWAP: Limit order at VWAP adjusted by spread_bps; only places if profitable.
+  // EXECUTION_STRATEGY_PROFITABLE_VWAP: Limit price set above VWAP to ensure profit.
   EXECUTION_STRATEGY_PROFITABLE_VWAP = 1;
-  // EXECUTION_STRATEGY_BREAKEVEN_VWAP: Limit order at VWAP; only places if at break-even or better.
+  // EXECUTION_STRATEGY_BREAKEVEN_VWAP: Limit price set at VWAP for break-even execution.
   EXECUTION_STRATEGY_BREAKEVEN_VWAP = 2;
-  // EXECUTION_STRATEGY_MID_PRICE: Limit order at mid-market price.
+  // EXECUTION_STRATEGY_MID_PRICE: Limit price set at the mid-point of the order book.
   EXECUTION_STRATEGY_MID_PRICE = 3;
-  // EXECUTION_STRATEGY_BEST_BID_ASK: Limit order at best bid or ask.
+  // EXECUTION_STRATEGY_BEST_BID_ASK: Limit price at the best bid or ask.
   EXECUTION_STRATEGY_BEST_BID_ASK = 4;
-  // EXECUTION_STRATEGY_CROSS_SPREAD: Limit order that crosses the spread to guarantee fill.
+  // EXECUTION_STRATEGY_CROSS_SPREAD: Price crosses the spread for faster fill.
   EXECUTION_STRATEGY_CROSS_SPREAD = 5;
-  // EXECUTION_STRATEGY_TAKER: Market taker order; fills immediately at any price.
+  // EXECUTION_STRATEGY_TAKER: Market/taker order for immediate fill.
   EXECUTION_STRATEGY_TAKER = 6;
 }
 
 // CexOrderType: CEX order execution strategy.
 enum CexOrderType {
-  // CEX_ORDER_TYPE_UNSPECIFIED: Unknown order type.
+  // CEX_ORDER_TYPE_UNSPECIFIED: Default zero value; must not be used explicitly.
   CEX_ORDER_TYPE_UNSPECIFIED = 0;
-  // CEX_ORDER_TYPE_LIMIT_BUY: Limit order to buy base asset.
+  // CEX_ORDER_TYPE_LIMIT_BUY: Limit buy order on CEX.
   CEX_ORDER_TYPE_LIMIT_BUY = 1;
-  // CEX_ORDER_TYPE_LIMIT_SELL: Limit order to sell base asset.
+  // CEX_ORDER_TYPE_LIMIT_SELL: Limit sell order on CEX.
   CEX_ORDER_TYPE_LIMIT_SELL = 2;
-  // CEX_ORDER_TYPE_SPOT_BUY: Spot (market) order to buy base asset.
+  // CEX_ORDER_TYPE_SPOT_BUY: Spot/market buy order on CEX.
   CEX_ORDER_TYPE_SPOT_BUY = 3;
-  // CEX_ORDER_TYPE_SPOT_SELL: Spot (market) order to sell base asset.
+  // CEX_ORDER_TYPE_SPOT_SELL: Spot/market sell order on CEX.
   CEX_ORDER_TYPE_SPOT_SELL = 4;
 }
