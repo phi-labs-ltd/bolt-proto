@@ -235,8 +235,9 @@ message StartHedgingResponse {
 
 // CloseHedgingRequest: Request to close a hedge order with fill details.
 message CloseHedgingRequest {
-  // hedge_id: PK of the hedge order to close (returned from StartHedging).
-  int64 hedge_id = 1;
+  // ledger_event_id: References bolt_market_ledger_events.id — the event whose hedge to close.
+  // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
+  int64 ledger_event_id = 1;
   // status: Terminal status — filled, partially_filled, cancelled, or error.
   HedgeOrderStatus status = 2;
   // cex_order_id: CEX-assigned order ID.
