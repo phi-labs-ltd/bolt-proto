@@ -144,6 +144,8 @@ message HedgeOrder {
   optional string memo = 16;
   // response_msg: Raw CEX response payload as JSON; preserved for audit.
   optional string response_msg = 17;
+  // ladder_summary: Summary of the timeout ladder execution for this hedge. Set at CloseHedging.
+  optional string ladder_summary = 21;
   // finished_at: When fill/cancel/error completed on CEX (MM-provided). Set at CloseHedging.
   optional google.protobuf.Timestamp finished_at = 18;
   // created_at: When this order row was inserted (service-generated).
@@ -225,16 +227,17 @@ message StartHedgingRequest {
 message StartHedgingResponse {
   // event: Updated running ledger event with adjusted delta/vwap. None when delta == 0 after adjustment.
   optional MarketLedgerEvent event = 1;
-  // hedge_order: The newly created hedge order (status=started).
-  HedgeOrder hedge_order = 2;
+  // hedge_order: The newly created hedge order (status=started). None when overhedge or direction mismatch.
+  optional HedgeOrder hedge_order = 2;
 }
 
 // ── CloseHedging ─────────────────────────────────────────────────────────────
 
 // CloseHedgingRequest: Request to close a hedge order with fill details.
 message CloseHedgingRequest {
-  // hedge_id: PK of the hedge order to close (returned from StartHedging).
-  int64 hedge_id = 1;
+  // ledger_event_id: References bolt_market_ledger_events.id — the event whose hedge to close.
+  // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
+  int64 ledger_event_id = 1;
   // status: Terminal status — filled, partially_filled, cancelled, or error.
   HedgeOrderStatus status = 2;
   // cex_order_id: CEX-assigned order ID.
@@ -255,6 +258,8 @@ message CloseHedgingRequest {
   optional string response_msg = 10;
   // memo: Optional note.
   optional string memo = 11;
+  // ladder_summary: Summary of the timeout ladder execution for this hedge.
+  optional string ladder_summary = 13;
   // finished_at: When fill/cancel/error completed on CEX.
   optional google.protobuf.Timestamp finished_at = 12;
 }
