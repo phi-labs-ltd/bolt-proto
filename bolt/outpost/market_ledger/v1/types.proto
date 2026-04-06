@@ -24,23 +24,6 @@ enum LedgerStatus {
   LEDGER_STATUS_IN_PROGRESS = 3;
 }
 
-// HedgeOrderStatus: Lifecycle state of a hedge order.
-// Replaces HedgeFillStatus (terminal-only) and HedgeStepStatus (removed).
-enum HedgeOrderStatus {
-  // HEDGE_ORDER_STATUS_UNSPECIFIED: Default zero value; must not be used explicitly.
-  HEDGE_ORDER_STATUS_UNSPECIFIED = 0;
-  // HEDGE_ORDER_STATUS_STARTED: StartHedging called, hedge in-flight on CEX.
-  HEDGE_ORDER_STATUS_STARTED = 1;
-  // HEDGE_ORDER_STATUS_FILLED: CEX fully filled the order.
-  HEDGE_ORDER_STATUS_FILLED = 2;
-  // HEDGE_ORDER_STATUS_PARTIALLY_FILLED: CEX partially filled; unfilled portion added back to running ledger.
-  HEDGE_ORDER_STATUS_PARTIALLY_FILLED = 3;
-  // HEDGE_ORDER_STATUS_CANCELLED: MM cancelled the CEX order; hedged_delta added back to running ledger.
-  HEDGE_ORDER_STATUS_CANCELLED = 4;
-  // HEDGE_ORDER_STATUS_ERROR: CEX error; hedged_delta added back to running ledger.
-  HEDGE_ORDER_STATUS_ERROR = 5;
-}
-
 // ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
 enum ExecutionStrategy {
   // EXECUTION_STRATEGY_UNSPECIFIED: Default zero value; must not be used explicitly.
