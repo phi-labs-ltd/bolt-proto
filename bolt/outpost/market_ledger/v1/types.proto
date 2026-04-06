@@ -24,7 +24,6 @@ enum LedgerStatus {
   LEDGER_STATUS_IN_PROGRESS = 3;
 }
 
-
 // ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
 enum ExecutionStrategy {
   // EXECUTION_STRATEGY_UNSPECIFIED: Default zero value; must not be used explicitly.
