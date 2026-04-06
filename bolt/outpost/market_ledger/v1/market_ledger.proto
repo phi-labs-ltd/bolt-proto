@@ -5,6 +5,7 @@ package bolt.outpost.market_ledger.v1;
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v1/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
+import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
 import "google/protobuf/duration.proto";
@@ -93,7 +94,7 @@ message SwapEvent {
   // base_liquidity: Pool base-asset liquidity at the time of the swap.
   bolt.assets.v1.Balance base_liquidity = 13;
   // swap_type: Classification of the swap (e.g. buy, sell).
-  bolt.outpost.settlement.v2.SwapType swap_type = 14;
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
   // originator: Partner that originated this swap.
   bolt.common.partners.v1.Partner originator = 15;
   // timestamp: On-chain timestamp of the swap, if available.
@@ -106,7 +107,7 @@ message SwapEvent {
 //
 // Field units:
 //   Base (SUI):       hedged_delta, filled_amount
-//   Quote (USDC):     exec_amount (filled_amount × avg_price)
+//   Quote (USDC):     executed_amount (filled_amount × avg_price)
 //   Quote/base ratio: avg_price
 //   Currency-tagged:  fee (see fee_currency)
 message HedgeOrder {
@@ -126,32 +127,38 @@ message HedgeOrder {
   optional string internal_order_id = 7;
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
+  // swap_type: Buy or sell side of the hedge. Set at StartHedging.
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 9;
+  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at StartHedging.
+  string instrument_name = 10;
+  // denom: Quote denomination (e.g. "USDC"). Set at StartHedging.
+  string denom = 11;
   // cex_order_id: CEX-assigned order ID. Set at CloseHedging.
-  optional string cex_order_id = 9;
-  // cex_order_type: Order type (limit/spot × buy/sell). Set at CloseHedging.
-  optional CexOrderType cex_order_type = 10;
+  optional string cex_order_id = 12;
+  // cex_order_kind: Market or limit order. Set at CloseHedging.
+  optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 13;
   // filled_amount: Base amount actually filled. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction filled_amount = 11;
-  // exec_amount: Quote value = filled_amount × avg_price. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction exec_amount = 12;
+  optional bolt.common.numeric.v1.Fraction filled_amount = 14;
+  // executed_amount: Quote value = filled_amount × avg_price. Set at CloseHedging.
+  optional bolt.common.numeric.v1.Fraction executed_amount = 15;
   // avg_price: Volume-weighted average fill price. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction avg_price = 13;
+  optional bolt.common.numeric.v1.Fraction avg_price = 16;
   // fee: Fee deducted; currency given by fee_currency. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction fee = 14;
+  optional bolt.common.numeric.v1.Fraction fee = 17;
   // fee_currency: Asset in which the fee was taken.
-  optional string fee_currency = 15;
+  optional string fee_currency = 18;
   // memo: Optional order-level note.
-  optional string memo = 16;
+  optional string memo = 19;
   // response_msg: Raw CEX response payload as JSON; preserved for audit.
-  optional string response_msg = 17;
+  optional string response_msg = 20;
   // ladder_summary: Summary of the timeout ladder execution for this hedge. Set at CloseHedging.
   optional string ladder_summary = 21;
   // finished_at: When fill/cancel/error completed on CEX (MM-provided). Set at CloseHedging.
-  optional google.protobuf.Timestamp finished_at = 18;
+  optional google.protobuf.Timestamp finished_at = 22;
   // created_at: When this order row was inserted (service-generated).
-  google.protobuf.Timestamp created_at = 19;
+  google.protobuf.Timestamp created_at = 23;
   // updated_at: When this order row was last modified.
-  google.protobuf.Timestamp updated_at = 20;
+  google.protobuf.Timestamp updated_at = 24;
 }
 
 // MarketLedger: A market ledger row.
@@ -221,6 +228,14 @@ message StartHedgingRequest {
   optional string internal_order_id = 2;
   // executed_at: When MM initiated the hedge on CEX.
   google.protobuf.Timestamp executed_at = 3;
+  // swap_type: Buy or sell side of the hedge.
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 4;
+  // executed_amount: Quote value of the hedge order.
+  bolt.common.numeric.v1.Fraction executed_amount = 5;
+  // instrument_name: CEX instrument name (e.g. "SUI-USDC").
+  string instrument_name = 6;
+  // denom: Quote denomination (e.g. "USDC").
+  string denom = 7;
 }
 
 // StartHedgingResponse: Result of a StartHedging call.
@@ -242,12 +257,12 @@ message CloseHedgingRequest {
   HedgeOrderStatus status = 2;
   // cex_order_id: CEX-assigned order ID.
   optional string cex_order_id = 3;
-  // cex_order_type: Order type used on CEX.
-  optional CexOrderType cex_order_type = 4;
+  // cex_order_kind: Market or limit order used on CEX.
+  optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 4;
   // filled_amount: Base amount filled. Required for filled/partially_filled.
   optional bolt.common.numeric.v1.Fraction filled_amount = 5;
-  // exec_amount: Quote value of fills.
-  optional bolt.common.numeric.v1.Fraction exec_amount = 6;
+  // executed_amount: Quote value of fills.
+  optional bolt.common.numeric.v1.Fraction executed_amount = 6;
   // avg_price: Volume-weighted average fill price.
   optional bolt.common.numeric.v1.Fraction avg_price = 7;
   // fee: Fee deducted.
@@ -258,10 +273,10 @@ message CloseHedgingRequest {
   optional string response_msg = 10;
   // memo: Optional note.
   optional string memo = 11;
-  // ladder_summary: Summary of the timeout ladder execution for this hedge.
-  optional string ladder_summary = 13;
   // finished_at: When fill/cancel/error completed on CEX.
   optional google.protobuf.Timestamp finished_at = 12;
+  // ladder_summary: Summary of the timeout ladder execution for this hedge.
+  optional string ladder_summary = 13;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.

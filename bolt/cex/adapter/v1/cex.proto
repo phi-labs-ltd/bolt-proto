@@ -57,6 +57,8 @@ enum OrderKind {
   ORDER_KIND_UNSPECIFIED = 0;
   // Market order
   ORDER_KIND_MARKET = 1;
+  // Limit order at a specified price
+  ORDER_KIND_LIMIT = 2;
 }
 
 // Response to CreateOrderRequest
