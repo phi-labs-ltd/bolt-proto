@@ -58,17 +58,3 @@ enum ExecutionStrategy {
   // EXECUTION_STRATEGY_TAKER: Market/taker order for immediate fill.
   EXECUTION_STRATEGY_TAKER = 6;
 }
-
-// CexOrderType: CEX order execution strategy.
-enum CexOrderType {
-  // CEX_ORDER_TYPE_UNSPECIFIED: Default zero value; must not be used explicitly.
-  CEX_ORDER_TYPE_UNSPECIFIED = 0;
-  // CEX_ORDER_TYPE_LIMIT_BUY: Limit buy order on CEX.
-  CEX_ORDER_TYPE_LIMIT_BUY = 1;
-  // CEX_ORDER_TYPE_LIMIT_SELL: Limit sell order on CEX.
-  CEX_ORDER_TYPE_LIMIT_SELL = 2;
-  // CEX_ORDER_TYPE_SPOT_BUY: Spot/market buy order on CEX.
-  CEX_ORDER_TYPE_SPOT_BUY = 3;
-  // CEX_ORDER_TYPE_SPOT_SELL: Spot/market sell order on CEX.
-  CEX_ORDER_TYPE_SPOT_SELL = 4;
-}
