@@ -58,4 +58,3 @@ enum ExecutionStrategy {
   // EXECUTION_STRATEGY_TAKER: Market/taker order for immediate fill.
   EXECUTION_STRATEGY_TAKER = 6;
 }
-
