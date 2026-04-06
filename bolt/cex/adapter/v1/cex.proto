@@ -72,7 +72,7 @@ message CreateOrderResponse {
   OrderStatus status = 3;
 }
 
-// Status of the filled or cancelled order
+// Status of a CEX order through its lifecycle.
 enum OrderStatus {
   // Order status is not specified - should never be used
   ORDER_STATUS_UNSPECIFIED = 0;
@@ -82,6 +82,16 @@ enum OrderStatus {
   ORDER_STATUS_PARTIALLY_FILLED_CANCELLED = 2;
   // Order is filled
   ORDER_STATUS_FILLED = 3;
+  // Order created but not yet submitted to CEX
+  ORDER_STATUS_CREATED = 4;
+  // Order submitted and in-flight on CEX
+  ORDER_STATUS_OPEN = 5;
+  // Order partially filled, still open
+  ORDER_STATUS_PARTIALLY_FILLED = 6;
+  // Order closed (terminal, post-settlement)
+  ORDER_STATUS_CLOSED = 7;
+  // CEX error
+  ORDER_STATUS_ERROR = 8;
 }
 
 // Request to withdraw tokens from CEX

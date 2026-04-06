@@ -16,7 +16,7 @@ import "google/protobuf/timestamp.proto";
 // hedge-order lifecycle, and streams live ledger state.
 service MarketLedgerService {
   // Streams the running ledger as the initial snapshot, then live updates per block.
-  // In-flight hedges are included via the hedge_orders field (status=started).
+  // In-flight hedges are included via the hedge_orders field (cex_order_status=open).
   // field_mask paths: "swaps", "hedge_orders" opt in to those fields.
   rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
   // Subtracts hedged delta from running ledger, creates in_progress row + hedge order.
@@ -117,8 +117,8 @@ message HedgeOrder {
   int64 ledger_id = 2;
   // ledger_event_id: FK to bolt_market_ledger_events. UNIQUE — one hedge per event.
   int64 ledger_event_id = 3;
-  // status: Lifecycle state of this hedge order.
-  HedgeOrderStatus status = 4;
+  // cex_order_status: Lifecycle state of this hedge order.
+  bolt.cex.adapter.v1.OrderStatus cex_order_status = 4;
   // hedged_delta: Delta subtracted from running ledger at StartHedging (signed, base units).
   bolt.common.numeric.v1.Fraction hedged_delta = 5;
   // hedged_vwap: VWAP snapshot at StartHedging time.
@@ -187,7 +187,7 @@ message MarketLedger {
 // or after StartHedging/CloseHedging adjusts the running delta.
 //
 // Only the running ledger row is sent. In_progress/closed rows are internal bookkeeping.
-// In-flight hedges are visible via the hedge_orders field (status=started).
+// In-flight hedges are visible via the hedge_orders field (cex_order_status=open).
 // Terminal orders (filled/partially_filled/cancelled/error) are excluded.
 message MarketLedgerEvent {
   // ledger: Always the running ledger row.
@@ -197,7 +197,7 @@ message MarketLedgerEvent {
   // swaps: Swap events accumulated in this ledger, in insertion order.
   // Omitted unless requested via field_mask path "swaps".
   repeated SwapEvent swaps = 3;
-  // hedge_orders: In-flight hedge orders (status=started) for this asset.
+  // hedge_orders: In-flight hedge orders (cex_order_status=open) for this asset.
   // Omitted unless requested via field_mask path "hedge_orders".
   repeated HedgeOrder hedge_orders = 4;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
@@ -242,7 +242,7 @@ message StartHedgingRequest {
 message StartHedgingResponse {
   // event: Updated running ledger event with adjusted delta/vwap. None when delta == 0 after adjustment.
   optional MarketLedgerEvent event = 1;
-  // hedge_order: The newly created hedge order (status=started). None when overhedge or direction mismatch.
+  // hedge_order: The newly created hedge order (cex_order_status=open). None when overhedge or direction mismatch.
   optional HedgeOrder hedge_order = 2;
 }
 
@@ -253,8 +253,8 @@ message CloseHedgingRequest {
   // ledger_event_id: References bolt_market_ledger_events.id — the event whose hedge to close.
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
-  // status: Terminal status — filled, partially_filled, cancelled, or error.
-  HedgeOrderStatus status = 2;
+  // cex_order_status: Terminal status — filled, partially_filled, cancelled, or error.
+  bolt.cex.adapter.v1.OrderStatus cex_order_status = 2;
   // cex_order_id: CEX-assigned order ID.
   optional string cex_order_id = 3;
   // cex_order_kind: Market or limit order used on CEX.
