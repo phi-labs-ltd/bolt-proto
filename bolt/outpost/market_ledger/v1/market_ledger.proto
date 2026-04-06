@@ -187,8 +187,8 @@ message MarketLedger {
 // or after StartHedging/CloseHedging adjusts the running delta.
 //
 // Only the running ledger row is sent. In_progress/closed rows are internal bookkeeping.
-// In-flight hedges are visible via the hedge_orders field (cex_order_status=open).
-// Terminal orders (filled/partially_filled/cancelled/error) are excluded.
+// In-flight hedges (cex_order_status: created/open) are visible via the hedge_orders field.
+// Terminal orders (filled/partially_filled/cancelled/partially_filled_cancelled/closed/error) are excluded.
 message MarketLedgerEvent {
   // ledger: Always the running ledger row.
   MarketLedger ledger = 1;
@@ -253,7 +253,7 @@ message CloseHedgingRequest {
   // ledger_event_id: References bolt_market_ledger_events.id — the event whose hedge to close.
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
-  // cex_order_status: Terminal status — filled, partially_filled, cancelled, or error.
+  // cex_order_status: Terminal status — filled, cancelled, partially_filled_cancelled, closed, or error.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 2;
   // cex_order_id: CEX-assigned order ID.
   optional string cex_order_id = 3;

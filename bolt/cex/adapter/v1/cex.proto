@@ -67,8 +67,9 @@ message CreateOrderResponse {
   bolt.assets.v1.Balance base = 1;
   // Amount of QUOTE asset traded.
   bolt.assets.v1.Balance quote = 2;
-  // Order statuses. Note that orders in progress (Created, PartiallyFilled) would not be returned,
-  // but order would be awaited till completion.
+  // Order status. CreateOrder awaits completion, so only terminal statuses (Filled, Cancelled,
+  // PartiallyFilledCancelled, PartiallyFilled, Closed, Error) are returned here. In-flight
+  // statuses (Created, Open) are used by other APIs (e.g. market-ledger).
   OrderStatus status = 3;
 }
 
@@ -86,7 +87,7 @@ enum OrderStatus {
   ORDER_STATUS_CREATED = 4;
   // Order submitted and in-flight on CEX
   ORDER_STATUS_OPEN = 5;
-  // Order partially filled, still open
+  // Order partially filled (terminal — unfilled portion not expected to fill)
   ORDER_STATUS_PARTIALLY_FILLED = 6;
   // Order closed (terminal, post-settlement)
   ORDER_STATUS_CLOSED = 7;
