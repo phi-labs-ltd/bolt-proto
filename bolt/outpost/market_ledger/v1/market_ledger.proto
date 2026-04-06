@@ -94,7 +94,7 @@ message SwapEvent {
   // base_liquidity: Pool base-asset liquidity at the time of the swap.
   bolt.assets.v1.Balance base_liquidity = 13;
   // swap_type: Classification of the swap (e.g. buy, sell).
-  bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
+  bolt.outpost.settlement.v2.SwapType swap_type = 14;
   // originator: Partner that originated this swap.
   bolt.common.partners.v1.Partner originator = 15;
   // timestamp: On-chain timestamp of the swap, if available.
@@ -127,7 +127,7 @@ message HedgeOrder {
   optional string internal_order_id = 7;
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
-  // swap_type: Buy or sell side of the hedge. Set at StartHedging.
+  // cex_order_type: Buy or sell side of the hedge. Set at StartHedging.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 9;
   // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at StartHedging.
   string instrument_name = 10;
@@ -228,7 +228,7 @@ message StartHedgingRequest {
   optional string internal_order_id = 2;
   // executed_at: When MM initiated the hedge on CEX.
   google.protobuf.Timestamp executed_at = 3;
-  // swap_type: Buy or sell side of the hedge.
+  // cex_order_type: Buy or sell side of the hedge.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 4;
   // executed_amount: Quote value of the hedge order.
   bolt.common.numeric.v1.Fraction executed_amount = 5;
