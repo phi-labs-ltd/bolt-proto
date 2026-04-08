@@ -277,6 +277,8 @@ message CloseHedgingRequest {
   optional google.protobuf.Timestamp finished_at = 12;
   // ladder_summary: Summary of the timeout ladder execution for this hedge.
   optional string ladder_summary = 13;
+  // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
