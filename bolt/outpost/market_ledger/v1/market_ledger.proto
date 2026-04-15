@@ -77,6 +77,8 @@ message TimeoutStep {
   google.protobuf.Duration delay = 1;
   // strategy: Execution strategy to use at this timeout rung.
   ExecutionStrategy strategy = 2;
+  // spread_bps: Optional spread in basis points applied to this rung's limit price.
+  optional uint32 spread_bps = 3;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -91,8 +93,6 @@ message EngineConfig {
   bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered list of timeout rungs with escalating strategies.
   repeated TimeoutStep timeout_ladder = 5;
-  // spread_bps: Optional spread in basis points applied to limit price.
-  optional uint32 spread_bps = 6;
 }
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
