@@ -277,6 +277,8 @@ message BalanceUpdate {
   string shares_updated = 6;
   // total_lp_shares: Total amount of LP shares in the pool after the update.
   string total_lp_shares = 7;
+  // total_base_liquidity: Total BASE liquidity in the pool after the update.
+  bolt.assets.v1.Balance total_base_liquidity = 8;
 }
 
 // BalanceUpdateType: Enum representing the type of balance update.
