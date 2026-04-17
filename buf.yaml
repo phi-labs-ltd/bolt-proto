@@ -6,8 +6,6 @@ lint:
     - STANDARD
     - COMMENTS
     - FILE_LOWER_SNAKE_CASE
-  ignore:
-    - bolt/outpost/market_ledger/v1/market_ledger.proto # Temporary as we transition to splitting the service, else we get error that same Request message is used in multiple services
 breaking:
   use:
     - FILE
