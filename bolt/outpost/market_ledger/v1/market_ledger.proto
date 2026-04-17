@@ -51,7 +51,7 @@ message TimeoutStep {
   // strategy: Execution strategy to use at this timeout rung.
   ExecutionStrategy strategy = 2;
   // spread_bps: Optional spread in basis points applied to this rung's limit price.
-  optional uint32 spread_bps = 3;
+  optional bolt.common.numeric.v1.Fraction spread_bps = 3;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
