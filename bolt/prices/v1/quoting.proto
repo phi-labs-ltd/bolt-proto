@@ -6,20 +6,20 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v1/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
-// OracleService: Oracle service for subscribing to prices being posted by Pricefeeder.
-service OracleService {
-  // SubscribePrices: Subscribes to price changes for the specified pairs. If no pairs are specified, it subscribes to all price changes.
-  rpc SubscribePrices(SubscribePricesRequest) returns (stream SubscribePricesResponse);
+// QuotingService: QuotingService for subscribing to prices being posted by Pricefeeder.
+service QuotingService {
+  // SubscribePriceQuotes: Subscribes to price changes for the specified pairs. If no pairs are specified, it subscribes to all price changes.
+  rpc SubscribePriceQuotes(SubscribePriceQuotesRequest) returns (stream SubscribePriceQuotesResponse);
 }
 
-// SubscribePricesRequest: Request for subscribing to price changes.
-message SubscribePricesRequest {
+// SubscribePriceQuotesRequest: Request for subscribing to price changes.
+message SubscribePriceQuotesRequest {
   // pairs: List of pairs to subscribe to. If empty, subscribes to all price changes.
   repeated bolt.assets.v1.Pair pairs = 1;
 }
 
-// SubscribePricesResponse: Response for subscribing to price changes.
-message SubscribePricesResponse {
+// SubscribePriceQuotesResponse: Response for subscribing to price changes.
+message SubscribePriceQuotesResponse {
   // pair: The pair for which the price is being updated.
   bolt.assets.v1.Pair pair = 1;
   // generated_at: The timestamp of the price generation.
