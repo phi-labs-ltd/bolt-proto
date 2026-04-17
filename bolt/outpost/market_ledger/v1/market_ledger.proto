@@ -12,33 +12,6 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
-// MarketLedgerService: Internal MM service that tracks swap deltas, manages
-// hedge-order lifecycle, and streams live ledger state.
-service MarketLedgerService {
-  // Streams the running ledger as the initial snapshot, then live updates per block.
-  // In-flight hedges are included via the hedge_orders field (cex_order_status=open).
-  // field_mask paths: "swaps", "hedge_orders" opt in to those fields.
-  rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
-  // Subtracts hedged delta from running ledger, creates in_progress row + hedge order.
-  // Response includes an optional MarketLedgerEvent (present if adjusted delta != 0).
-  rpc StartHedging(StartHedgingRequest) returns (StartHedgingResponse);
-  // Closes a specific hedge order with fill details. Transitions in_progress → closed.
-  // For cancel/error/partial: adds delta back to running ledger, returns updated event.
-  rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
-  // Inserts or replaces the engine config for a single (asset, direction) pair.
-  rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
-  // Returns all configs for the given asset (both Long and Short directions).
-  rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
-  // Returns all engine configs across all assets and directions.
-  rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
-  // Returns the current Running ledger for the given asset, or absent if none exists.
-  rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
-  // Returns all Running ledgers across every asset, ordered by asset name.
-  rpc GetOpenMarketLedgers(GetOpenMarketLedgersRequest) returns (GetOpenMarketLedgersResponse);
-  // Returns the ledger with the given id.
-  rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
-}
-
 // The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
 service PublicMarketLedgerService {
   // Streams the running ledger as the initial snapshot, then live updates per block.
