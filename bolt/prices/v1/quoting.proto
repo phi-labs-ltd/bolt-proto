@@ -3,7 +3,7 @@ syntax = "proto3";
 package bolt.prices.v1;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // QuotingService: QuotingService for subscribing to prices being posted by Pricefeeder.
@@ -27,7 +27,7 @@ message SubscribePriceQuotesResponse {
   // posted_at: The timestamp of the price posting. This field is optional and may be null if the price has never been posted but intermediately calculated.
   optional google.protobuf.Timestamp posted_at = 3;
   // price: The price for the asset pair.
-  bolt.common.numeric.v1.Fraction price = 4;
+  bolt.common.numeric.v2.Fraction price = 4;
   // metadata: Additional metadata specific to the price calculation
   oneof metadata {
     // avo_metadata: Metadata specific to AVOMetadata.
@@ -40,9 +40,9 @@ message AVOMetadata {
   // pair: The pair for which the price is being updated.
   bolt.assets.v1.Pair pair = 1;
   // bid: The bid price for the asset pair.
-  bolt.common.numeric.v1.Fraction bid = 2;
+  bolt.common.numeric.v2.Fraction bid = 2;
   // ask: The ask price for the asset pair.
-  bolt.common.numeric.v1.Fraction ask = 3;
+  bolt.common.numeric.v2.Fraction ask = 3;
   // spread: The spread between the bid and ask prices for the asset pair.
-  bolt.common.numeric.v1.Fraction spread = 4;
+  bolt.common.numeric.v2.Fraction spread = 4;
 }
