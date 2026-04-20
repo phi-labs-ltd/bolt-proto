@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package bolt.common.numeric.v2;
+
+// For representing rational numbers.
+message Fraction {
+  // The top bit
+  uint64 numerator = 1;
+  // The bottom bit
+  uint64 denominator = 2;
+  // Whether the number is negative or not
+  bool is_negative = 3;
+}
