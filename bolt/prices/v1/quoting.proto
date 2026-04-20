@@ -45,4 +45,12 @@ message AVOMetadata {
   bolt.common.numeric.v2.Fraction ask = 3;
   // spread: The spread between the bid and ask prices for the asset pair.
   bolt.common.numeric.v2.Fraction spread = 4;
+  // sigma_fast: The fast sigma value used in the price calculation.
+  bolt.common.numeric.v2.Fraction sigma_fast = 5;
+  // sigma_slow: The slow sigma value used in the price calculation.
+  bolt.common.numeric.v2.Fraction sigma_slow = 6;
+  // sigma_combined: The combined sigma value used in the price calculation.
+  bolt.common.numeric.v2.Fraction sigma_combined = 7;
+  // log_return: The log return value used in the price calculation.
+  bolt.common.numeric.v2.Fraction log_return = 8;
 }
