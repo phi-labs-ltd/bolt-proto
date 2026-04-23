@@ -14,4 +14,6 @@ enum Partner {
   PARTNER_FLOWX = 3;
   // Aftermath partner integration
   PARTNER_AFTERMATH = 4;
+  // Cetus partner integration
+  PARTNER_CETUS = 5;
 }
