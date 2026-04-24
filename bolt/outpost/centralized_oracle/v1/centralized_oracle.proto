@@ -17,6 +17,11 @@ service OracleService {
 message PostPricesRequest {
   // price_updates: List of price updates to be posted to the oracle
   repeated PriceUpdate price_updates = 1;
+  // memo: Metadata for the price updates.
+  // This can be used to include any additional information that might be relevant logging/tracing.
+  // Used to connect the client request to the server logs
+  // e.g pricefeeder run_id
+  map<string, string> memo = 2;
 }
 
 // PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
@@ -43,4 +48,9 @@ message PriceUpdate {
   string price = 2;
   // duration: The duration for which the price is valid
   google.protobuf.Duration duration = 4;
+  // memo: Metadata for the price updates.
+  // This can be used to include any additional information that might be relevant logging/tracing.
+  // Used to provide more context on server response to the client
+  // e.g tx_digest
+  map<string, string> memo = 5;
 }
