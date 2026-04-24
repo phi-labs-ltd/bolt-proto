@@ -37,6 +37,8 @@ message GetPriceResponse {
   string price = 2;
   // last_updated: The timestamp when the price was updated for the last time, optional.
   google.protobuf.Timestamp last_updated = 3;
+  // expiry: The timestamp when the price expires.
+  google.protobuf.Timestamp expiry = 4;
 }
 
 // GetPricesRequest: Request fetching multiple pairs prices.
@@ -67,6 +69,8 @@ message StreamPriceResponse {
   string price = 2;
   // last_updated: The timestamp when the price was updated for the last time, optional.
   google.protobuf.Timestamp last_updated = 3;
+  // expiry: The timestamp when the price expires.
+  google.protobuf.Timestamp expiry = 4;
 }
 
 // StreamPricesRequest: Subscribes to price changes on multiple pairs.
