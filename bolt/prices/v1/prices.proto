@@ -2,9 +2,8 @@ syntax = "proto3";
 
 package bolt.prices.v1;
 
-import "google/protobuf/timestamp.proto";
-
 import "bolt/assets/v1/assets.proto";
+import "google/protobuf/timestamp.proto";
 
 // PricesService: Prices venue service....
 service PricesService {
@@ -28,9 +27,6 @@ service PricesService {
 message GetPriceRequest {
   // pair: The specific market pair. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 2;
 }
 
 // GetPriceResponse: Response to GetPriceRequest.
@@ -47,9 +43,6 @@ message GetPriceResponse {
 message GetPricesRequest {
   // pairs: List of pairs to fetch prices for. If empty should return all the prices.
   repeated bolt.assets.v1.Pair pairs = 1;
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 2;
 }
 
 // GetPricesResponse: Response to GetPricesRequest.
@@ -64,9 +57,6 @@ message GetPricesResponse {
 message StreamPriceRequest {
   // pair: The specific market pair. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 2;
 }
 
 // StreamPriceResponse: Response to StreamPriceRequest.
@@ -83,9 +73,6 @@ message StreamPriceResponse {
 message StreamPricesRequest {
   // pairs: List of pairs to fetch prices for. If empty should return all the prices.
   repeated bolt.assets.v1.Pair pairs = 1;
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 2;
 }
 
 // StreamPricesResponse: Response to StreamPricesRequest.
@@ -107,11 +94,7 @@ message GetPriceVenueInfoResponse {
 }
 
 // GetPricePairsRequest: Queries for the available price pairs.
-message GetPricePairsRequest {
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 1;
-}
+message GetPricePairsRequest {}
 
 // GetPricePairsResponse: Response to GetPricePairsRequest.
 message GetPricePairsResponse {

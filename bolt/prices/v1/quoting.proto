@@ -2,10 +2,9 @@ syntax = "proto3";
 
 package bolt.prices.v1;
 
-import "google/protobuf/timestamp.proto";
-
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/timestamp.proto";
 
 // QuotingService: QuotingService for subscribing to prices being posted by Pricefeeder.
 service QuotingService {
@@ -17,9 +16,6 @@ service QuotingService {
 message SubscribePriceQuotesRequest {
   // pairs: List of pairs to subscribe to. If empty, subscribes to all price changes.
   repeated bolt.assets.v1.Pair pairs = 1;
-  // memo: This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  map<string, string> memo = 2;
 }
 
 // SubscribePriceQuotesResponse: Response for subscribing to price changes.
