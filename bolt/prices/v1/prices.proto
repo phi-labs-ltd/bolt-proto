@@ -2,8 +2,9 @@ syntax = "proto3";
 
 package bolt.prices.v1;
 
-import "bolt/assets/v1/assets.proto";
 import "google/protobuf/timestamp.proto";
+
+import "bolt/assets/v1/assets.proto";
 
 // PricesService: Prices venue service....
 service PricesService {

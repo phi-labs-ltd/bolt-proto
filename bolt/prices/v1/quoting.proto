@@ -2,9 +2,10 @@ syntax = "proto3";
 
 package bolt.prices.v1;
 
+import "google/protobuf/timestamp.proto";
+
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
-import "google/protobuf/timestamp.proto";
 
 // QuotingService: QuotingService for subscribing to prices being posted by Pricefeeder.
 service QuotingService {
