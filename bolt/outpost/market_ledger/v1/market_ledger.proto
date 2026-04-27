@@ -148,8 +148,9 @@ message HedgeOrder {
   bolt.common.numeric.v1.Fraction hedged_delta = 5;
   // hedged_vwap: VWAP snapshot at trigger time.
   bolt.common.numeric.v1.Fraction hedged_vwap = 6;
-  // internal_order_id: MM's internal order tracking ID (optional).
-  optional string internal_order_id = 7;
+  // internal_order_id: Service-generated UUID (UUID v4) created at trigger time.
+  // The server always sets this field; MM uses it as the CEX-side idempotency key.
+  string internal_order_id = 7;
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
   // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
