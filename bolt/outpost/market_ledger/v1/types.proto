@@ -20,7 +20,7 @@ enum LedgerStatus {
   LEDGER_STATUS_RUNNING = 1;
   // LEDGER_STATUS_CLOSED: CloseHedging transitioned an in_progress row to closed.
   LEDGER_STATUS_CLOSED = 2;
-  // LEDGER_STATUS_IN_PROGRESS: Created by StartHedging — snapshot of hedged delta/vwap.
+  // LEDGER_STATUS_IN_PROGRESS: Created by service-side trigger evaluation — snapshot of hedged delta/vwap.
   LEDGER_STATUS_IN_PROGRESS = 3;
 }
 

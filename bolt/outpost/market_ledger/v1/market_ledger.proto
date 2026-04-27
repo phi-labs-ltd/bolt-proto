@@ -34,15 +34,21 @@ service PublicMarketLedgerService {
   rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
 }
 
-// The PrivateMarketLedgerService exposes RPCs for internal use by the MM.
+// The PrivateMarketLedgerService exposes RPCs for internal callers only — reachable
+// only from the private gRPC port. The MM is the caller for hedge-lifecycle RPCs
+// (CloseHedging); operator/admin tooling is the caller for config-write RPCs
+// (UpsertEngineConfig, UpsertAssetConfig). Reads of either config live on
+// PublicMarketLedgerService for broader consumption.
 service PrivateMarketLedgerService {
-  // Closes a specific hedge order with fill details. Transitions in_progress → closed.
-  // For cancel/error/partial: adds delta back to running ledger, returns updated event.
+  // Called by MM. Closes a specific hedge order with fill details. Transitions
+  // in_progress → closed. For cancel/error/partial: adds delta back to running
+  // ledger, returns updated event.
   rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
-  // Inserts or replaces the engine config for a single (asset, direction) pair.
+  // Called by operator tooling. Inserts or replaces the engine config for a single
+  // (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
-  // Inserts or replaces the asset config for a single asset (sign-agnostic).
-  // Service-internal policy; not consumed by MM. Reads are public (see PublicMarketLedgerService).
+  // Called by operator tooling. Inserts or replaces the asset config for a single
+  // asset (sign-agnostic). Service-internal policy.
   rpc UpsertAssetConfig(UpsertAssetConfigRequest) returns (UpsertAssetConfigResponse);
 }
 
@@ -76,8 +82,9 @@ message EngineConfig {
 message AssetConfig {
   // asset: Base asset symbol (e.g. "SUI"). Primary key.
   string asset = 1;
-  // time_threshold_ms: How long unhedged delta may sit before a TIME trigger fires.
-  int64 time_threshold_ms = 2;
+  // time_threshold: How long unhedged delta may sit before a TIME trigger fires.
+  // Uses google.protobuf.Duration for unit safety and consistency with TimeoutStep.delay.
+  google.protobuf.Duration time_threshold = 2;
   // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
   // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
   bolt.common.numeric.v1.Fraction dust_threshold = 3;
@@ -220,13 +227,15 @@ message MarketLedgerEvent {
   repeated HedgeOrder hedge_orders = 4;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 5;
-  // trigger_reason: Why this event fired. Always AMOUNT or TIME on fresh events; on
-  // replay it carries the persisted bolt_hedge_orders.trigger_reason (also AMOUNT or
-  // TIME — pre-cutover hedges are backfilled to AMOUNT). UNSPECIFIED is the proto3
-  // default sentinel and is not expected on the wire.
+  // trigger_reason: Why this event fired. The server always sets this field —
+  // AMOUNT or TIME on fresh events, and on replay it carries the persisted
+  // bolt_hedge_orders.trigger_reason (also AMOUNT or TIME — pre-cutover hedges
+  // are backfilled to AMOUNT). UNSPECIFIED is the proto3 enum default sentinel
+  // and is not expected on the wire from a post-cutover server.
   TriggerReason trigger_reason = 6;
-  // is_replay: True iff this event is a reconnect catch-up replay, not a fresh trigger.
-  // MM branches behaviour on this flag (CEX reconcile vs place-fresh-order).
+  // is_replay: True iff this event is a reconnect catch-up replay, not a fresh
+  // trigger. The server always sets this field. MM branches behaviour on it
+  // (CEX reconcile vs place-fresh-order).
   bool is_replay = 7;
 }
 
