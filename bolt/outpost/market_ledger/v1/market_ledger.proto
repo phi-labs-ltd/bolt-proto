@@ -22,6 +22,10 @@ service PublicMarketLedgerService {
   rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
   // Returns all engine configs across all assets and directions.
   rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
+  // Returns the asset config for a single asset, if one exists.
+  rpc GetAssetConfig(GetAssetConfigRequest) returns (GetAssetConfigResponse);
+  // Returns all asset configs across all assets.
+  rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
   // Returns the current Running ledger for the given asset, or absent if none exists.
   rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
   // Returns all Running ledgers across every asset, ordered by asset name.
@@ -30,16 +34,29 @@ service PublicMarketLedgerService {
   rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
 }
 
-// The PrivateMarketLedgerService exposes RPCs for internal use by the MM.
+// The PrivateMarketLedgerService exposes RPCs for internal callers only — reachable
+// only from the private gRPC port. The MM is the caller for hedge-lifecycle RPCs
+// (CloseHedging); operator/admin tooling is the caller for config-write RPCs
+// (UpsertEngineConfig, UpsertAssetConfig). Reads of either config live on
+// PublicMarketLedgerService for broader consumption.
 service PrivateMarketLedgerService {
-  // Subtracts hedged delta from running ledger, creates in_progress row + hedge order.
-  // Response includes an optional MarketLedgerEvent (present if adjusted delta != 0).
-  rpc StartHedging(StartHedgingRequest) returns (StartHedgingResponse);
-  // Closes a specific hedge order with fill details. Transitions in_progress → closed.
-  // For cancel/error/partial: adds delta back to running ledger, returns updated event.
+  // DEPRECATED (BOLT-1827): trigger evaluation moved into the service. Server returns
+  // UNIMPLEMENTED. Kept as a deprecated stub to preserve wire compatibility for
+  // mainnet-rollback scenarios; will be removed in a follow-up cleanup release once
+  // no caller remains.
+  rpc StartHedging(StartHedgingRequest) returns (StartHedgingResponse) {
+    option deprecated = true;
+  }
+  // Called by MM. Closes a specific hedge order with fill details. Transitions
+  // in_progress → closed. For cancel/error/partial: adds delta back to running
+  // ledger, returns updated event.
   rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
-  // Inserts or replaces the engine config for a single (asset, direction) pair.
+  // Called by operator tooling. Inserts or replaces the engine config for a single
+  // (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
+  // Called by operator tooling. Inserts or replaces the asset config for a single
+  // asset (sign-agnostic). Reads are exposed publicly via PublicMarketLedgerService.
+  rpc UpsertAssetConfig(UpsertAssetConfigRequest) returns (UpsertAssetConfigResponse);
 }
 
 // ── Shared messages ──────────────────────────────────────────────────────────
@@ -62,10 +79,30 @@ message EngineConfig {
   Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
   bolt.common.numeric.v1.Fraction threshold = 3;
-  // hard_cap: Maximum delta allowed before force-hedging.
-  bolt.common.numeric.v1.Fraction hard_cap = 4;
+  // hard_cap: DEPRECATED (BOLT-1827). Full-delta hedging at every threshold breach
+  // makes the second-tier escalation cap redundant. Server emits the proto3 default
+  // (0) on output and ignores the value on input. Kept on the wire for rollback
+  // compatibility; will be removed in a follow-up cleanup release.
+  bolt.common.numeric.v1.Fraction hard_cap = 4 [deprecated = true];
   // timeout_ladder: Ordered list of timeout rungs with escalating strategies.
   repeated TimeoutStep timeout_ladder = 5;
+}
+
+// AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
+// dust floor apply to long and short equally, so they are not split per direction.
+// Service-managed: writes happen via UpsertAssetConfig on PrivateMarketLedgerService
+// (operator tooling); reads are exposed via GetAssetConfig / GetAssetConfigs on
+// PublicMarketLedgerService. Not carried on MarketLedgerEvent and not required by
+// MM (MM is a pure executor; it does not act on these values).
+message AssetConfig {
+  // asset: Base asset symbol (e.g. "SUI"). Primary key.
+  string asset = 1;
+  // time_threshold: How long unhedged delta may sit before a TIME trigger fires.
+  // Uses google.protobuf.Duration for unit safety and consistency with TimeoutStep.delay.
+  google.protobuf.Duration time_threshold = 2;
+  // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
+  // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
+  bolt.common.numeric.v1.Fraction dust_threshold = 3;
 }
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
@@ -106,7 +143,7 @@ message SwapEvent {
   google.protobuf.Timestamp created_at = 17;
 }
 
-// HedgeOrder: Tracks a hedge from StartHedging through CloseHedging.
+// HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
 //
 // Field units:
 //   Base (SUI):       hedged_delta, filled_amount
@@ -122,19 +159,22 @@ message HedgeOrder {
   int64 ledger_event_id = 3;
   // cex_order_status: Lifecycle state of this hedge order.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 4;
-  // hedged_delta: Delta subtracted from running ledger at StartHedging (signed, base units).
+  // hedged_delta: Delta subtracted from running ledger at trigger time (signed, base units).
   bolt.common.numeric.v1.Fraction hedged_delta = 5;
-  // hedged_vwap: VWAP snapshot at StartHedging time.
+  // hedged_vwap: VWAP snapshot at trigger time.
   bolt.common.numeric.v1.Fraction hedged_vwap = 6;
-  // internal_order_id: MM's internal order tracking ID (optional).
+  // internal_order_id: Service-generated UUID (UUID v4) created at trigger time.
+  // The server always populates this field on emitted events; MM uses it as the
+  // CEX-side idempotency key. Kept as `optional` for wire-format stability with
+  // older clients; semantically required by the post-cutover server-side contract.
   optional string internal_order_id = 7;
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
-  // cex_order_type: Buy or sell side of the hedge. Set at StartHedging.
+  // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 9;
-  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at StartHedging.
+  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at trigger time.
   string instrument_name = 10;
-  // denom: Quote denomination (e.g. "USDC"). Set at StartHedging.
+  // denom: Quote denomination (e.g. "USDC"). Set at trigger time.
   string denom = 11;
   // cex_order_id: CEX-assigned order ID. Set at CloseHedging.
   optional string cex_order_id = 12;
@@ -187,7 +227,7 @@ message MarketLedger {
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block
-// or after StartHedging/CloseHedging adjusts the running delta.
+// or after CloseHedging adjusts the running delta.
 //
 // Only the running ledger row is sent. In_progress/closed rows are internal bookkeeping.
 // In-flight hedges (cex_order_status: created/open) are visible via the hedge_orders field.
@@ -205,6 +245,16 @@ message MarketLedgerEvent {
   repeated HedgeOrder hedge_orders = 4;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 5;
+  // trigger_reason: Why this event fired. The server always sets this field —
+  // AMOUNT or TIME on fresh events, and on replay it carries the persisted
+  // bolt_hedge_orders.trigger_reason (also AMOUNT or TIME — pre-cutover hedges
+  // are backfilled to AMOUNT). UNSPECIFIED is the proto3 enum default sentinel
+  // and is not expected on the wire from a post-cutover server.
+  TriggerReason trigger_reason = 6;
+  // is_replay: True iff this event is a reconnect catch-up replay, not a fresh
+  // trigger. The server always sets this field. MM branches behaviour on it
+  // (CEX reconcile vs place-fresh-order).
+  bool is_replay = 7;
 }
 
 // ── Subscribe ────────────────────────────────────────────────────────────────
@@ -221,10 +271,11 @@ message SubscribeMarketLedgerResponse {
   repeated MarketLedgerEvent events = 1;
 }
 
-// ── StartHedging ─────────────────────────────────────────────────────────────
+// ── StartHedging (DEPRECATED — BOLT-1827) ────────────────────────────────────
 
-// StartHedgingRequest: Request to begin hedging for a ledger event.
+// StartHedgingRequest: DEPRECATED (BOLT-1827) — request to begin hedging for a ledger event.
 message StartHedgingRequest {
+  option deprecated = true;
   // ledger_event_id: References bolt_market_ledger_events.id -- the event that triggered this hedge.
   int64 ledger_event_id = 1;
   // internal_order_id: MM's internal order tracking ID (optional).
@@ -241,8 +292,9 @@ message StartHedgingRequest {
   string denom = 7;
 }
 
-// StartHedgingResponse: Result of a StartHedging call.
+// StartHedgingResponse: DEPRECATED (BOLT-1827) — result of a StartHedging call.
 message StartHedgingResponse {
+  option deprecated = true;
   // event: Updated running ledger event with adjusted delta/vwap. None when delta == 0 after adjustment.
   optional MarketLedgerEvent event = 1;
   // hedge_order: The newly created hedge order (cex_order_status=open). None when overhedge or direction mismatch.
@@ -325,6 +377,41 @@ message GetEngineConfigsRequest {}
 message GetEngineConfigsResponse {
   // configs: All persisted engine configs.
   repeated EngineConfig configs = 1;
+}
+
+// ── Asset Config ─────────────────────────────────────────────────────────────
+
+// UpsertAssetConfigRequest: Request to insert or replace an asset config.
+message UpsertAssetConfigRequest {
+  // config: The asset config to upsert.
+  AssetConfig config = 1;
+}
+
+// UpsertAssetConfigResponse: Result of an UpsertAssetConfig call.
+message UpsertAssetConfigResponse {
+  // config: The persisted asset config after upsert.
+  AssetConfig config = 1;
+}
+
+// GetAssetConfigRequest: Request to fetch the asset config for a single asset.
+message GetAssetConfigRequest {
+  // asset: Base asset symbol to look up (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetAssetConfigResponse: The asset config for the requested asset.
+message GetAssetConfigResponse {
+  // config: The persisted asset config, or absent if none exists for the asset.
+  optional AssetConfig config = 1;
+}
+
+// GetAssetConfigsRequest: Request to fetch all asset configs.
+message GetAssetConfigsRequest {}
+
+// GetAssetConfigsResponse: All asset configs across all assets.
+message GetAssetConfigsResponse {
+  // configs: All persisted asset configs.
+  repeated AssetConfig configs = 1;
 }
 
 // ── Query RPCs ───────────────────────────────────────────────────────────────
