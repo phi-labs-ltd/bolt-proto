@@ -20,8 +20,20 @@ enum LedgerStatus {
   LEDGER_STATUS_RUNNING = 1;
   // LEDGER_STATUS_CLOSED: CloseHedging transitioned an in_progress row to closed.
   LEDGER_STATUS_CLOSED = 2;
-  // LEDGER_STATUS_IN_PROGRESS: Created by StartHedging — snapshot of hedged delta/vwap.
+  // LEDGER_STATUS_IN_PROGRESS: Created by service-side trigger evaluation — snapshot of hedged delta/vwap.
   LEDGER_STATUS_IN_PROGRESS = 3;
+}
+
+// TriggerReason: Why a hedge trigger fired. Encodes the breached condition only —
+// "what kind of event this is" (fresh broadcast vs reconnect catch-up replay) lives
+// in the separate MarketLedgerEvent.is_replay field.
+enum TriggerReason {
+  // TRIGGER_REASON_UNSPECIFIED: Default zero value; must not be used explicitly.
+  TRIGGER_REASON_UNSPECIFIED = 0;
+  // TRIGGER_REASON_AMOUNT: |delta| breached the asset+direction amount threshold.
+  TRIGGER_REASON_AMOUNT = 1;
+  // TRIGGER_REASON_TIME: The inventory-at-risk clock elapsed (and |delta| >= dust_threshold).
+  TRIGGER_REASON_TIME = 2;
 }
 
 // ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
