@@ -40,6 +40,13 @@ service PrivateMarketLedgerService {
   rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
   // Inserts or replaces the engine config for a single (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
+  // Inserts or replaces the asset config for a single asset (sign-agnostic).
+  // Service-internal policy; not consumed by MM.
+  rpc UpsertAssetConfig(UpsertAssetConfigRequest) returns (UpsertAssetConfigResponse);
+  // Returns the asset config for a single asset, if one exists.
+  rpc GetAssetConfig(GetAssetConfigRequest) returns (GetAssetConfigResponse);
+  // Returns all asset configs across all assets.
+  rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
 }
 
 // ── Shared messages ──────────────────────────────────────────────────────────
