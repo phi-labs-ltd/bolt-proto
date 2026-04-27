@@ -66,8 +66,6 @@ message EngineConfig {
   Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
   bolt.common.numeric.v1.Fraction threshold = 3;
-  // hard_cap: Maximum delta allowed before force-hedging.
-  bolt.common.numeric.v1.Fraction hard_cap = 4;
   // timeout_ladder: Ordered list of timeout rungs with escalating strategies.
   repeated TimeoutStep timeout_ladder = 5;
 }
