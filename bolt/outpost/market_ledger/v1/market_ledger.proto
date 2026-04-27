@@ -320,8 +320,8 @@ message SubOrder {
   optional string fee_currency = 8;
   // response_msg: Raw CEX response JSON for audit.
   optional string response_msg = 9;
-  // memo: Optional note.
-  optional string memo = 10;
+  // market-maker generated UUID
+  string market_maker_uuid = 10;
   // finished_at: When fill/cancel/error completed on CEX.
   optional google.protobuf.Timestamp finished_at = 11;
   // ladder_summary: Summary of the timeout ladder execution for this hedge.
