@@ -68,6 +68,19 @@ message EngineConfig {
   repeated TimeoutStep timeout_ladder = 5;
 }
 
+// AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
+// dust floor apply to long and short equally, so they are not split per direction.
+// Service-internal — not carried on MarketLedgerEvent; MM does not consume this.
+message AssetConfig {
+  // asset: Base asset symbol (e.g. "SUI"). Primary key.
+  string asset = 1;
+  // time_threshold_ms: How long unhedged delta may sit before a TIME trigger fires.
+  int64 time_threshold_ms = 2;
+  // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
+  // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
+  bolt.common.numeric.v1.Fraction dust_threshold = 3;
+}
+
 // SwapEvent: A single swap event ingested from the on-chain pool.
 message SwapEvent {
   // id: DB primary key for the swap event row.
@@ -333,6 +346,41 @@ message GetEngineConfigsRequest {}
 message GetEngineConfigsResponse {
   // configs: All persisted engine configs.
   repeated EngineConfig configs = 1;
+}
+
+// ── Asset Config ─────────────────────────────────────────────────────────────
+
+// UpsertAssetConfigRequest: Request to insert or replace an asset config.
+message UpsertAssetConfigRequest {
+  // config: The asset config to upsert.
+  AssetConfig config = 1;
+}
+
+// UpsertAssetConfigResponse: Result of an UpsertAssetConfig call.
+message UpsertAssetConfigResponse {
+  // config: The persisted asset config after upsert.
+  AssetConfig config = 1;
+}
+
+// GetAssetConfigRequest: Request to fetch the asset config for a single asset.
+message GetAssetConfigRequest {
+  // asset: Base asset symbol to look up (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetAssetConfigResponse: The asset config for the requested asset.
+message GetAssetConfigResponse {
+  // config: The persisted asset config, or absent if none exists for the asset.
+  optional AssetConfig config = 1;
+}
+
+// GetAssetConfigsRequest: Request to fetch all asset configs.
+message GetAssetConfigsRequest {}
+
+// GetAssetConfigsResponse: All asset configs across all assets.
+message GetAssetConfigsResponse {
+  // configs: All persisted asset configs.
+  repeated AssetConfig configs = 1;
 }
 
 // ── Query RPCs ───────────────────────────────────────────────────────────────
