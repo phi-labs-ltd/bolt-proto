@@ -55,7 +55,7 @@ service PrivateMarketLedgerService {
   // (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
   // Called by operator tooling. Inserts or replaces the asset config for a single
-  // asset (sign-agnostic). Service-internal policy.
+  // asset (sign-agnostic). Reads are exposed publicly via PublicMarketLedgerService.
   rpc UpsertAssetConfig(UpsertAssetConfigRequest) returns (UpsertAssetConfigResponse);
 }
 
@@ -90,7 +90,10 @@ message EngineConfig {
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
 // dust floor apply to long and short equally, so they are not split per direction.
-// Service-internal — not carried on MarketLedgerEvent; MM does not consume this.
+// Service-managed: writes happen via UpsertAssetConfig on PrivateMarketLedgerService
+// (operator tooling); reads are exposed via GetAssetConfig / GetAssetConfigs on
+// PublicMarketLedgerService. Not carried on MarketLedgerEvent and not required by
+// MM (MM is a pure executor; it does not act on these values).
 message AssetConfig {
   // asset: Base asset symbol (e.g. "SUI"). Primary key.
   string asset = 1;
