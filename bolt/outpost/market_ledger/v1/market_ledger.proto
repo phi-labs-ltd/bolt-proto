@@ -205,6 +205,14 @@ message MarketLedgerEvent {
   repeated HedgeOrder hedge_orders = 4;
   // engine_configs: Engine configs for this asset (up to two entries: one per direction).
   repeated EngineConfig engine_configs = 5;
+  // trigger_reason: Why this event fired. Always AMOUNT or TIME on fresh events; on
+  // replay it carries the persisted bolt_hedge_orders.trigger_reason (also AMOUNT or
+  // TIME — pre-cutover hedges are backfilled to AMOUNT). UNSPECIFIED is the proto3
+  // default sentinel and is not expected on the wire.
+  TriggerReason trigger_reason = 6;
+  // is_replay: True iff this event is a reconnect catch-up replay, not a fresh trigger.
+  // MM branches behaviour on this flag (CEX reconcile vs place-fresh-order).
+  bool is_replay = 7;
 }
 
 // ── Subscribe ────────────────────────────────────────────────────────────────
