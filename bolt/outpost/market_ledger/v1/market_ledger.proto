@@ -22,6 +22,10 @@ service PublicMarketLedgerService {
   rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
   // Returns all engine configs across all assets and directions.
   rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
+  // Returns the asset config for a single asset, if one exists.
+  rpc GetAssetConfig(GetAssetConfigRequest) returns (GetAssetConfigResponse);
+  // Returns all asset configs across all assets.
+  rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
   // Returns the current Running ledger for the given asset, or absent if none exists.
   rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
   // Returns all Running ledgers across every asset, ordered by asset name.
@@ -38,12 +42,8 @@ service PrivateMarketLedgerService {
   // Inserts or replaces the engine config for a single (asset, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
   // Inserts or replaces the asset config for a single asset (sign-agnostic).
-  // Service-internal policy; not consumed by MM.
+  // Service-internal policy; not consumed by MM. Reads are public (see PublicMarketLedgerService).
   rpc UpsertAssetConfig(UpsertAssetConfigRequest) returns (UpsertAssetConfigResponse);
-  // Returns the asset config for a single asset, if one exists.
-  rpc GetAssetConfig(GetAssetConfigRequest) returns (GetAssetConfigResponse);
-  // Returns all asset configs across all assets.
-  rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
 }
 
 // ── Shared messages ──────────────────────────────────────────────────────────
