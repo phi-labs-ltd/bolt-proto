@@ -32,9 +32,6 @@ service PublicMarketLedgerService {
 
 // The PrivateMarketLedgerService exposes RPCs for internal use by the MM.
 service PrivateMarketLedgerService {
-  // Subtracts hedged delta from running ledger, creates in_progress row + hedge order.
-  // Response includes an optional MarketLedgerEvent (present if adjusted delta != 0).
-  rpc StartHedging(StartHedgingRequest) returns (StartHedgingResponse);
   // Closes a specific hedge order with fill details. Transitions in_progress → closed.
   // For cancel/error/partial: adds delta back to running ledger, returns updated event.
   rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
@@ -126,7 +123,7 @@ message SwapEvent {
   google.protobuf.Timestamp created_at = 17;
 }
 
-// HedgeOrder: Tracks a hedge from StartHedging through CloseHedging.
+// HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
 //
 // Field units:
 //   Base (SUI):       hedged_delta, filled_amount
@@ -142,19 +139,19 @@ message HedgeOrder {
   int64 ledger_event_id = 3;
   // cex_order_status: Lifecycle state of this hedge order.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 4;
-  // hedged_delta: Delta subtracted from running ledger at StartHedging (signed, base units).
+  // hedged_delta: Delta subtracted from running ledger at trigger time (signed, base units).
   bolt.common.numeric.v1.Fraction hedged_delta = 5;
-  // hedged_vwap: VWAP snapshot at StartHedging time.
+  // hedged_vwap: VWAP snapshot at trigger time.
   bolt.common.numeric.v1.Fraction hedged_vwap = 6;
   // internal_order_id: MM's internal order tracking ID (optional).
   optional string internal_order_id = 7;
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
-  // cex_order_type: Buy or sell side of the hedge. Set at StartHedging.
+  // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 9;
-  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at StartHedging.
+  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at trigger time.
   string instrument_name = 10;
-  // denom: Quote denomination (e.g. "USDC"). Set at StartHedging.
+  // denom: Quote denomination (e.g. "USDC"). Set at trigger time.
   string denom = 11;
   // cex_order_id: CEX-assigned order ID. Set at CloseHedging.
   optional string cex_order_id = 12;
@@ -207,7 +204,7 @@ message MarketLedger {
 }
 
 // MarketLedgerEvent: Live ledger state for an asset, emitted after processing a block
-// or after StartHedging/CloseHedging adjusts the running delta.
+// or after CloseHedging adjusts the running delta.
 //
 // Only the running ledger row is sent. In_progress/closed rows are internal bookkeeping.
 // In-flight hedges (cex_order_status: created/open) are visible via the hedge_orders field.
@@ -247,34 +244,6 @@ message SubscribeMarketLedgerRequest {
 message SubscribeMarketLedgerResponse {
   // events: Ledger events for each asset, one per active ledger.
   repeated MarketLedgerEvent events = 1;
-}
-
-// ── StartHedging ─────────────────────────────────────────────────────────────
-
-// StartHedgingRequest: Request to begin hedging for a ledger event.
-message StartHedgingRequest {
-  // ledger_event_id: References bolt_market_ledger_events.id -- the event that triggered this hedge.
-  int64 ledger_event_id = 1;
-  // internal_order_id: MM's internal order tracking ID (optional).
-  optional string internal_order_id = 2;
-  // executed_at: When MM initiated the hedge on CEX.
-  google.protobuf.Timestamp executed_at = 3;
-  // cex_order_type: Buy or sell side of the hedge.
-  bolt.outpost.settlement.v2.SwapType cex_order_type = 4;
-  // executed_amount: Quote value of the hedge order.
-  bolt.common.numeric.v1.Fraction executed_amount = 5;
-  // instrument_name: CEX instrument name (e.g. "SUI-USDC").
-  string instrument_name = 6;
-  // denom: Quote denomination (e.g. "USDC").
-  string denom = 7;
-}
-
-// StartHedgingResponse: Result of a StartHedging call.
-message StartHedgingResponse {
-  // event: Updated running ledger event with adjusted delta/vwap. None when delta == 0 after adjustment.
-  optional MarketLedgerEvent event = 1;
-  // hedge_order: The newly created hedge order (cex_order_status=open). None when overhedge or direction mismatch.
-  optional HedgeOrder hedge_order = 2;
 }
 
 // ── CloseHedging ─────────────────────────────────────────────────────────────
