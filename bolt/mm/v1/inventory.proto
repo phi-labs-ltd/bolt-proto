@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package bolt.mm.v1;
+
+// InventoryService: InventoryService for subscribing to the running ledger inventory.
+service InventoryService {
+  // Streams the running ledger inventory.
+  rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
+}
+
+// SubscribeInventoryRequest: Request for subscribing to the running ledger inventory.
+message SubscribeInventoryRequest {}
+
+// SubscribeInventoryResponse: Response for subscribing to the running ledger inventory.
+message SubscribeInventoryResponse {
+  // inventory: The current inventory of the running ledger.
+  Inventory inventory = 1;
+}
+
+// Inventory: Represents the current inventory of the running ledger.
+message Inventory {
+  // id: DB primary key for the ledger row, to maintain cross component traceability.
+  int64 id = 1;
+  // asset: Base asset symbol (e.g. "SUI").
+  string asset = 2;
+  // will need to send in delta and vwap values, but PRD not decided for this yet.
+}
