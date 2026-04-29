@@ -11,7 +11,7 @@ jobs:
   publish:
     if: ${{ !github.event.release.prerelease }}
     name: Publish to Buf Schema Registry
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
       - uses: bufbuild/buf-action@v1
