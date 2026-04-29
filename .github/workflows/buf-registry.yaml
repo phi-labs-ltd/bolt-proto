@@ -1,19 +1,15 @@
 name: Publish to Buf Schema Registry
 on:
-  push:
-    tags:
-      - "*"
-    paths:
-      - "bolt/**/**.proto"
-      - "buf.yaml"
-      - "buf.lock"
-      
+  release:
+    types: [published]
+
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   publish:
+    if: ${{ !github.event.release.prerelease }}
     name: Publish to Buf Schema Registry
     runs-on: ubuntu-latest
     steps:
