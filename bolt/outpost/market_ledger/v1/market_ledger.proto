@@ -61,7 +61,8 @@ service PrivateMarketLedgerService {
 
 // ── Shared messages ──────────────────────────────────────────────────────────
 
-// TimeoutStep: One rung of the hedge timeout ladder.
+// TimeoutStep: One rung of the hedge timeout ladder. Position within its enclosing
+// Bucket.timeout_ladder is the rung_idx (no field carried explicitly).
 message TimeoutStep {
   // delay: How long to wait before escalating to this strategy.
   google.protobuf.Duration delay = 1;
@@ -69,6 +70,17 @@ message TimeoutStep {
   ExecutionStrategy strategy = 2;
   // spread_bps: Optional spread in basis points applied to this rung's limit price.
   optional bolt.common.numeric.v1.Fraction spread_bps = 3;
+}
+
+// Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
+// with its own timeout ladder. Position within EngineConfig.buckets is the
+// bucket_idx (no field carried explicitly).
+message Bucket {
+  // percent_bps: Share of the hedge routed to this bucket, in basis points
+  // (10000 = 100%). Sum across buckets is expected to be 10000.
+  uint32 percent_bps = 1;
+  // timeout_ladder: Ordered list of timeout rungs for this bucket.
+  repeated TimeoutStep timeout_ladder = 2;
 }
 
 // EngineConfig: Hedging parameters for a single (asset, direction) pair.
@@ -84,8 +96,15 @@ message EngineConfig {
   // (0) on output and ignores the value on input. Kept on the wire for rollback
   // compatibility; will be removed in a follow-up cleanup release.
   bolt.common.numeric.v1.Fraction hard_cap = 4 [deprecated = true];
-  // timeout_ladder: Ordered list of timeout rungs with escalating strategies.
-  repeated TimeoutStep timeout_ladder = 5;
+  // timeout_ladder: DEPRECATED — superseded by `buckets`. A single flat ladder is
+  // equivalent to one Bucket with percent_bps=10000 and the same rungs. Kept on
+  // the wire for rollback compatibility; will be removed in a follow-up cleanup
+  // release once no caller remains.
+  repeated TimeoutStep timeout_ladder = 5 [deprecated = true];
+  // buckets: Ordered list of ladder buckets. Each bucket runs its own
+  // timeout_ladder over its percent_bps slice of the hedge. Position in this
+  // list is the bucket_idx.
+  repeated Bucket buckets = 6;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
@@ -309,51 +328,51 @@ message CloseHedgingRequest {
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
   // cex_order_status: Terminal status — filled, cancelled, partially_filled_cancelled, closed, or error.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 2 [deprecated = true];
   // cex_order_id: CEX-assigned order ID.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional string cex_order_id = 3 [deprecated = true];
   // cex_order_kind: Market or limit order used on CEX.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 4 [deprecated = true];
   // filled_amount: Base amount filled. Required for filled/partially_filled.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional bolt.common.numeric.v1.Fraction filled_amount = 5 [deprecated = true];
   // executed_amount: Quote value of fills.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional bolt.common.numeric.v1.Fraction executed_amount = 6 [deprecated = true];
   // avg_price: Volume-weighted average fill price.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional bolt.common.numeric.v1.Fraction avg_price = 7 [deprecated = true];
   // fee: Fee deducted.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional bolt.common.numeric.v1.Fraction fee = 8 [deprecated = true];
   // fee_currency: Asset in which fee was taken.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional string fee_currency = 9 [deprecated = true];
   // response_msg: Raw CEX response JSON for audit.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional string response_msg = 10 [deprecated = true];
   // memo: Optional note.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_orders instead.
   optional string memo = 11 [deprecated = true];
   // finished_at: When fill/cancel/error completed on CEX.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional google.protobuf.Timestamp finished_at = 12 [deprecated = true];
   // ladder_summary: Summary of the timeout ladder execution for this hedge.
-  // Deprecated: use sub_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional string ladder_summary = 13 [deprecated = true];
   // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
-  // sub_orders: The suborders that the order was decomposed into. Preferred over the
+  // cex_order_records: The cex order records that the order was decomposed into. Preferred over the
   // deprecated flat fill fields above, which describe only the aggregate.
-  repeated SubOrder sub_orders = 15;
+  repeated CexOrderRecord cex_order_records = 15;
 }
 
-// SubOrder: A single CEX execution slice produced when a hedge order is decomposed
+// CexOrderRecord: A single CEX execution slice produced when a hedge order is decomposed
 // (e.g. across price levels or timeout-ladder steps).
-message SubOrder {
+message CexOrderRecord {
   // cex_order_status: Terminal status — filled, cancelled, partially_filled_cancelled, closed, or error.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 1;
   // cex_order_id: CEX-assigned order ID.
