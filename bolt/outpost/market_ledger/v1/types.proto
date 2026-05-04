@@ -53,3 +53,26 @@ enum ExecutionStrategy {
   // EXECUTION_STRATEGY_TAKER: Market/taker order for immediate fill.
   EXECUTION_STRATEGY_TAKER = 6;
 }
+
+// FinishAs: Terminal disposition class of a CEX order at the rung where it
+// settled. Distinct from `bolt.cex.adapter.v1.OrderStatus`, which models the
+// in-flight lifecycle state (open / closed / cancelled / etc.). Default zero
+// value (`FINISH_AS_UNSPECIFIED`) means the order has not yet finished — used
+// on snapshots emitted while the order is still open.
+enum FinishAs {
+  // FINISH_AS_UNSPECIFIED: Order has not finished yet (still open or
+  // disposition not yet known). Default zero value.
+  FINISH_AS_UNSPECIFIED = 0;
+  // FINISH_AS_FILLED: Order filled completely.
+  FINISH_AS_FILLED = 1;
+  // FINISH_AS_CANCELLED: Order cancelled (no fill or partial fill before
+  // cancel).
+  FINISH_AS_CANCELLED = 2;
+  // FINISH_AS_IOC: Order completed via immediate-or-cancel; unfilled portion
+  // auto-cancelled.
+  FINISH_AS_IOC = 3;
+  // FINISH_AS_STP: Order cancelled by CEX self-trade prevention.
+  FINISH_AS_STP = 4;
+  // FINISH_AS_ERROR: Order finished with a CEX-side error.
+  FINISH_AS_ERROR = 5;
+}
