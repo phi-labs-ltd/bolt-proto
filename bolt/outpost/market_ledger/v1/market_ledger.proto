@@ -427,6 +427,10 @@ message CexOrderRecord {
   // response_msg: Raw CEX response payload (JSON-serialized) at this rung for
   // forensics. Service stores this directly into a JSONB column.
   optional string response_msg = 16;
+  // ladder_summary: Summary of the timeout-ladder execution captured in this
+  // snapshot. Distinct from `response_msg` (raw CEX payload): this is the
+  // MM-side rung-execution summary.
+  optional string ladder_summary = 17;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
