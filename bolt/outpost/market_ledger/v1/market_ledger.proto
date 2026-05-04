@@ -10,6 +10,7 @@ import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 // The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
@@ -328,34 +329,34 @@ message CloseHedgingRequest {
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
   // cex_order_status: Terminal status — filled, cancelled, partially_filled_cancelled, closed, or error.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 2 [deprecated = true];
   // cex_order_id: CEX-assigned order ID.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional string cex_order_id = 3 [deprecated = true];
   // cex_order_kind: Market or limit order used on CEX.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 4 [deprecated = true];
   // filled_amount: Base amount filled. Required for filled/partially_filled.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional bolt.common.numeric.v1.Fraction filled_amount = 5 [deprecated = true];
   // executed_amount: Quote value of fills.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional bolt.common.numeric.v1.Fraction executed_amount = 6 [deprecated = true];
   // avg_price: Volume-weighted average fill price.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional bolt.common.numeric.v1.Fraction avg_price = 7 [deprecated = true];
   // fee: Fee deducted.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional bolt.common.numeric.v1.Fraction fee = 8 [deprecated = true];
   // fee_currency: Asset in which fee was taken.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional string fee_currency = 9 [deprecated = true];
   // response_msg: Raw CEX response JSON for audit.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional string response_msg = 10 [deprecated = true];
   // memo: Optional note.
-  // Deprecated: use cex_orders instead.
+  // Deprecated: use cex_order_records instead.
   optional string memo = 11 [deprecated = true];
   // finished_at: When fill/cancel/error completed on CEX.
   // Deprecated: use cex_order_records instead.
@@ -365,70 +366,67 @@ message CloseHedgingRequest {
   optional string ladder_summary = 13 [deprecated = true];
   // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
   bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
-  // cex_order_records: The cex order records that the order was decomposed into. Preferred over the
-  // deprecated flat fill fields above, which describe only the aggregate.
+  // cex_order_records: CEX orders the hedge was decomposed into, one record per placed order.
   repeated CexOrderRecord cex_order_records = 15;
-  // instrument_name: CEX instrument used for the hedge (e.g. "SUI-USDC").
-  // MM-supplied. The service has no record of it before close_hedging — this
-  // is the canonical hedge-level value (one instrument per hedge), shared
-  // across every CexOrderRecord in `cex_order_records`.
+  // instrument_name: CEX instrument used for the hedge (e.g. "SUI-USDC"). Hedge-level; one instrument per hedge.
   string instrument_name = 16;
+  // internal_order_id: Service-generated UUID echoed back from the triggering event.
+  string internal_order_id = 17;
+  // hedged_delta: Intent from the triggering event — signed delta the hedge was launched to cover, in base units.
+  bolt.common.numeric.v1.Fraction hedged_delta = 18;
+  // hedged_vwap: Intent from the triggering event — VWAP snapshot at trigger time.
+  bolt.common.numeric.v1.Fraction hedged_vwap = 19;
+  // denom: Quote denomination (e.g. "USDC").
+  string denom = 20;
+  // executed_at_ms: When MM initiated the hedge on CEX, as epoch milliseconds.
+  int64 executed_at_ms = 21;
+  // finished_at_ms: When fill/cancel/error completed on CEX, as epoch milliseconds.
+  int64 finished_at_ms = 22;
 }
 
-// CexOrderRecord: Snapshot of a CEX order at one rung of its execution. One row
-// is emitted per rung per CEX order placed in the hedge — at each rung
-// transition (entering a new rung) and at the terminal moment (filled / cancelled
-// / errored). Hedge-level fields (instrument_name, cex_order_type buy/sell,
-// internal_order_id) live on the enclosing CloseHedgingRequest; CexOrderRecord
-// carries only per-rung-snapshot fields.
+// CexOrderRecord: One CEX order placed during the hedge. Carries the order's
+// bucket/rung position, identifiers, intent, fills, and terminal disposition.
 message CexOrderRecord {
-  // rung_idx: Position in Bucket.timeout_ladder (0-based) — which rung this
-  // snapshot captures.
-  uint32 rung_idx = 1;
-  // cex_order_id: CEX-assigned order ID. Empty if placement failed before the
-  // CEX returned an id.
-  optional string cex_order_id = 2;
-  // cex_order_kind: Limit or market order kind at execution time.
-  bolt.cex.adapter.v1.OrderKind cex_order_kind = 3;
-  // amount: Planned order size at this rung (intent), in base-asset units.
-  bolt.common.numeric.v1.Fraction amount = 4;
-  // price: Submitted limit price at this rung. Omitted for market orders.
-  optional bolt.common.numeric.v1.Fraction price = 5;
-  // filled_in_base: Accumulated base-side fill volume at this rung.
-  bolt.common.numeric.v1.Fraction filled_in_base = 6;
-  // filled_in_quote: Accumulated quote-side fill value at this rung.
-  bolt.common.numeric.v1.Fraction filled_in_quote = 7;
-  // avg_price: Volume-weighted average fill price at this rung. Omitted on
-  // zero fill.
-  optional bolt.common.numeric.v1.Fraction avg_price = 8;
-  // fee: Accumulated fee deducted at this rung.
-  bolt.common.numeric.v1.Fraction fee = 9;
-  // fee_currency: Asset in which fee was taken (e.g. "USDT"). Omitted on zero
-  // fill.
-  optional string fee_currency = 10;
-  // status: In-flight CEX order status at the moment this snapshot was taken
-  // (e.g. open, closed, cancelled, partially_filled).
-  bolt.cex.adapter.v1.OrderStatus status = 11;
-  // finish_as: Terminal disposition class of the CEX order. Set on the snapshot
-  // captured at the order's terminal moment; absent on snapshots emitted while
-  // the order is still open.
-  // TODO(BOLT-1833 cleanup): drop the `optional` keyword once the schema only
-  // emits records with a known terminal disposition (every record has a
-  // populated finish_as).
-  optional FinishAs finish_as = 12;
-  // rung_started_at: When the order entered this rung (initial place, or amend
-  // from prior rung).
-  google.protobuf.Timestamp rung_started_at = 13;
-  // rung_ended_at: When the order left this rung (amended to next, or terminal).
-  google.protobuf.Timestamp rung_ended_at = 14;
-  // error_message: Per-rung diagnostic; populated if an error was observed at
-  // this rung.
-  optional string error_message = 15;
-  // response_msg: Raw CEX response payload (JSON-serialized) at this rung for
-  // forensics. Service stores this directly into a JSONB column.
-  optional string response_msg = 16;
-  // ladder_summary: Summary of the timeout ladder execution for this hedge.
-  optional string ladder_summary = 17;
+  // bucket_idx: Position in EngineConfig.buckets (0-based) — which bucket this order belongs to.
+  uint32 bucket_idx = 1;
+  // rung_idx: Position in Bucket.timeout_ladder (0-based) — which rung this order was placed at.
+  uint32 rung_idx = 2;
+  // client_order_id: Client-supplied idempotency key, formatted "t-<internal_order_id>-<bucket_idx>".
+  string client_order_id = 3;
+  // cex_order_id: CEX-assigned order ID. Empty if placement failed before the CEX returned an id.
+  string cex_order_id = 4;
+  // instrument_name: CEX instrument the order was placed on (e.g. "SUI-USDC").
+  string instrument_name = 5;
+  // cex_order_kind: Order side — "buy" or "sell".
+  string cex_order_kind = 6;
+  // cex_order_type: Order type — "limit" or "market".
+  string cex_order_type = 7;
+  // amount: Planned order size (intent), in base-asset units.
+  bolt.common.numeric.v1.Fraction amount = 8;
+  // price: Submitted limit price. Omitted for market orders.
+  bolt.common.numeric.v1.Fraction price = 9;
+  // filled_in_base: Final base-side fill volume.
+  bolt.common.numeric.v1.Fraction filled_in_base = 10;
+  // filled_in_quote: Final quote-side fill value.
+  bolt.common.numeric.v1.Fraction filled_in_quote = 11;
+  // avg_deal_price: Volume-weighted average fill price across all fills on this order.
+  bolt.common.numeric.v1.Fraction avg_deal_price = 12;
+  // fee: Total fee deducted on this order.
+  bolt.common.numeric.v1.Fraction fee = 13;
+  // fee_currency: Asset in which fee was taken (e.g. "USDT").
+  string fee_currency = 14;
+  // status: CEX order status using Gate taxonomy — "open", "closed", or "cancelled".
+  string status = 15;
+  // finish_as: Terminal disposition — "filled", "cancelled", "ioc", "stp", or "error". Empty while open.
+  string finish_as = 16;
+  // rung_started_at_ms: When the order was placed at this rung, as epoch milliseconds.
+  int64 rung_started_at_ms = 17;
+  // rung_ended_at_ms: When the order left this rung (terminal, amended, or cancelled), as epoch milliseconds.
+  int64 rung_ended_at_ms = 18;
+  // error_message: Diagnostic message; populated if an error was observed on this order.
+  string error_message = 19;
+  // response_msg: Raw CEX response payload for forensics. Stored directly into a JSONB column.
+  google.protobuf.Struct response_msg = 20;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
