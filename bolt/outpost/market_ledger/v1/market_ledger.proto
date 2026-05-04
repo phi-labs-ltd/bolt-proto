@@ -10,7 +10,6 @@ import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/field_mask.proto";
-import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 // The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
@@ -429,8 +428,9 @@ message CexOrderRecord {
   // error_message: Per-rung diagnostic; populated if an error was observed at
   // this rung.
   optional string error_message = 19;
-  // response_msg: Raw CEX response payload at this rung for forensics.
-  optional google.protobuf.Struct response_msg = 20;
+  // response_msg: Raw CEX response payload (JSON-serialized) at this rung for
+  // forensics. Service stores this directly into a JSONB column.
+  optional string response_msg = 20;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
