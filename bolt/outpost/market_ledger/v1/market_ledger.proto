@@ -41,6 +41,13 @@ service PublicMarketLedgerService {
 // (UpsertEngineConfig, UpsertAssetConfig). Reads of either config live on
 // PublicMarketLedgerService for broader consumption.
 service PrivateMarketLedgerService {
+  // DEPRECATED (BOLT-1827): trigger evaluation moved into the service. Server returns
+  // UNIMPLEMENTED. Kept as a deprecated stub to preserve wire compatibility for
+  // mainnet-rollback scenarios; will be removed in a follow-up cleanup release once
+  // no caller remains.
+  rpc StartHedging(StartHedgingRequest) returns (StartHedgingResponse) {
+    option deprecated = true;
+  }
   // Called by MM. Closes a specific hedge order with fill details. Transitions
   // in_progress → closed. For cancel/error/partial: adds delta back to running
   // ledger, returns updated event.
@@ -85,10 +92,20 @@ message EngineConfig {
   Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
   bolt.common.numeric.v1.Fraction threshold = 3;
+  // hard_cap: DEPRECATED (BOLT-1827). Full-delta hedging at every threshold breach
+  // makes the second-tier escalation cap redundant. Server emits the proto3 default
+  // (0) on output and ignores the value on input. Kept on the wire for rollback
+  // compatibility; will be removed in a follow-up cleanup release.
+  bolt.common.numeric.v1.Fraction hard_cap = 4 [deprecated = true];
+  // timeout_ladder: DEPRECATED — superseded by `buckets`. A single flat ladder is
+  // equivalent to one Bucket with percent_bps=10000 and the same rungs. Kept on
+  // the wire for rollback compatibility; will be removed in a follow-up cleanup
+  // release once no caller remains.
+  repeated TimeoutStep timeout_ladder = 5 [deprecated = true];
   // buckets: Ordered list of ladder buckets. Each bucket runs its own
   // timeout_ladder over its percent_bps slice of the hedge. Position in this
   // list is the bucket_idx.
-  repeated Bucket buckets = 4;
+  repeated Bucket buckets = 6;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
@@ -274,6 +291,36 @@ message SubscribeMarketLedgerResponse {
   repeated MarketLedgerEvent events = 1;
 }
 
+// ── StartHedging (DEPRECATED — BOLT-1827) ────────────────────────────────────
+
+// StartHedgingRequest: DEPRECATED (BOLT-1827) — request to begin hedging for a ledger event.
+message StartHedgingRequest {
+  option deprecated = true;
+  // ledger_event_id: References bolt_market_ledger_events.id -- the event that triggered this hedge.
+  int64 ledger_event_id = 1;
+  // internal_order_id: MM's internal order tracking ID (optional).
+  optional string internal_order_id = 2;
+  // executed_at: When MM initiated the hedge on CEX.
+  google.protobuf.Timestamp executed_at = 3;
+  // cex_order_type: Buy or sell side of the hedge.
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 4;
+  // executed_amount: Quote value of the hedge order.
+  bolt.common.numeric.v1.Fraction executed_amount = 5;
+  // instrument_name: CEX instrument name (e.g. "SUI-USDC").
+  string instrument_name = 6;
+  // denom: Quote denomination (e.g. "USDC").
+  string denom = 7;
+}
+
+// StartHedgingResponse: DEPRECATED (BOLT-1827) — result of a StartHedging call.
+message StartHedgingResponse {
+  option deprecated = true;
+  // event: Updated running ledger event with adjusted delta/vwap. None when delta == 0 after adjustment.
+  optional MarketLedgerEvent event = 1;
+  // hedge_order: The newly created hedge order (cex_order_status=open). None when overhedge or direction mismatch.
+  optional HedgeOrder hedge_order = 2;
+}
+
 // ── CloseHedging ─────────────────────────────────────────────────────────────
 
 // CloseHedgingRequest: Request to close a hedge order with fill details.
@@ -281,24 +328,60 @@ message CloseHedgingRequest {
   // ledger_event_id: References bolt_market_ledger_events.id — the event whose hedge to close.
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
+  // cex_order_status: Terminal status — filled, cancelled, partially_filled_cancelled, closed, or error.
+  // Deprecated: use cex_order_records instead.
+  bolt.cex.adapter.v1.OrderStatus cex_order_status = 2 [deprecated = true];
+  // cex_order_id: CEX-assigned order ID.
+  // Deprecated: use cex_order_records instead.
+  optional string cex_order_id = 3 [deprecated = true];
+  // cex_order_kind: Market or limit order used on CEX.
+  // Deprecated: use cex_order_records instead.
+  optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 4 [deprecated = true];
+  // filled_amount: Base amount filled. Required for filled/partially_filled.
+  // Deprecated: use cex_order_records instead.
+  optional bolt.common.numeric.v1.Fraction filled_amount = 5 [deprecated = true];
+  // executed_amount: Quote value of fills.
+  // Deprecated: use cex_order_records instead.
+  optional bolt.common.numeric.v1.Fraction executed_amount = 6 [deprecated = true];
+  // avg_price: Volume-weighted average fill price.
+  // Deprecated: use cex_order_records instead.
+  optional bolt.common.numeric.v1.Fraction avg_price = 7 [deprecated = true];
+  // fee: Fee deducted.
+  // Deprecated: use cex_order_records instead.
+  optional bolt.common.numeric.v1.Fraction fee = 8 [deprecated = true];
+  // fee_currency: Asset in which fee was taken.
+  // Deprecated: use cex_order_records instead.
+  optional string fee_currency = 9 [deprecated = true];
+  // response_msg: Raw CEX response JSON for audit.
+  // Deprecated: use cex_order_records instead.
+  optional string response_msg = 10 [deprecated = true];
+  // memo: Optional note.
+  // Deprecated: use cex_order_records instead.
+  optional string memo = 11 [deprecated = true];
+  // finished_at: When fill/cancel/error completed on CEX.
+  // Deprecated: use cex_order_records instead.
+  optional google.protobuf.Timestamp finished_at = 12 [deprecated = true];
+  // ladder_summary: Summary of the timeout ladder execution for this hedge.
+  // Deprecated: use cex_order_records instead.
+  optional string ladder_summary = 13 [deprecated = true];
   // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
-  bolt.outpost.settlement.v2.SwapType cex_order_type = 2;
+  bolt.outpost.settlement.v2.SwapType cex_order_type = 14;
   // cex_order_records: CEX orders the hedge was decomposed into, one record per placed order.
-  repeated CexOrderRecord cex_order_records = 3;
+  repeated CexOrderRecord cex_order_records = 15;
   // instrument_name: CEX instrument used for the hedge (e.g. "SUI-USDC"). Hedge-level; one instrument per hedge.
-  string instrument_name = 4;
+  string instrument_name = 16;
   // internal_order_id: Service-generated UUID echoed back from the triggering event.
-  string internal_order_id = 5;
+  string internal_order_id = 17;
   // hedged_delta: Intent from the triggering event — signed delta the hedge was launched to cover, in base units.
-  bolt.common.numeric.v1.Fraction hedged_delta = 6;
+  bolt.common.numeric.v1.Fraction hedged_delta = 18;
   // hedged_vwap: Intent from the triggering event — VWAP snapshot at trigger time.
-  bolt.common.numeric.v1.Fraction hedged_vwap = 7;
+  bolt.common.numeric.v1.Fraction hedged_vwap = 19;
   // denom: Quote denomination (e.g. "USDC").
-  string denom = 8;
+  string denom = 20;
   // executed_at_ms: When MM initiated the hedge on CEX, as epoch milliseconds.
-  int64 executed_at_ms = 9;
+  int64 executed_at_ms = 21;
   // finished_at_ms: When fill/cancel/error completed on CEX, as epoch milliseconds.
-  int64 finished_at_ms = 10;
+  int64 finished_at_ms = 22;
 }
 
 // CexOrderRecord: One CEX order placed during the hedge. Carries the order's
