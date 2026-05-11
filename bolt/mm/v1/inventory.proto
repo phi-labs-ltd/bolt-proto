@@ -2,26 +2,78 @@ syntax = "proto3";
 
 package bolt.mm.v1;
 
-// InventoryService: InventoryService for subscribing to the running ledger inventory.
+import "google/protobuf/timestamp.proto";
+
+// InventoryService: InventoryService for subscribing to the running ledger
+// inventory.
 service InventoryService {
   // Streams the running ledger inventory.
-  rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
+  rpc SubscribeInventory(SubscribeInventoryRequest)
+      returns (stream SubscribeInventoryResponse);
 }
 
-// SubscribeInventoryRequest: Request for subscribing to the running ledger inventory.
-message SubscribeInventoryRequest {}
+// SubscribeInventoryRequest: Request for subscribing to the running ledger
+// inventory.
+message SubscribeInventoryRequest {
+  // assets: Optional whitelist of asset symbols (e.g. ["SUI", "USDC"]).
+  // Empty = every asset the server tracks for this client.
+  repeated string assets = 1;
+}
 
-// SubscribeInventoryResponse: Response for subscribing to the running ledger inventory.
+// SubscribeInventoryResponse: Response for subscribing to the running ledger
+// inventory.
 message SubscribeInventoryResponse {
-  // inventory: The current inventory of the running ledger.
-  Inventory inventory = 1;
+  // inventories: One Inventory per asset.
+  //
+  // The server sends a single initial frame on connect carrying one entry
+  // per subscribed asset (the snapshot). Each subsequent frame carries
+  // exactly one entry — the asset whose state just changed. Consumers can
+  // treat the first frame as bulk state and later frames as deltas.
+  repeated Inventory inventories = 1;
+
+  // emitted_at: Server time when this frame was emitted. Distinct from
+  // each row's updated_at — used by consumers to monitor stream
+  // freshness independent of update activity (drives health-state).
+  google.protobuf.Timestamp emitted_at = 2;
 }
 
 // Inventory: Represents the current inventory of the running ledger.
 message Inventory {
-  // id: DB primary key for the ledger row, to maintain cross component traceability.
+  // id: DB primary key for the ledger row, to maintain cross component
+  // traceability.
   int64 id = 1;
+
   // asset: Base asset symbol (e.g. "SUI").
   string asset = 2;
-  // will need to send in delta and vwap values, but PRD not decided for this yet.
+
+  // status: Lifecycle state of this inventory row. Consumers drop the
+  // asset from their per-asset state map after a single CLOSED frame.
+  InventoryStatus status = 3;
+
+  // sequence: Monotonic per-asset sequence number, incremented on every
+  // emitted Inventory for this asset. Consumers detect dropped frames
+  // by gaps and reject out-of-order frames after reconnect. Durable
+  // across server restarts.
+  int64 sequence = 4;
+
+  // updated_at: Server time at which this row last changed.
+  google.protobuf.Timestamp updated_at = 5;
+
+  // will need to send in delta and vwap values, but PRD not decided for this
+  // yet.
+}
+
+// InventoryStatus: Lifecycle state of an inventory row.
+enum InventoryStatus {
+  INVENTORY_STATUS_UNSPECIFIED = 0;
+  // OPEN: Position is live; pricefeeder prices against it.
+  INVENTORY_STATUS_OPEN = 1;
+  // CLOSING: Server is winding the position down (e.g. asset delisting,
+  // manual flatten). Pricefeeder should widen / refuse the side that
+  // would grow exposure.
+  INVENTORY_STATUS_CLOSING = 2;
+  // CLOSED: Position is settled and zero. Terminal — one final CLOSED
+  // frame is emitted, then the server stops sending updates for this
+  // asset.
+  INVENTORY_STATUS_CLOSED = 3;
 }
