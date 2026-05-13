@@ -83,6 +83,12 @@ message Inventory {
   // is_snapshot: True if this frame was synthesized at subscribe time as
   // initial-state replay; false for live broadcast.
   bool is_snapshot = 10;
+
+  // emitted_at_ms: Epoch milliseconds at which the server constructed this
+  // event, taken at broadcast time. Per-event timestamp; distinct from
+  // SubscribeInventoryResponse.emitted_at, which marks when a stream frame
+  // (possibly batching multiple Inventories) was written to the wire.
+  int64 emitted_at_ms = 11;
 }
 
 // PoolDepth: Latest depth of a single on-chain pool for which the enclosing
