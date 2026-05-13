@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bolt.mm.v1;
 
+import "bolt/common/numeric/v1/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // InventoryService: InventoryService for subscribing to the running ledger
@@ -59,8 +60,55 @@ message Inventory {
   // updated_at: Server time at which this row last changed.
   google.protobuf.Timestamp updated_at = 5;
 
-  // will need to send in delta and vwap values, but PRD not decided for this
-  // yet.
+  // running_delta: Accumulated net swap delta on the running ledger for this
+  // asset (signed, base units).
+  bolt.common.numeric.v1.Fraction running_delta = 6;
+
+  // running_vwap: Volume-weighted average price across the running ledger's
+  // swaps. Absent when the running ledger has zero swaps (e.g. immediately
+  // after a hedge trigger reset delta to 0). Consumers must treat absent as
+  // "no VWAP currently defined" — never zero or a stale prior value.
+  optional bolt.common.numeric.v1.Fraction running_vwap = 7;
+
+  // pool_depths: Latest depth for every on-chain pool where this asset is
+  // base. Sourced from the just-parsed swap payload at SWAP_INGESTION, and
+  // from the service's pool registry at the other trigger reasons and on
+  // snapshot replay.
+  repeated PoolDepth pool_depths = 8;
+
+  // trigger_reason: Why this inventory event was emitted. UNSPECIFIED on
+  // snapshot-replay frames (is_snapshot = true); a concrete reason on live
+  // frames.
+  TriggerReason trigger_reason = 9;
+
+  // is_snapshot: True if this frame was synthesized at subscribe time as
+  // initial-state replay; false for live broadcast.
+  bool is_snapshot = 10;
+}
+
+// PoolDepth: Latest depth of a single on-chain pool for which the enclosing
+// Inventory's asset is base.
+message PoolDepth {
+  // pool_id: On-chain pool identifier.
+  string pool_id = 1;
+
+  // base_asset: Base asset symbol of the pool (e.g. "SUI").
+  string base_asset = 2;
+
+  // quote_asset: Quote asset symbol of the pool (e.g. "USDC").
+  string quote_asset = 3;
+
+  // base_amount: Pool base-asset reserve at the time of the swap or last
+  // recorded snapshot.
+  bolt.common.numeric.v1.Fraction base_amount = 4;
+
+  // quote_amount: Pool quote-asset reserve at the time of the swap or last
+  // recorded snapshot.
+  bolt.common.numeric.v1.Fraction quote_amount = 5;
+
+  // last_updated_ms: Epoch milliseconds when this depth was recorded — swap
+  // event timestamp at SWAP_INGESTION, pool-registry updated_at otherwise.
+  int64 last_updated_ms = 6;
 }
 
 // InventoryStatus: Lifecycle state of an inventory row.
@@ -76,4 +124,28 @@ enum InventoryStatus {
   // frame is emitted, then the server stops sending updates for this
   // asset.
   INVENTORY_STATUS_CLOSED = 3;
+}
+
+// TriggerReason: Why the server emitted an Inventory frame on the running
+// ledger for an asset. Carries the upstream cause of the state change.
+enum TriggerReason {
+  // TRIGGER_REASON_UNSPECIFIED: Default zero value. Used for snapshot-replay
+  // frames (is_snapshot = true), which have no real triggering cause. Never
+  // emitted on live frames.
+  TRIGGER_REASON_UNSPECIFIED = 0;
+  // TRIGGER_REASON_SWAP_INGESTION: End-of-block swap ingestion changed the
+  // asset's running_delta. pool_depths is sourced from the just-parsed
+  // on-chain swap payload — the freshest possible reading, equal to the
+  // post-swap reserves.
+  TRIGGER_REASON_SWAP_INGESTION = 1;
+  // TRIGGER_REASON_CLOSE_HEDGING_RESTORE: close_hedging restore moved the
+  // unfilled remainder back onto the running ledger and the restore changed
+  // running_delta. No swap occurred; pool_depths is read from the service's
+  // pool registry.
+  TRIGGER_REASON_CLOSE_HEDGING_RESTORE = 2;
+  // TRIGGER_REASON_HEDGE_TRIGGER: Netting engine fired a hedge: swaps moved
+  // to an in-progress ledger, the new running row has no swaps,
+  // running_delta reset to 0, and running_vwap is absent. pool_depths is
+  // read from the service's pool registry.
+  TRIGGER_REASON_HEDGE_TRIGGER = 3;
 }
