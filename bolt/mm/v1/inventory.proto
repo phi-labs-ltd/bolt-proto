@@ -2,14 +2,15 @@ syntax = "proto3";
 
 package bolt.mm.v1;
 
-import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // InventoryService: InventoryService for subscribing to the running ledger
 // inventory.
 service InventoryService {
   // Streams the running ledger inventory.
-  rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
+  rpc SubscribeInventory(SubscribeInventoryRequest)
+      returns (stream SubscribeInventoryResponse);
 }
 
 // SubscribeInventoryRequest: Request for subscribing to the running ledger
@@ -20,21 +21,33 @@ message SubscribeInventoryRequest {
   repeated string assets = 1;
 }
 
-// SubscribeInventoryResponse: Response for subscribing to the running ledger
-// inventory.
+// SubscribeInventoryResponse: One frame of the inventory stream.
+//
+// The server sends exactly one Snapshot frame on connect carrying every
+// running-ledger Inventory the subscription matches, followed by Update
+// frames — one per asset whose state just changed. Consumers branch on
+// the oneof tag; per-frame freshness is read from Inventory.emitted_at_ms.
 message SubscribeInventoryResponse {
-  // inventories: One Inventory per asset.
-  //
-  // The server sends a single initial frame on connect carrying one entry
-  // per subscribed asset (the snapshot). Each subsequent frame carries
-  // exactly one entry — the asset whose state just changed. Consumers can
-  // treat the first frame as bulk state and later frames as deltas.
-  repeated Inventory inventories = 1;
+  // payload: Discriminated payload — Snapshot on connect, Update thereafter.
+  oneof payload {
+    // snapshot: Initial bulk state, sent once at the start of the stream.
+    Snapshot snapshot = 1;
+    // update: Live state change for a single asset.
+    Update update = 2;
+  }
+}
 
-  // emitted_at: Server time when this frame was emitted. Distinct from
-  // each row's updated_at — used by consumers to monitor stream
-  // freshness independent of update activity (drives health-state).
-  google.protobuf.Timestamp emitted_at = 2;
+// Snapshot: Initial bulk state delivered at the start of the stream.
+message Snapshot {
+  // inventories: One Inventory per running ledger the subscription matches.
+  repeated Inventory inventories = 1;
+}
+
+// Update: A live state change for a single asset, emitted on every commit
+// that changed the asset's running_delta.
+message Update {
+  // inventory: The post-commit Inventory for the affected asset.
+  Inventory inventory = 1;
 }
 
 // Inventory: Represents the current inventory of the running ledger.
@@ -61,13 +74,13 @@ message Inventory {
 
   // running_delta: Accumulated net swap delta on the running ledger for this
   // asset (signed, base units).
-  bolt.common.numeric.v1.Fraction running_delta = 6;
+  bolt.common.numeric.v2.Fraction running_delta = 6;
 
   // running_vwap: Volume-weighted average price across the running ledger's
   // swaps. Absent when the running ledger has zero swaps (e.g. immediately
   // after a hedge trigger reset delta to 0). Consumers must treat absent as
   // "no VWAP currently defined" — never zero or a stale prior value.
-  optional bolt.common.numeric.v1.Fraction running_vwap = 7;
+  optional bolt.common.numeric.v2.Fraction running_vwap = 7;
 
   // pool_depths: Latest depth for every on-chain pool where this asset is
   // base. Sourced from the just-parsed swap payload at SWAP_INGESTION, and
@@ -76,44 +89,32 @@ message Inventory {
   repeated PoolDepth pool_depths = 8;
 
   // trigger_reason: Why this inventory event was emitted. UNSPECIFIED on
-  // snapshot-replay frames (is_snapshot = true); a concrete reason on live
-  // frames.
+  // Snapshot entries (no real triggering cause); a concrete reason on
+  // Update entries.
   TriggerReason trigger_reason = 9;
 
-  // is_snapshot: True if this frame was synthesized at subscribe time as
-  // initial-state replay; false for live broadcast.
-  bool is_snapshot = 10;
-
   // emitted_at_ms: Epoch milliseconds at which the server constructed this
-  // event, taken at broadcast time. Per-event timestamp; distinct from
-  // SubscribeInventoryResponse.emitted_at, which marks when a stream frame
-  // (possibly batching multiple Inventories) was written to the wire.
-  int64 emitted_at_ms = 11;
+  // Inventory, taken at broadcast time. Per-event timestamp used by
+  // consumers to monitor stream freshness independent of update activity.
+  int64 emitted_at_ms = 10;
 }
 
-// PoolDepth: Latest depth of a single on-chain pool for which the enclosing
-// Inventory's asset is base.
+// PoolDepth: Latest depth of a single on-chain pool.
 message PoolDepth {
-  // pool_id: On-chain pool identifier.
-  string pool_id = 1;
-
-  // base_asset: Base asset symbol of the pool (e.g. "SUI").
-  string base_asset = 2;
-
   // quote_asset: Quote asset symbol of the pool (e.g. "USDC").
-  string quote_asset = 3;
+  string quote_asset = 1;
 
-  // base_amount: Pool base-asset reserve at the time of the swap or last
+  // base_liquidity: Pool base-asset reserve at the time of the swap or last
   // recorded snapshot.
-  bolt.common.numeric.v1.Fraction base_amount = 4;
+  bolt.common.numeric.v2.Fraction base_liquidity = 2;
 
-  // quote_amount: Pool quote-asset reserve at the time of the swap or last
-  // recorded snapshot.
-  bolt.common.numeric.v1.Fraction quote_amount = 5;
+  // quote_liquidity: Mapping of the pool quote-asset reserve at the time of the
+  // swap or last recorded snapshot.
+  map<string, bolt.common.numeric.v2.Fraction> quote_liquidity = 3;
 
   // last_updated_ms: Epoch milliseconds when this depth was recorded — swap
   // event timestamp at SWAP_INGESTION, pool-registry updated_at otherwise.
-  int64 last_updated_ms = 6;
+  google.protobuf.Timestamp last_updated = 4;
 }
 
 // InventoryStatus: Lifecycle state of an inventory row.
@@ -134,9 +135,9 @@ enum InventoryStatus {
 // TriggerReason: Why the server emitted an Inventory frame on the running
 // ledger for an asset. Carries the upstream cause of the state change.
 enum TriggerReason {
-  // TRIGGER_REASON_UNSPECIFIED: Default zero value. Used for snapshot-replay
-  // frames (is_snapshot = true), which have no real triggering cause. Never
-  // emitted on live frames.
+  // TRIGGER_REASON_UNSPECIFIED: Default zero value. Used for Snapshot
+  // entries, which have no real triggering cause. Never emitted on Update
+  // entries.
   TRIGGER_REASON_UNSPECIFIED = 0;
   // TRIGGER_REASON_SWAP_INGESTION: End-of-block swap ingestion changed the
   // asset's running_delta. pool_depths is sourced from the just-parsed
