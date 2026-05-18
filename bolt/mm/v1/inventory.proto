@@ -107,6 +107,7 @@ message PoolDepth {
 
 // InventoryStatus: Lifecycle state of an inventory row.
 enum InventoryStatus {
+  // INVENTORY_STATUS_UNSPECIFIED: Default zero value; status not set.
   INVENTORY_STATUS_UNSPECIFIED = 0;
   // OPEN: Position is live; pricefeeder prices against it.
   INVENTORY_STATUS_OPEN = 1;
