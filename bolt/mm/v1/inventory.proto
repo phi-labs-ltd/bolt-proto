@@ -9,8 +9,7 @@ import "google/protobuf/timestamp.proto";
 // inventory.
 service InventoryService {
   // Streams the running ledger inventory.
-  rpc SubscribeInventory(SubscribeInventoryRequest)
-      returns (stream SubscribeInventoryResponse);
+  rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
 }
 
 // SubscribeInventoryRequest: Request for subscribing to the running ledger
