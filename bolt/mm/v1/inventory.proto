@@ -89,20 +89,17 @@ message Inventory {
 
 // PoolDepth: Latest depth of a single on-chain pool.
 message PoolDepth {
-  // quote_asset: Quote asset symbol of the pool (e.g. "USDC").
-  string quote_asset = 1;
-
   // base_liquidity: Pool base-asset reserve at the time of the swap or last
   // recorded snapshot.
-  bolt.common.numeric.v2.Fraction base_liquidity = 2;
+  bolt.common.numeric.v2.Fraction base_liquidity = 1;
 
   // quote_liquidity: Mapping of the pool quote-asset reserve at the time of the
   // swap or last recorded snapshot.
-  map<string, bolt.common.numeric.v2.Fraction> quote_liquidity = 3;
+  map<string, bolt.common.numeric.v2.Fraction> quote_liquidity = 2;
 
   // last_updated_ms: Epoch milliseconds when this depth was recorded — swap
   // event timestamp at SWAP_INGESTION, pool-registry updated_at otherwise.
-  google.protobuf.Timestamp last_updated = 4;
+  google.protobuf.Timestamp last_updated = 3;
 }
 
 // InventoryStatus: Lifecycle state of an inventory row.
