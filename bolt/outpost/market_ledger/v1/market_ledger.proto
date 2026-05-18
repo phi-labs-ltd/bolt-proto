@@ -161,6 +161,8 @@ message SwapEvent {
   optional google.protobuf.Timestamp timestamp = 16;
   // created_at: When this swap event row was inserted in the DB.
   google.protobuf.Timestamp created_at = 17;
+  // Quote_liquidity: Pool quote-asset liquidity at the time of the swap.
+  bolt.assets.v1.Balance quote_liquidity = 18;
 }
 
 // HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
