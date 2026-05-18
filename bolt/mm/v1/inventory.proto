@@ -63,40 +63,29 @@ message Inventory {
   // asset from their per-asset state map after a single CLOSED frame.
   InventoryStatus status = 3;
 
-  // sequence: Monotonic per-asset sequence number, incremented on every
-  // emitted Inventory for this asset. Consumers detect dropped frames
-  // by gaps and reject out-of-order frames after reconnect. Durable
-  // across server restarts.
-  int64 sequence = 4;
-
   // updated_at: Server time at which this row last changed.
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp updated_at = 4;
 
   // running_delta: Accumulated net swap delta on the running ledger for this
   // asset (signed, base units).
-  bolt.common.numeric.v2.Fraction running_delta = 6;
+  bolt.common.numeric.v2.Fraction running_delta = 5;
 
   // running_vwap: Volume-weighted average price across the running ledger's
   // swaps. Absent when the running ledger has zero swaps (e.g. immediately
   // after a hedge trigger reset delta to 0). Consumers must treat absent as
   // "no VWAP currently defined" — never zero or a stale prior value.
-  optional bolt.common.numeric.v2.Fraction running_vwap = 7;
+  optional bolt.common.numeric.v2.Fraction running_vwap = 6;
 
   // pool_depths: Latest depth for every on-chain pool where this asset is
   // base. Sourced from the just-parsed swap payload at SWAP_INGESTION, and
   // from the service's pool registry at the other trigger reasons and on
   // snapshot replay.
-  repeated PoolDepth pool_depths = 8;
+  repeated PoolDepth pool_depths = 7;
 
   // trigger_reason: Why this inventory event was emitted. UNSPECIFIED on
   // Snapshot entries (no real triggering cause); a concrete reason on
   // Update entries.
-  TriggerReason trigger_reason = 9;
-
-  // emitted_at_ms: Epoch milliseconds at which the server constructed this
-  // Inventory, taken at broadcast time. Per-event timestamp used by
-  // consumers to monitor stream freshness independent of update activity.
-  int64 emitted_at_ms = 10;
+  TriggerReason trigger_reason = 8;
 }
 
 // PoolDepth: Latest depth of a single on-chain pool.
