@@ -123,6 +123,9 @@ message AssetConfig {
   // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
   // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
   bolt.common.numeric.v1.Fraction dust_threshold = 3;
+  // in_progress_expiry: How long an in_progress ledger may live before being marked
+  // abandoned at subscribe time. Must be > 0.
+  google.protobuf.Duration in_progress_expiry = 4;
 }
 
 // SwapEvent: A single swap event ingested from the on-chain pool.
