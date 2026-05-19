@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.mm.v1;
 
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/outpost/market_ledger/v1/types.proto";
 import "google/protobuf/timestamp.proto";
 
 // InventoryService: InventoryService for subscribing to the running ledger
@@ -85,6 +86,23 @@ message Inventory {
   // Snapshot entries (no real triggering cause); a concrete reason on
   // Update entries.
   TriggerReason trigger_reason = 8;
+
+  // netting_thresholds: Per-direction |delta| thresholds at which the netting
+  // engine will fire a hedge for this asset. Typically one entry per
+  // configured direction (LONG, SHORT). Empty when no engine config is
+  // currently loaded for the asset.
+  repeated NettingThreshold netting_thresholds = 9;
+}
+
+// NettingThreshold: |delta| threshold at which the netting engine fires a
+// hedge for a single (asset, direction) pair. Mirrors the per-direction
+// threshold field of the asset's engine config.
+message NettingThreshold {
+  // direction: Position direction this threshold applies to (Long or Short).
+  bolt.outpost.market_ledger.v1.Direction direction = 1;
+  // threshold: |delta| at which the netting engine fires a hedge for this
+  // direction (base units, as a decimal Fraction).
+  bolt.common.numeric.v2.Fraction threshold = 2;
 }
 
 // PoolDepth: Latest depth of a single on-chain pool.
