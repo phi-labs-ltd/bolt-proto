@@ -85,6 +85,23 @@ message Inventory {
   // Snapshot entries (no real triggering cause); a concrete reason on
   // Update entries.
   TriggerReason trigger_reason = 8;
+
+  // netting_thresholds: Per-direction |delta| thresholds at which the netting
+  // engine will fire a hedge for this asset. Typically one entry per
+  // configured direction (LONG, SHORT). Empty when no engine config is
+  // currently loaded for the asset.
+  repeated NettingThreshold netting_thresholds = 9;
+}
+
+// NettingThreshold: |delta| threshold at which the netting engine fires a
+// hedge for a single (asset, direction) pair. Mirrors the per-direction
+// threshold field of the asset's engine config.
+message NettingThreshold {
+  // direction: Position direction this threshold applies to (Long or Short).
+  Direction direction = 1;
+  // threshold: |delta| at which the netting engine fires a hedge for this
+  // direction (base units, as a decimal Fraction).
+  bolt.common.numeric.v2.Fraction threshold = 2;
 }
 
 // PoolDepth: Latest depth of a single on-chain pool.
@@ -116,6 +133,16 @@ enum InventoryStatus {
   // frame is emitted, then the server stops sending updates for this
   // asset.
   INVENTORY_STATUS_CLOSED = 3;
+}
+
+// Direction: MM position direction for which a netting threshold applies.
+enum Direction {
+  // DIRECTION_UNSPECIFIED: Default zero value; must not be used explicitly.
+  DIRECTION_UNSPECIFIED = 0;
+  // DIRECTION_LONG: Net-long exposure (bought more base than sold).
+  DIRECTION_LONG = 1;
+  // DIRECTION_SHORT: Net-short exposure (sold more base than bought).
+  DIRECTION_SHORT = 2;
 }
 
 // TriggerReason: Why the server emitted an Inventory frame on the running

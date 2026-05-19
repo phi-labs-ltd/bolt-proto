@@ -1,0 +1,57 @@
+# ──────────────────────────────────────────────
+#  bolt-proto + Claude Code Development Environment
+#  Compatible with Podman (rootless) & Docker
+#
+#  First-time setup:
+#    podman volume create claude-config
+#    podman volume create claude-dotconfig
+#
+#  Run (see Justfile `podman-claude` target):
+#    podman run -it --rm \
+#      -v $(pwd):/root/project:Z \
+#      -v claude-config:/root/.claude:z \
+#      -v claude-dotconfig:/root/.config:z \
+#      podman-proto-dev
+# ──────────────────────────────────────────────
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ── System dependencies ────────────────────────
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    ca-certificates \
+    jq \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── GitHub SSH host key (avoids "Host key verification failed") ──
+RUN mkdir -p /root/.ssh && ssh-keyscan github.com >>/root/.ssh/known_hosts
+
+# ── just (command runner) ─────────────────────
+RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+
+# ── buf (proto lint/format/breaking) ──────────
+RUN curl -sSL "https://github.com/bufbuild/buf/releases/latest/download/buf-Linux-x86_64" -o /usr/local/bin/buf \
+    && chmod +x /usr/local/bin/buf
+
+# ── Claude Code (native installer) ────────────
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+# ── Shell helpers ──────────────────────────────
+ENV PATH=/root/.local/bin:/usr/local/bin:$PATH
+
+RUN echo 'export PATH=$HOME/.local/bin:/usr/local/bin:$PATH' >>~/.bashrc \
+    && echo 'export PATH=$HOME/.local/bin:/usr/local/bin:$PATH' >>~/.profile \
+    && echo 'PATH=/root/.local/bin:/usr/local/bin:$PATH' >>/etc/environment \
+    && echo 'export PATH=/root/.local/bin:/usr/local/bin:$PATH' >/etc/profile.d/bolt-proto-dev.sh
+
+# ── Project volume ─────────────────────────────
+WORKDIR /root/project
+
+# Entrypoint wrapper ensures .claude.json exists before starting Claude Code
+COPY scripts/entrypoint-claude.sh /usr/local/bin/entrypoint-claude.sh
+RUN chmod +x /usr/local/bin/entrypoint-claude.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-claude.sh"]
