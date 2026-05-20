@@ -10,6 +10,8 @@ import "google/protobuf/timestamp.proto";
 service InventoryService {
   // Streams the running ledger inventory.
   rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
+  // Get the latest inventory for all requested assets on the running ledger.
+  rpc GetLatestInventory(GetLatestInventoryRequest) returns (GetLatestInventoryResponse);
 }
 
 // SubscribeInventoryRequest: Request for subscribing to the running ledger
@@ -34,6 +36,19 @@ message SubscribeInventoryResponse {
     // update: Live state change for a single asset.
     Update update = 2;
   }
+}
+
+// GetLatestInventoryRequest: Request for the latest inventory for all requested assets on the running ledger.
+message GetLatestInventoryRequest {
+  // assets: Optional whitelist of asset symbols (e.g. ["SUI", "USDC"]).
+  // Empty = every asset the server tracks for this client.
+  repeated string assets = 1;
+}
+
+// GetLatestInventoryResponse: Response for the latest inventory for all requested assets on the running ledger.
+message GetLatestInventoryResponse {
+  // inventories: One Inventory per running ledger the request matches.
+  repeated Inventory inventories = 1;
 }
 
 // Snapshot: Initial bulk state delivered at the start of the stream.
