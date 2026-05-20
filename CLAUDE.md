@@ -31,12 +31,18 @@
   ```
 - `-Type` suffix: for classification enums (`SwapType`, `OrderType`, `CexOrderType`)
 - `-Status` suffix: for lifecycle enums (`LedgerStatus`, `CexOrderStatus`, `OrderStatus`)
+- When removing an enum value, `reserved` both the number and the name: `reserved 5; reserved "ORDER_STATUS_OLD";`
+- When adding a new alias for an existing value, put the new alias **last** so consumers have time to migrate
+- Prefer an enum over `bool` if the field has two states today but might gain more later
 
 ### Messages
 
 - PascalCase names; no nested messages
 - Every RPC has an explicit top-level `{Rpc}Request` / `{Rpc}Response` pair
 - Empty messages still defined explicitly: `message GetFooRequest {}`
+- Avoid messages with hundreds of fields — split by concern; large messages bloat memory and hit compiler limits
+- Use different messages for RPC APIs vs persistent storage so the two schemas can evolve independently
+- Prefer concrete typed fields over `google.protobuf.Any`; only reach for `Any` when the schema genuinely cannot be known statically
 
 ### Fields
 
@@ -47,6 +53,11 @@
 - External system IDs (CEX order IDs, tx digests): `string`
 - Timestamps: `google.protobuf.Timestamp`
 - Optional fields: use `optional` keyword
+- Don't use language keywords as field names (`class`, `interface`, `package`, `type`, `return`, `from`, etc.) — generators may rename and break clients
+- Never change a field's default value — old and new binaries will disagree on what an unset field means
+- Never migrate a field between `repeated` and scalar (or vice versa) — silently loses data on the wire
+- Proto3 has no `required` keyword; document required semantics with `// required` in the field comment
+- Prefer well-known / common types where one exists: `google.protobuf.Timestamp`, `google.protobuf.Duration`, `google.type.Date`
 
 ### Services & RPCs
 
@@ -76,5 +87,11 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
   reserved 3;
   reserved "old_field_name";
   ```
+- Never reuse a tag number, even after `reserved` is dropped — old clients will misinterpret the wire bytes
 - Never change a field number or type
 - Adding optional fields and new enum values is safe
+
+### Wire format & interchange
+
+- Don't rely on byte-for-byte serialization stability — proto serialization is not deterministic across builds or languages; don't hash, sign, or dedupe by serialized bytes
+- Don't use text format (`.textproto`) for data interchange — text format is for debugging and human-editable config; use binary on the wire
