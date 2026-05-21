@@ -4,7 +4,7 @@ package bolt.outpost.market_ledger.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
-import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
 import "bolt/outpost/market_ledger/v1/types.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
@@ -63,7 +63,7 @@ message TimeoutStep {
   // strategy: Execution strategy to use at this timeout rung.
   ExecutionStrategy strategy = 2;
   // spread_bps: Optional spread in basis points applied to this rung's limit price.
-  optional bolt.common.numeric.v1.Fraction spread_bps = 3;
+  optional bolt.common.numeric.v2.Fraction spread_bps = 3;
 }
 
 // Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
@@ -84,7 +84,7 @@ message EngineConfig {
   // direction: Position direction this config governs (Long or Short).
   Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
-  bolt.common.numeric.v1.Fraction threshold = 3;
+  bolt.common.numeric.v2.Fraction threshold = 3;
   // buckets: Ordered list of ladder buckets. Each bucket runs its own
   // timeout_ladder over its percent_bps slice of the hedge. Position in this
   // list is the bucket_idx.
@@ -105,7 +105,7 @@ message AssetConfig {
   google.protobuf.Duration time_threshold = 2;
   // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
   // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
-  bolt.common.numeric.v1.Fraction dust_threshold = 3;
+  bolt.common.numeric.v2.Fraction dust_threshold = 3;
   // in_progress_expiry: How long an in_progress ledger may live before being marked
   // abandoned at subscribe time. Must be > 0.
   google.protobuf.Duration in_progress_expiry = 4;
@@ -136,7 +136,7 @@ message SwapEvent {
   // lp_fee: Fee collected by liquidity providers.
   bolt.assets.v1.Balance lp_fee = 11;
   // price: Effective swap price (quote per base).
-  bolt.common.numeric.v1.Fraction price = 12;
+  bolt.common.numeric.v2.Fraction price = 12;
   // base_liquidity: Pool base-asset liquidity at the time of the swap.
   bolt.assets.v1.Balance base_liquidity = 13;
   // swap_type: Classification of the swap (e.g. buy, sell).
@@ -168,9 +168,9 @@ message HedgeOrder {
   // cex_order_status: Lifecycle state of this hedge order.
   bolt.cex.adapter.v1.OrderStatus cex_order_status = 4;
   // hedged_delta: Delta subtracted from running ledger at trigger time (signed, base units).
-  bolt.common.numeric.v1.Fraction hedged_delta = 5;
+  bolt.common.numeric.v2.Fraction hedged_delta = 5;
   // hedged_vwap: VWAP snapshot at trigger time.
-  bolt.common.numeric.v1.Fraction hedged_vwap = 6;
+  bolt.common.numeric.v2.Fraction hedged_vwap = 6;
   // internal_order_id: Service-generated UUID (UUID v4) created at trigger time.
   // The server always populates this field on emitted events; MM uses it as the
   // CEX-side idempotency key. Kept as `optional` for wire-format stability with
@@ -189,13 +189,13 @@ message HedgeOrder {
   // cex_order_kind: Market or limit order. Set at CloseHedging.
   optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 13;
   // filled_amount: Base amount actually filled. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction filled_amount = 14;
+  optional bolt.common.numeric.v2.Fraction filled_amount = 14;
   // executed_amount: Quote value = filled_amount × avg_price. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction executed_amount = 15;
+  optional bolt.common.numeric.v2.Fraction executed_amount = 15;
   // avg_price: Volume-weighted average fill price. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction avg_price = 16;
+  optional bolt.common.numeric.v2.Fraction avg_price = 16;
   // fee: Fee deducted; currency given by fee_currency. Set at CloseHedging.
-  optional bolt.common.numeric.v1.Fraction fee = 17;
+  optional bolt.common.numeric.v2.Fraction fee = 17;
   // fee_currency: Asset in which the fee was taken.
   optional string fee_currency = 18;
   // memo: Optional order-level note.
@@ -219,9 +219,9 @@ message MarketLedger {
   // asset: Base asset symbol (e.g. "SUI").
   string asset = 2;
   // delta: Accumulated net swap delta (signed, base units).
-  bolt.common.numeric.v1.Fraction delta = 3;
+  bolt.common.numeric.v2.Fraction delta = 3;
   // vwap: Volume-weighted average price across accumulated swaps.
-  bolt.common.numeric.v1.Fraction vwap = 4;
+  bolt.common.numeric.v2.Fraction vwap = 4;
   // status: Current lifecycle state of this ledger row.
   LedgerStatus status = 5;
   // initial_height: Sui checkpoint height of the first swap in this ledger.
@@ -295,9 +295,9 @@ message CloseHedgingRequest {
   // internal_order_id: Service-generated UUID echoed back from the triggering event.
   string internal_order_id = 5;
   // hedged_delta: Intent from the triggering event — signed delta the hedge was launched to cover, in base units.
-  bolt.common.numeric.v1.Fraction hedged_delta = 6;
+  bolt.common.numeric.v2.Fraction hedged_delta = 6;
   // hedged_vwap: Intent from the triggering event — VWAP snapshot at trigger time.
-  bolt.common.numeric.v1.Fraction hedged_vwap = 7;
+  bolt.common.numeric.v2.Fraction hedged_vwap = 7;
   // denom: Quote denomination (e.g. "USDC").
   string denom = 8;
   // executed_at_ms: When MM initiated the hedge on CEX, as epoch milliseconds.
@@ -324,17 +324,17 @@ message CexOrderRecord {
   // cex_order_type: Order type — "limit" or "market".
   string cex_order_type = 7;
   // amount: Planned order size (intent), in base-asset units.
-  bolt.common.numeric.v1.Fraction amount = 8;
+  bolt.common.numeric.v2.Fraction amount = 8;
   // price: Submitted limit price. Omitted for market orders.
-  bolt.common.numeric.v1.Fraction price = 9;
+  bolt.common.numeric.v2.Fraction price = 9;
   // filled_in_base: Final base-side fill volume.
-  bolt.common.numeric.v1.Fraction filled_in_base = 10;
+  bolt.common.numeric.v2.Fraction filled_in_base = 10;
   // filled_in_quote: Final quote-side fill value.
-  bolt.common.numeric.v1.Fraction filled_in_quote = 11;
+  bolt.common.numeric.v2.Fraction filled_in_quote = 11;
   // avg_deal_price: Volume-weighted average fill price across all fills on this order.
-  bolt.common.numeric.v1.Fraction avg_deal_price = 12;
+  bolt.common.numeric.v2.Fraction avg_deal_price = 12;
   // fee: Total fee deducted on this order.
-  bolt.common.numeric.v1.Fraction fee = 13;
+  bolt.common.numeric.v2.Fraction fee = 13;
   // fee_currency: Asset in which fee was taken (e.g. "USDT").
   string fee_currency = 14;
   // status: CEX order status using Gate taxonomy — "open", "closed", or "cancelled".
