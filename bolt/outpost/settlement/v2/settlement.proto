@@ -3,7 +3,6 @@ syntax = "proto3";
 package bolt.outpost.settlement.v2;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/cex/adapter/v2/cex.proto";
 import "bolt/common/partners/v1/partners.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
@@ -420,9 +419,15 @@ message RebalanceSwapSellRequest {
   reserved 4;
   reserved "receiver";
   // quote_receiver_address: The address (includes optional memo) that will receive the quote asset.
-  bolt.cex.adapter.v2.DepositAddress quote_receiver_address = 5;
+  reserved 5;
+  reserved "quote_receiver_address";
   // base_receiver_address: The address (includes optional memo)  that will receive the base asset.
-  bolt.cex.adapter.v2.DepositAddress base_receiver_address = 6;
+  reserved 6;
+  reserved "base_receiver_address";
+  // quote_receiver: The address that will receive the quote asset.
+  string quote_receiver = 7;
+  // base_receiver: The address that will receive the base asset.
+  string base_receiver = 8;
 }
 
 // RebalanceSwapSellResponse: Response to the RebalanceSwapSellRequest.
@@ -455,7 +460,10 @@ message RebalanceWithdrawSharesRequest {
   // The maximum base threshold for the base asset in the pool in rational values e.g. 5/3
   string max_base_threshold = 2;
   // receiver: The address (includes optional memo)  who will receive the withdrawn base asset.
-  bolt.cex.adapter.v2.DepositAddress receiver = 3;
+  reserved 3;
+  reserved "receiver";
+  // receiver_address: The address who will receive the withdrawn base asset.
+  string receiver_address = 4;
 }
 
 // RebalanceWithdrawSharesResponse: Response to the RebalanceWithdrawSharesRequest. Contains information about the rebalance withdraw shares.

@@ -22,6 +22,9 @@ enum LedgerStatus {
   LEDGER_STATUS_CLOSED = 2;
   // LEDGER_STATUS_IN_PROGRESS: Created by service-side trigger evaluation — snapshot of hedged delta/vwap.
   LEDGER_STATUS_IN_PROGRESS = 3;
+  // LEDGER_STATUS_ABANDONED: in_progress ledger exceeded in_progress_expiry at subscribe time;
+  // the MM never placed the hedge (service or MM was down). Delta is written off; hedge_order left unchanged.
+  LEDGER_STATUS_ABANDONED = 4;
 }
 
 // TriggerReason: Why a hedge trigger fired. Encodes the breached condition only —
