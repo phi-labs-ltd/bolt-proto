@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package bolt.outpost.funder.v1;
+
+// FunderService: Internal gRPC service that sponsors gas for other Bolt
+// services using Sui sponsored transactions. The sponsor (funder) owns the gas
+// coin; the client (oracle, settlement, etc.) is the transaction sender.
+//
+// Callers are intentionally gas-agnostic: the funder picks gas budget and gas
+// price. The funder uses a hardcoded high budget (Sui refunds the unused
+// portion after execution) and caches the reference gas price internally.
+service FunderService {
+  // Endpoint to pick a gas coin, build the GasPayment for it, sign the
+  // resulting Transaction's digest, and return the gas portion plus the
+  // sponsor signature. The caller assembles
+  // `Transaction { kind, sender, gas_payment, expiration }` from pieces it
+  // already controls, co-signs, and submits.
+  rpc SponsorTransaction(SponsorTransactionRequest) returns (SponsorTransactionResponse);
+}
+
+// SponsorTransactionRequest: Request asking the funder to attach a gas coin
+// and produce the sponsor's signature for a client-supplied transaction kind.
+message SponsorTransactionRequest {
+  // tx_kind_bcs: bcs-encoded sui_sdk_types::TransactionKind — the PTB the
+  // caller wants sponsored. Funder must see the kind to produce a valid
+  // sponsor signature (the signature is over the whole Transaction's digest,
+  // including kind) and to refuse non-ProgrammableTransaction kinds.
+  bytes tx_kind_bcs = 1;
+  // sender: bcs-encoded sui_sdk_types::Address of the sender (the requesting service).
+  bytes sender = 2;
+}
+
+// SponsorTransactionResponse: Response containing the funder-owned gas payment
+// and the sponsor's signature over the assembled transaction digest.
+message SponsorTransactionResponse {
+  // gas_payment_bcs: bcs-encoded sui_sdk_types::GasPayment — the only piece of
+  // the Transaction the funder owns. Caller assembles the full Transaction
+  // from this plus its own tx_kind + sender + TransactionExpiration::None.
+  bytes gas_payment_bcs = 1;
+  // sponsor_signature: bcs-encoded sui_sdk_types::UserSignature — sponsor's
+  // signature on the assembled Transaction's digest. Sui validates the
+  // signature against gas_payment.owner; mismatch with the assembled
+  // Transaction is rejected at submit, so no client-side defense-in-depth
+  // check is needed.
+  bytes sponsor_signature = 2;
+}
