@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package bolt.outpost.market_ledger.v2;
+
+// Direction: MM position direction for which an engine config applies.
+enum Direction {
+  // DIRECTION_UNSPECIFIED: Default zero value; must not be used explicitly.
+  DIRECTION_UNSPECIFIED = 0;
+  // DIRECTION_LONG: Net-long exposure (bought more base than sold).
+  DIRECTION_LONG = 1;
+  // DIRECTION_SHORT: Net-short exposure (sold more base than bought).
+  DIRECTION_SHORT = 2;
+}
+
+// LedgerStatus: Lifecycle state of a market ledger row.
+enum LedgerStatus {
+  // LEDGER_STATUS_UNSPECIFIED: Default zero value; must not be used explicitly.
+  LEDGER_STATUS_UNSPECIFIED = 0;
+  // LEDGER_STATUS_RUNNING: One per asset, accumulates swaps continuously.
+  LEDGER_STATUS_RUNNING = 1;
+  // LEDGER_STATUS_CLOSED: CloseHedging transitioned an in_progress row to closed.
+  LEDGER_STATUS_CLOSED = 2;
+  // LEDGER_STATUS_IN_PROGRESS: Created by service-side trigger evaluation — snapshot of hedged delta/vwap.
+  LEDGER_STATUS_IN_PROGRESS = 3;
+  // LEDGER_STATUS_ABANDONED: in_progress ledger exceeded in_progress_expiry at subscribe time;
+  // the MM never placed the hedge (service or MM was down). Delta is written off; hedge_order left unchanged.
+  LEDGER_STATUS_ABANDONED = 4;
+}
+
+// TriggerReason: Why a hedge trigger fired. Encodes the breached condition only —
+// "what kind of event this is" (fresh broadcast vs reconnect catch-up replay) lives
+// in the separate MarketLedgerEvent.is_replay field.
+enum TriggerReason {
+  // TRIGGER_REASON_UNSPECIFIED: Default zero value; must not be used explicitly.
+  TRIGGER_REASON_UNSPECIFIED = 0;
+  // TRIGGER_REASON_AMOUNT: |delta| breached the asset+direction amount threshold.
+  TRIGGER_REASON_AMOUNT = 1;
+  // TRIGGER_REASON_TIME: The inventory-at-risk clock elapsed (and |delta| >= dust_threshold).
+  TRIGGER_REASON_TIME = 2;
+}
+
+// ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
+enum ExecutionStrategy {
+  // EXECUTION_STRATEGY_UNSPECIFIED: Default zero value; must not be used explicitly.
+  EXECUTION_STRATEGY_UNSPECIFIED = 0;
+  // EXECUTION_STRATEGY_PROFITABLE_VWAP: Limit price set above VWAP to ensure profit.
+  EXECUTION_STRATEGY_PROFITABLE_VWAP = 1;
+  // EXECUTION_STRATEGY_BREAKEVEN_VWAP: Limit price set at VWAP for break-even execution.
+  EXECUTION_STRATEGY_BREAKEVEN_VWAP = 2;
+  // EXECUTION_STRATEGY_MID_PRICE: Limit price set at the mid-point of the order book.
+  EXECUTION_STRATEGY_MID_PRICE = 3;
+  // EXECUTION_STRATEGY_BEST_BID_ASK: Limit price at the best bid or ask.
+  EXECUTION_STRATEGY_BEST_BID_ASK = 4;
+  // EXECUTION_STRATEGY_CROSS_SPREAD: Price crosses the spread for faster fill.
+  EXECUTION_STRATEGY_CROSS_SPREAD = 5;
+  // EXECUTION_STRATEGY_TAKER: Market/taker order for immediate fill.
+  EXECUTION_STRATEGY_TAKER = 6;
+}
+
+// FinishAs: Terminal disposition class of a CEX order at the rung where it
+// settled. Distinct from `bolt.cex.adapter.v1.OrderStatus`, which models the
+// in-flight lifecycle state (open / closed / cancelled / etc.). Default zero
+// value (`FINISH_AS_UNSPECIFIED`) means the order has not yet finished — used
+// on snapshots emitted while the order is still open.
+enum FinishAs {
+  // FINISH_AS_UNSPECIFIED: Order has not finished yet (still open or
+  // disposition not yet known). Default zero value.
+  FINISH_AS_UNSPECIFIED = 0;
+  // FINISH_AS_FILLED: Order filled completely.
+  FINISH_AS_FILLED = 1;
+  // FINISH_AS_CANCELLED: Order cancelled (no fill or partial fill before
+  // cancel).
+  FINISH_AS_CANCELLED = 2;
+  // FINISH_AS_IOC: Order completed via immediate-or-cancel; unfilled portion
+  // auto-cancelled.
+  FINISH_AS_IOC = 3;
+  // FINISH_AS_STP: Order cancelled by CEX self-trade prevention.
+  FINISH_AS_STP = 4;
+  // FINISH_AS_ERROR: Order finished with a CEX-side error.
+  FINISH_AS_ERROR = 5;
+}

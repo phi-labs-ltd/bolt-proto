@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package bolt.outpost.market_ledger.v1;
+package bolt.outpost.market_ledger.v2;
 
 import "bolt/common/numeric/v2/numeric.proto";
-import "bolt/outpost/market_ledger/v1/market_ledger.proto";
+import "bolt/outpost/market_ledger/v2/market_ledger.proto";
 import "bolt/outpost/settlement/v2/settlement.proto";
 import "google/protobuf/struct.proto";
 

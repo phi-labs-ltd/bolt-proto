@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package bolt.outpost.market_ledger.v1;
+package bolt.outpost.market_ledger.v2;
 
-import "bolt/outpost/market_ledger/v1/market_ledger.proto";
+import "bolt/outpost/market_ledger/v2/market_ledger.proto";
 import "google/protobuf/field_mask.proto";
 
 // The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
