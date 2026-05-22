@@ -13,6 +13,8 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
+option deprecated = true;
+
 // The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
 service PublicMarketLedgerService {
   // Streams the running ledger as the initial snapshot, then live updates per block.

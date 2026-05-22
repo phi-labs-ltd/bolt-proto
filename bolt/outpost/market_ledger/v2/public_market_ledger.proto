@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package bolt.outpost.market_ledger.v2;
+
+import "bolt/outpost/market_ledger/v2/market_ledger.proto";
+import "google/protobuf/field_mask.proto";
+
+// The PublicMarketLedgerService exposes the same RPCs as MarketLedgerService but with restricted endpoints for external consumption.
+service PublicMarketLedgerService {
+  // Streams the running ledger as the initial snapshot, then live updates per block.
+  // In-flight hedges are included via the hedge_orders field (cex_order_status=open).
+  // field_mask paths: "swaps", "hedge_orders" opt in to those fields.
+  rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
+  // Returns all configs for the given asset (both Long and Short directions).
+  rpc GetEngineConfigsForAsset(GetEngineConfigsForAssetRequest) returns (GetEngineConfigsForAssetResponse);
+  // Returns all engine configs across all assets and directions.
+  rpc GetEngineConfigs(GetEngineConfigsRequest) returns (GetEngineConfigsResponse);
+  // Returns the asset config for a single asset, if one exists.
+  rpc GetAssetConfig(GetAssetConfigRequest) returns (GetAssetConfigResponse);
+  // Returns all asset configs across all assets.
+  rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
+  // Returns the current Running ledger for the given asset, or absent if none exists.
+  rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
+  // Returns all Running ledgers across every asset, ordered by asset name.
+  rpc GetOpenMarketLedgers(GetOpenMarketLedgersRequest) returns (GetOpenMarketLedgersResponse);
+  // Returns the ledger with the given id.
+  rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
+}
+
+// ── Subscribe ────────────────────────────────────────────────────────────────
+
+// SubscribeMarketLedgerRequest: Request to stream live ledger state.
+message SubscribeMarketLedgerRequest {
+  // field_mask: Paths "swaps", "hedge_orders" to opt in to those fields.
+  optional google.protobuf.FieldMask field_mask = 1;
+}
+
+// SubscribeMarketLedgerResponse: One frame of the ledger stream.
+message SubscribeMarketLedgerResponse {
+  // events: Ledger events for each asset, one per active ledger.
+  repeated MarketLedgerEvent events = 1;
+}
+
+// ── Engine Config ────────────────────────────────────────────────────────────
+
+// GetEngineConfigsForAssetRequest: Request to fetch engine configs for a single asset.
+message GetEngineConfigsForAssetRequest {
+  // asset: Base asset symbol to look up (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetEngineConfigsForAssetResponse: Engine configs for the requested asset.
+message GetEngineConfigsForAssetResponse {
+  // configs: Up to two configs (one per direction) for the asset.
+  repeated EngineConfig configs = 1;
+}
+
+// GetEngineConfigsRequest: Request to fetch all engine configs.
+message GetEngineConfigsRequest {}
+
+// GetEngineConfigsResponse: All engine configs across all assets.
+message GetEngineConfigsResponse {
+  // configs: All persisted engine configs.
+  repeated EngineConfig configs = 1;
+}
+
+// ── Asset Config ─────────────────────────────────────────────────────────────
+
+// GetAssetConfigRequest: Request to fetch the asset config for a single asset.
+message GetAssetConfigRequest {
+  // asset: Base asset symbol to look up (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetAssetConfigResponse: The asset config for the requested asset.
+message GetAssetConfigResponse {
+  // config: The persisted asset config, or absent if none exists for the asset.
+  optional AssetConfig config = 1;
+}
+
+// GetAssetConfigsRequest: Request to fetch all asset configs.
+message GetAssetConfigsRequest {}
+
+// GetAssetConfigsResponse: All asset configs across all assets.
+message GetAssetConfigsResponse {
+  // configs: All persisted asset configs.
+  repeated AssetConfig configs = 1;
+}
+
+// ── Query RPCs ───────────────────────────────────────────────────────────────
+
+// GetOpenMarketLedgerRequest: Request to fetch the running ledger for a single asset.
+message GetOpenMarketLedgerRequest {
+  // asset: Base asset symbol to look up (e.g. "SUI").
+  string asset = 1;
+}
+
+// GetOpenMarketLedgerResponse: The running ledger for the requested asset.
+message GetOpenMarketLedgerResponse {
+  // ledger: The running ledger, or absent if none exists for the asset.
+  optional MarketLedger ledger = 1;
+}
+
+// GetOpenMarketLedgersRequest: Request to fetch all running ledgers.
+message GetOpenMarketLedgersRequest {}
+
+// GetOpenMarketLedgersResponse: All running ledgers across every asset.
+message GetOpenMarketLedgersResponse {
+  // ledgers: Running ledgers ordered by asset name.
+  repeated MarketLedger ledgers = 1;
+}
+
+// GetMarketLedgerByIdRequest: Request to fetch a ledger by its primary key.
+message GetMarketLedgerByIdRequest {
+  // id: DB primary key of the ledger row to retrieve.
+  int64 id = 1;
+}
+
+// GetMarketLedgerByIdResponse: The ledger row matching the given id.
+message GetMarketLedgerByIdResponse {
+  // ledger: The requested ledger row.
+  MarketLedger ledger = 1;
+}
