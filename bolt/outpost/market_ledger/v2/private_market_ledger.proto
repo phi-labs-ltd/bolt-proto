@@ -4,7 +4,7 @@ package bolt.outpost.market_ledger.v2;
 
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/outpost/market_ledger/v2/market_ledger.proto";
-import "bolt/outpost/settlement/v2/settlement.proto";
+import "bolt/outpost/market_ledger/v2/types.proto";
 import "google/protobuf/struct.proto";
 
 // The PrivateMarketLedgerService exposes RPCs for internal callers only — reachable
@@ -33,7 +33,7 @@ message CloseHedgingRequest {
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
   // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
-  bolt.outpost.settlement.v2.SwapType cex_order_type = 2;
+  SwapType cex_order_type = 2;
   // cex_order_records: CEX orders the hedge was decomposed into, one record per placed order.
   repeated CexOrderRecord cex_order_records = 3;
   // instrument_name: CEX instrument used for the hedge (e.g. "SUI-USDC"). Hedge-level; one instrument per hedge.

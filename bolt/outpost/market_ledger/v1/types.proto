@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package bolt.outpost.market_ledger.v1;
 
+option deprecated = true;
+
 // Direction: MM position direction for which an engine config applies.
 enum Direction {
   // DIRECTION_UNSPECIFIED: Default zero value; must not be used explicitly.
