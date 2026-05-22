@@ -26,8 +26,8 @@ message SponsorTransactionRequest {
   // sponsor signature (the signature is over the whole Transaction's digest,
   // including kind) and to refuse non-ProgrammableTransaction kinds.
   bytes tx_kind_bcs = 1;
-  // sender: bcs-encoded sui_sdk_types::Address of the sender (the requesting service).
-  bytes sender = 2;
+  // sender: Sui address of the sender (the requesting service), as a `0x`-prefixed hex string.
+  string sender = 2;
 }
 
 // SponsorTransactionResponse: Response containing the funder-owned gas payment
