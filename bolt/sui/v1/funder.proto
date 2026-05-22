@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.outpost.funder.v1;
+package bolt.sui.v1;
 
 // FunderService: Internal gRPC service that sponsors gas for other Bolt
 // services using Sui sponsored transactions. The sponsor (funder) owns the gas
