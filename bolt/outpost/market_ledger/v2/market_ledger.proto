@@ -139,32 +139,14 @@ message HedgeOrder {
   string instrument_name = 10;
   // denom: Quote denomination (e.g. "USDC"). Set at trigger time.
   string denom = 11;
-  // cex_order_id: CEX-assigned order ID. Set at CloseHedging.
-  optional string cex_order_id = 12 [deprecated = true];
-  // cex_order_kind: Market or limit order. Set at CloseHedging.
-  optional bolt.cex.adapter.v1.OrderKind cex_order_kind = 13 [deprecated = true];
-  // filled_amount: Base amount actually filled. Set at CloseHedging.
-  optional bolt.common.numeric.v2.Fraction filled_amount = 14 [deprecated = true];
-  // executed_amount: Quote value = filled_amount × avg_price. Set at CloseHedging.
-  optional bolt.common.numeric.v2.Fraction executed_amount = 15 [deprecated = true];
-  // avg_price: Volume-weighted average fill price. Set at CloseHedging.
-  optional bolt.common.numeric.v2.Fraction avg_price = 16 [deprecated = true];
-  // fee: Fee deducted; currency given by fee_currency. Set at CloseHedging.
-  optional bolt.common.numeric.v2.Fraction fee = 17 [deprecated = true];
-  // fee_currency: Asset in which the fee was taken.
-  optional string fee_currency = 18 [deprecated = true];
   // memo: Optional order-level note.
-  optional string memo = 19;
-  // response_msg: Raw CEX response payload as JSON; preserved for audit.
-  optional string response_msg = 20 [deprecated = true];
-  // ladder_summary: Summary of the timeout ladder execution for this hedge. Set at CloseHedging.
-  optional string ladder_summary = 21 [deprecated = true];
+  optional string memo = 12;
   // finished_at: When fill/cancel/error completed on CEX (MM-provided). Set at CloseHedging.
-  optional google.protobuf.Timestamp finished_at = 22;
+  optional google.protobuf.Timestamp finished_at = 13;
   // created_at: When this order row was inserted (service-generated).
-  google.protobuf.Timestamp created_at = 23;
+  google.protobuf.Timestamp created_at = 14;
   // updated_at: When this order row was last modified.
-  google.protobuf.Timestamp updated_at = 24;
+  google.protobuf.Timestamp updated_at = 15;
 }
 
 // MarketLedger: A market ledger row.
