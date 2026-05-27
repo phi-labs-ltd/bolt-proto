@@ -26,13 +26,12 @@ message MarketStateEntry {
   MarketStateStrategy strategy = 2;
 }
 
-// TimeoutStep: One rung of the hedge timeout ladder. `strategies` must
-// contain exactly three entries (FAVORABLE, NEUTRAL, ADVERSE); the MM
-// selects by `state` using gap_bps vs EngineConfig.gap_threshold_bps.
+// TimeoutStep: One rung of the hedge timeout ladder. `strategies` size is
+// 1 (NEUTRAL only) or 3 (FAVORABLE+NEUTRAL+ADVERSE, all unique).
 message TimeoutStep {
   // delay: Wait before escalating to the next rung.
   google.protobuf.Duration delay = 1;
-  // strategies: (state, strategy) entries; exactly one per MarketState.
+  // strategies: (state, strategy) entries; size 1 (NEUTRAL) or 3 (unique).
   repeated MarketStateEntry strategies = 2;
 }
 
