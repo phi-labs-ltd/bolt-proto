@@ -10,15 +10,30 @@ import "bolt/outpost/market_ledger/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-// TimeoutStep: One rung of the hedge timeout ladder. Position within its enclosing
-// Bucket.timeout_ladder is the rung_idx (no field carried explicitly).
+// MarketStateStrategy: Execution strategy + spread for one market state.
+message MarketStateStrategy {
+  // strategy: Execution strategy.
+  ExecutionStrategy strategy = 1;
+  // spread_bps: Spread in basis points applied to the limit price.
+  optional bolt.common.numeric.v2.Fraction spread_bps = 2;
+}
+
+// MarketStateEntry: (state, strategy) pair; enum-keyed-map shim for proto3.
+message MarketStateEntry {
+  // state: Market state this entry applies to.
+  MarketState state = 1;
+  // strategy: Strategy to apply when `state` matches.
+  MarketStateStrategy strategy = 2;
+}
+
+// TimeoutStep: One rung of the hedge timeout ladder. `strategies` must
+// contain exactly three entries (FAVORABLE, NEUTRAL, ADVERSE); the MM
+// selects by `state` using gap_bps vs EngineConfig.gap_threshold_bps.
 message TimeoutStep {
-  // delay: How long to wait before escalating to this strategy.
+  // delay: Wait before escalating to the next rung.
   google.protobuf.Duration delay = 1;
-  // strategy: Execution strategy to use at this timeout rung.
-  ExecutionStrategy strategy = 2;
-  // spread_bps: Optional spread in basis points applied to this rung's limit price.
-  optional bolt.common.numeric.v2.Fraction spread_bps = 3;
+  // strategies: (state, strategy) entries; exactly one per MarketState.
+  repeated MarketStateEntry strategies = 2;
 }
 
 // Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
@@ -44,6 +59,9 @@ message EngineConfig {
   // timeout_ladder over its percent_bps slice of the hedge. Position in this
   // list is the bucket_idx.
   repeated Bucket buckets = 4;
+  // gap_threshold_bps: |gap| in bps between gate mid and residual VWAP at
+  // which neutral flips to favorable / adverse. Zero = always non-neutral.
+  bolt.common.numeric.v2.Fraction gap_threshold_bps = 5;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and

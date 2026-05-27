@@ -51,6 +51,21 @@ enum TriggerReason {
   TRIGGER_REASON_TIME = 2;
 }
 
+// MarketState: Possible market-states at rung-assessment time.
+enum MarketState {
+  // MARKET_STATE_UNSPECIFIED: Default zero value; must not be used explicitly.
+  MARKET_STATE_UNSPECIFIED = 0;
+  // MARKET_STATE_FAVORABLE: gap_bps >= gap_threshold_bps — the gate has moved
+  // in the MM's favor relative to residual VWAP.
+  MARKET_STATE_FAVORABLE = 1;
+  // MARKET_STATE_NEUTRAL: |gap_bps| < gap_threshold_bps — book is roughly at
+  // VWAP.
+  MARKET_STATE_NEUTRAL = 2;
+  // MARKET_STATE_ADVERSE: gap_bps < -gap_threshold_bps — the gate has moved
+  // against the MM.
+  MARKET_STATE_ADVERSE = 3;
+}
+
 // ExecutionStrategy: Pricing and execution strategy for a single TimeoutStep ladder rung.
 enum ExecutionStrategy {
   // EXECUTION_STRATEGY_UNSPECIFIED: Default zero value; must not be used explicitly.
