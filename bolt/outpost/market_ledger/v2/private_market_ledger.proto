@@ -95,6 +95,8 @@ message CexOrderRecord {
   string error_message = 19;
   // response_msg: Raw CEX response payload for forensics. Stored directly into a JSONB column.
   google.protobuf.Struct response_msg = 20;
+  // strategy: Pricing/execution strategy applied at this rung (the rung that placed this order).
+  ExecutionStrategy strategy = 21;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
