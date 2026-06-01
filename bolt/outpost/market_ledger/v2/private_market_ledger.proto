@@ -97,6 +97,8 @@ message CexOrderRecord {
   google.protobuf.Struct response_msg = 20;
   // strategy: Pricing/execution strategy applied at this rung (the rung that placed this order).
   ExecutionStrategy strategy = 21;
+  // market_condition: Market state assessed at this rung when the order was placed — favorable, neutral, or adverse.
+  MarketState market_condition = 22;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
