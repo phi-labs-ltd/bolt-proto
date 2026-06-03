@@ -5,18 +5,23 @@ package bolt.outpost.centralized_oracle.v2;
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
-// OracleService: Receives price updates from the pricefeeder and exposes oracle metadata.
+// OracleService: Receives price updates from the pricefeeder and exposes oracle
+// metadata.
 service OracleService {
   // Endpoint to post prices to the oracle.
   rpc PostPrices(PostPricesRequest) returns (PostPricesResponse);
-  // Endpoint to halt one or more pairs on-chain at a producer-chosen price.
+  // Endpoint to halt the price consumption for swaps. This will update the
+  // price onchain, but set the price to be expired so it cannot be used in
+  // Pools
   rpc HaltPrices(HaltPricesRequest) returns (HaltPricesResponse);
   // Endpoint to get information about the network the oracle is running on.
   rpc Info(InfoRequest) returns (InfoResponse);
 }
 
-// PostPricesRequest: Request carrying a batch of price updates to be posted to the oracle. Invoked by the pricefeeder.
+// PostPricesRequest: Request carrying a batch of price updates to be posted to
+// the oracle. Invoked by the pricefeeder.
 message PostPricesRequest {
   // price_updates: List of price updates to be posted to the oracle.
   repeated PriceUpdate price_updates = 1;
@@ -26,9 +31,16 @@ message PostPricesRequest {
 }
 
 // PostPricesResponse: Response to PostPricesRequest. Empty on success.
-message PostPricesResponse {}
+message PostPricesResponse {
+  // memo: Metadata for the price updates.
+  // This can be used to include any additional information that might be
+  // relevant logging/tracing. Used to provide more context on server response
+  // to the client e.g tx_digest
+  map<string, string> memo = 1;
+}
 
-// HaltPricesRequest: Request carrying a batch of halts to be posted to the oracle. Invoked by the pricefeeder.
+// HaltPricesRequest: Request carrying a batch of halts to be posted to the
+// oracle. Invoked by the pricefeeder.
 message HaltPricesRequest {
   // halts: List of pair halts to be posted to the oracle.
   repeated HaltPriceUpdate halts = 1;
@@ -38,7 +50,13 @@ message HaltPricesRequest {
 }
 
 // HaltPricesResponse: Response to HaltPricesRequest. Empty on success.
-message HaltPricesResponse {}
+message HaltPricesResponse {
+  // memo: Metadata for the price halts.
+  // This can be used to include any additional information that might be
+  // relevant logging/tracing. Used to provide more context on server response
+  // to the client e.g tx_digest
+  map<string, string> memo = 1;
+}
 
 // HaltPriceUpdate: A two-sided price at which a pair is to be halted on-chain.
 message HaltPriceUpdate {
@@ -49,22 +67,29 @@ message HaltPriceUpdate {
   // ask: The ask price at which the pair is halted.
   bolt.common.numeric.v2.Fraction ask = 3;
   // memo: Metadata for this halt, used for logging/tracing.
-  // e.g. tx_digest providing more context on the server response back to the client.
+  // e.g. tx_digest providing more context on the server response back to the
+  // client.
   map<string, string> memo = 4;
 }
 
-// InfoRequest: Request to get information about the oracle. Invoked by the pricefeeder.
+// InfoRequest: Request to get information about the oracle. Invoked by the
+// pricefeeder.
 message InfoRequest {}
 
-// InfoResponse: Information about which chain the oracle is running on and the address that will sign price posts.
+// InfoResponse: Information about which chain the oracle is running on and the
+// address that will sign price posts.
 message InfoResponse {
-  // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1.
+  // chain_id: The chain id of the chain the oracle is running on. e.g.
+  // archway-1.
   string chain_id = 1;
-  // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm.
+  // whoami: The address of the signer who will be submitting the prices. e.g.
+  // archway1qwertyuiopasdfghjklzxcvbnm.
   string whoami = 2;
+  repeated bolt.assets.v1.Pair supported_pairs = 5;
 }
 
-// PriceUpdate: A two-sided price update for a given pair, with a producer-supplied freshness window.
+// PriceUpdate: A two-sided price update for a given pair, with a
+// producer-supplied validity window.
 message PriceUpdate {
   // pair: The pair for which the price is being updated. e.g. ATOM/USDT.
   bolt.assets.v1.Pair pair = 1;
@@ -73,13 +98,16 @@ message PriceUpdate {
   // ask: The ask price for the pair.
   bolt.common.numeric.v2.Fraction ask = 3;
   // memo: Metadata for this price update, used for logging/tracing.
-  // e.g. tx_digest providing more context on the server response back to the client.
+  // e.g. tx_digest providing more context on the server response back to the
+  // client.
   map<string, string> memo = 4;
-  // freshness: Validity window for this price update. Exactly one variant should be set.
-  oneof freshness {
-    // freshness_duration: Validity expressed as a duration from receipt. e.g. 60s.
-    google.protobuf.Duration freshness_duration = 5;
-    // expiry_timestamp_ms: Validity expressed as an absolute expiry, in Unix epoch milliseconds. e.g. 1735689600000.
-    uint64 expiry_timestamp_ms = 6;
+  // validity: Validity window for this price update. Exactly one variant
+  // should be set.
+  oneof validity {
+    // validity_duration: Validity expressed as a duration from receipt. e.g.
+    // 60s.
+    google.protobuf.Duration validity_duration = 5;
+    // expiry_timestamp: Validity expressed as an absolute expiry.
+    google.protobuf.Timestamp expiry_timestamp = 6;
   }
 }
