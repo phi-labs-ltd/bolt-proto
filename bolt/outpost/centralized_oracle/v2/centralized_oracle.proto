@@ -85,6 +85,7 @@ message InfoResponse {
   // whoami: The address of the signer who will be submitting the prices. e.g.
   // archway1qwertyuiopasdfghjklzxcvbnm.
   string whoami = 2;
+  // supported_pairs: List of pairs supported by service
   repeated bolt.assets.v1.Pair supported_pairs = 5;
 }
 
