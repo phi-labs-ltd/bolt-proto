@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package bolt.outpost.centralized_oracle.v2;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/duration.proto";
+
+// OracleService: Receives price updates from the pricefeeder and exposes oracle metadata.
+service OracleService {
+  // Endpoint to post prices to the oracle.
+  rpc PostPrices(PostPricesRequest) returns (PostPricesResponse);
+  // Endpoint to get information about the network the oracle is running on.
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// PostPricesRequest: Request carrying a batch of price updates to be posted to the oracle. Invoked by the pricefeeder.
+message PostPricesRequest {
+  // price_updates: List of price updates to be posted to the oracle.
+  repeated PriceUpdate price_updates = 1;
+  // memo: Metadata for the batch, used for logging/tracing.
+  // e.g. pricefeeder run_id used to correlate client requests with server logs.
+  map<string, string> memo = 2;
+}
+
+// PostPricesResponse: Response to PostPricesRequest. Empty on success.
+message PostPricesResponse {}
+
+// InfoRequest: Request to get information about the oracle. Invoked by the pricefeeder.
+message InfoRequest {}
+
+// InfoResponse: Information about which chain the oracle is running on and the address that will sign price posts.
+message InfoResponse {
+  // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1.
+  string chain_id = 1;
+  // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm.
+  string whoami = 2;
+}
+
+// PriceUpdate: A two-sided price update for a given pair, with a producer-supplied freshness window.
+message PriceUpdate {
+  // pair: The pair for which the price is being updated. e.g. ATOM/USDT.
+  bolt.assets.v1.Pair pair = 1;
+  // bid: The bid price for the pair.
+  bolt.common.numeric.v2.Fraction bid = 2;
+  // ask: The ask price for the pair.
+  bolt.common.numeric.v2.Fraction ask = 3;
+  // memo: Metadata for this price update, used for logging/tracing.
+  // e.g. tx_digest providing more context on the server response back to the client.
+  map<string, string> memo = 4;
+  // freshness: Validity window for this price update. Exactly one variant should be set.
+  oneof freshness {
+    // freshness_duration: Validity expressed as a duration from receipt. e.g. 60s.
+    google.protobuf.Duration freshness_duration = 5;
+    // expiry_timestamp_ms: Validity expressed as an absolute expiry, in Unix epoch milliseconds. e.g. 1735689600000.
+    uint64 expiry_timestamp_ms = 6;
+  }
+}
