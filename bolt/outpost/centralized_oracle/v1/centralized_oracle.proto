@@ -13,28 +13,34 @@ service OracleService {
   rpc Info(InfoRequest) returns (InfoResponse);
 }
 
-// PostPricesRequest: Request to given prices to the oracle. Should be invoked by pricefeeder
+// PostPricesRequest: Request to given prices to the oracle. Should be invoked
+// by pricefeeder
 message PostPricesRequest {
   // price_updates: List of price updates to be posted to the oracle
   repeated PriceUpdate price_updates = 1;
   // memo: Metadata for the price updates.
-  // This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to connect the client request to the server logs
-  // e.g pricefeeder run_id
+  // This can be used to include any additional information that might be
+  // relevant logging/tracing. Used to connect the client request to the server
+  // logs e.g pricefeeder run_id
   map<string, string> memo = 2;
 }
 
-// PostPricesResponse: Response to the PostPricesRequest. Doesn't respond anything on success.
+// PostPricesResponse: Response to the PostPricesRequest. Doesn't respond
+// anything on success.
 message PostPricesResponse {}
 
-// InfoRequest: Request to get information about the oracle. Should be invoked by pricefeeder
+// InfoRequest: Request to get information about the oracle. Should be invoked
+// by pricefeeder
 message InfoRequest {}
 
-// InfoResponse: Response to the InfoRequest. Contains information about which chain the oracle is running on and the address of the signer.
+// InfoResponse: Response to the InfoRequest. Contains information about which
+// chain the oracle is running on and the address of the signer.
 message InfoResponse {
-  // chain_id: The chain id of the chain the oracle is running on. e.g. archway-1
+  // chain_id: The chain id of the chain the oracle is running on. e.g.
+  // archway-1
   string chain_id = 1;
-  // whoami: The address of the signer who will be submitting the prices. e.g. archway1qwertyuiopasdfghjklzxcvbnm
+  // whoami: The address of the signer who will be submitting the prices. e.g.
+  // archway1qwertyuiopasdfghjklzxcvbnm
   string whoami = 2;
 }
 
@@ -49,8 +55,8 @@ message PriceUpdate {
   // duration: The duration for which the price is valid
   google.protobuf.Duration duration = 4;
   // memo: Metadata for the price updates.
-  // This can be used to include any additional information that might be relevant logging/tracing.
-  // Used to provide more context on server response to the client
-  // e.g tx_digest
+  // This can be used to include any additional information that might be
+  // relevant logging/tracing. Used to provide more context on server response
+  // to the client e.g tx_digest
   map<string, string> memo = 5;
 }
