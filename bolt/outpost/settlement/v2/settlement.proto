@@ -2,10 +2,11 @@ syntax = "proto3";
 
 package bolt.outpost.settlement.v2;
 
-import "bolt/assets/v1/assets.proto";
-import "bolt/common/partners/v1/partners.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/partners/v1/partners.proto";
 
 // Service 1: PublicSettlementService
 service PublicSettlementService {
@@ -189,6 +190,9 @@ message Trade {
   SwapType swap_type = 13;
   // base_liquidity: Total BASE liquidity in the pool after the trade.
   bolt.assets.v1.Balance base_liquidity = 14;
+  // memo: Metadata for the trade. This can be used to include any additional information that might be 
+  // relevant logging/tracing/tracking. e.g receiver of the swap funds 
+  map<string, string> memo = 15;
 }
 
 //  SwapType: Enum representing the type of swap.
