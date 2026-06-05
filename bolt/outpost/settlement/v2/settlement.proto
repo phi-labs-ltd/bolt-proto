@@ -189,6 +189,9 @@ message Trade {
   SwapType swap_type = 13;
   // base_liquidity: Total BASE liquidity in the pool after the trade.
   bolt.assets.v1.Balance base_liquidity = 14;
+  // memo: Metadata for the trade. This can be used to include any additional information that might be
+  // relevant logging/tracing/tracking. e.g receiver of the swap funds
+  map<string, string> memo = 15;
 }
 
 //  SwapType: Enum representing the type of swap.
