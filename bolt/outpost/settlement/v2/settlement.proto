@@ -404,6 +404,10 @@ enum RebalanceStatusType {
   REBALANCE_STATUS_TYPE_ZERO_BASE_INPUT_AMOUNT = 10;
   // Pool paused error.
   REBALANCE_STATUS_TYPE_POOL_PAUSED = 11;
+  // Oracle price for the pair is missing or expired; swap cannot be priced.
+  REBALANCE_STATUS_TYPE_STALE_PRICE = 12;
+  // Quote asset is configured but toggled out of trading; swap cannot execute.
+  REBALANCE_STATUS_TYPE_QUOTE_NOT_TRADING = 13;
 }
 
 // RebalanceSwapSellRequest: Sells base tokens and sends quote proceeds and base surplus to their
