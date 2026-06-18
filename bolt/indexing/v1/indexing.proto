@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bolt.indexing.v1;
+
+// IndexingService: a generic streaming service for exposing per-event key/value metadata.
+service IndexingService {
+  // Index: subscribe to a stream of indexed key/value snapshots.
+  rpc Index(IndexRequest) returns (stream IndexResponse);
+}
+
+// IndexRequest: subscription request.
+message IndexRequest {
+  // keys: the keys the client wants to receive. If empty, the server streams all keys it produces.
+  repeated string keys = 1;
+}
+
+// IndexResponse: a single snapshot of indexed values for one event.
+message IndexResponse {
+  // indexed_values: map of key → value. Values are strings, and consumers parse them as needed.
+  map<string, string> indexed_values = 1;
+}
