@@ -19,8 +19,8 @@ message MarketStateStrategy {
 }
 
 // MarketStateEntry: (state, strategy, delay) tuple for one market condition within a rung (TimeoutStep).
-// Carries the execution strategy and an optional dwell override for favorable, neutral, or adverse.
-// Used as a repeated field in TimeoutStep.strategies (size 1 = Neutral-only, size 3 = all states).
+// Carries the execution strategy and an optional dwell override for FAVORABLE, NEUTRAL, or ADVERSE.
+// Used as a repeated field in TimeoutStep.strategies (size 1 = NEUTRAL-only, size 3 = all states).
 message MarketStateEntry {
   // state: Market state this entry applies to.
   MarketState state = 1;
@@ -37,7 +37,7 @@ message TimeoutStep {
   // delay: Default dwell for this rung, shared across all market states. Individual
   // states may override via MarketStateEntry.delay; absent per-state delay falls back here.
   google.protobuf.Duration delay = 1;
-  // strategies: (state, strategy) entries; size 1 (NEUTRAL) or 3 (unique).
+  // strategies: (state, strategy, delay) entries; size 1 (NEUTRAL) or 3 (unique).
   repeated MarketStateEntry strategies = 2;
 }
 
