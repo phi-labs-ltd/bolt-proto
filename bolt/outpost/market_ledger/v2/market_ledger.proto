@@ -18,18 +18,24 @@ message MarketStateStrategy {
   optional bolt.common.numeric.v2.Fraction spread_bps = 2;
 }
 
-// MarketStateEntry: (state, strategy) pair; enum-keyed-map shim for proto3.
+// MarketStateEntry: (state, strategy, delay) tuple for one market condition within a rung (TimeoutStep).
+// Carries the execution strategy and an optional dwell override for favorable, neutral, or adverse.
+// Used as a repeated field in TimeoutStep.strategies (size 1 = Neutral-only, size 3 = all states).
 message MarketStateEntry {
   // state: Market state this entry applies to.
   MarketState state = 1;
   // strategy: Strategy to apply when `state` matches.
   MarketStateStrategy strategy = 2;
+  // delay: Per-state dwell override. When present, overrides the parent
+  // TimeoutStep.delay for this market state only. Absent = use TimeoutStep.delay.
+  optional google.protobuf.Duration delay = 3;
 }
 
 // TimeoutStep: One rung of the hedge timeout ladder. `strategies` size is
 // 1 (NEUTRAL only) or 3 (FAVORABLE+NEUTRAL+ADVERSE, all unique).
 message TimeoutStep {
-  // delay: Wait before escalating to the next rung.
+  // delay: Default dwell for this rung, shared across all market states. Individual
+  // states may override via MarketStateEntry.delay; absent per-state delay falls back here.
   google.protobuf.Duration delay = 1;
   // strategies: (state, strategy) entries; size 1 (NEUTRAL) or 3 (unique).
   repeated MarketStateEntry strategies = 2;
