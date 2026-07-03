@@ -67,6 +67,14 @@ message EngineConfig {
   // gap_threshold_bps: |gap| in bps between gate mid and residual VWAP at
   // which neutral flips to favorable / adverse. Zero = always non-neutral.
   bolt.common.numeric.v2.Fraction gap_threshold_bps = 5;
+  // quote_asset: Quote asset symbol the MM hedges this base asset against
+  // (e.g. "USDC"). MM derives the venue-specific CEX instrument name from
+  // (asset, quote_asset) — e.g. "SUI_USDC" — instead of hardcoding it.
+  // A hedge-policy choice, not an on-chain fact: it may differ from the
+  // pool's on-chain quote leg. Kept `optional` for wire-format stability
+  // with legacy configs; semantically required by the post-cutover
+  // server-side contract (events are not emitted without it).
+  optional string quote_asset = 6;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
