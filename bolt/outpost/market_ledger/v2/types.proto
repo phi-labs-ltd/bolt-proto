@@ -84,6 +84,18 @@ enum ExecutionStrategy {
   EXECUTION_STRATEGY_TAKER = 6;
 }
 
+// CexOrderStrategy: Venue-agnostic time-in-force strategy for CEX limit orders.
+enum CexOrderStrategy {
+  // CEX_ORDER_STRATEGY_UNSPECIFIED: No strategy was explicitly supplied.
+  CEX_ORDER_STRATEGY_UNSPECIFIED = 0;
+  // CEX_ORDER_STRATEGY_GTC: Keep the order open until filled or cancelled.
+  CEX_ORDER_STRATEGY_GTC = 1;
+  // CEX_ORDER_STRATEGY_POC: Post-only; the order must not execute immediately as a taker.
+  CEX_ORDER_STRATEGY_POC = 2;
+  // CEX_ORDER_STRATEGY_IOC: Execute immediately and cancel any unfilled remainder.
+  CEX_ORDER_STRATEGY_IOC = 3;
+}
+
 // FinishAs: Terminal disposition class of a CEX order at the rung where it
 // settled. Distinct from `bolt.cex.adapter.v1.OrderStatus`, which models the
 // in-flight lifecycle state (open / closed / cancelled / etc.). Default zero
