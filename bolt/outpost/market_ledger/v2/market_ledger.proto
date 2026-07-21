@@ -39,6 +39,9 @@ message TimeoutStep {
   google.protobuf.Duration delay = 1;
   // strategies: (state, strategy, delay) entries; size 1 (NEUTRAL) or 3 (unique).
   repeated MarketStateEntry strategies = 2;
+  // cex_order_strategy: Venue-agnostic time-in-force applied to orders placed at
+  // this rung. When absent, defaults to CEX_ORDER_STRATEGY_GTC.
+  optional CexOrderStrategy cex_order_strategy = 3;
 }
 
 // Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
