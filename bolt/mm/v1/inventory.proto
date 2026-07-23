@@ -66,9 +66,9 @@ message Update {
 
 // Inventory: Represents the current inventory of the running ledger.
 message Inventory {
-  // id: DB primary key for the ledger row, to maintain cross component
-  // traceability.
-  int64 id = 1;
+  // id: DB primary key for the ledger row. Deprecated: unread by consumers;
+  // use event_id, which identifies each emitted frame.
+  int64 id = 1 [deprecated = true];
 
   // asset: Base asset symbol (e.g. "SUI").
   string asset = 2;
@@ -106,6 +106,13 @@ message Inventory {
   // configured direction (LONG, SHORT). Empty when no engine config is
   // currently loaded for the asset.
   repeated NettingThreshold netting_thresholds = 9;
+
+  // event_id: UUID unique to this emitted frame. The producer persists the
+  // same id on the swap rows of the batch that triggered the frame
+  // (bolt_swap_events.inventory_event_id), linking swaps to frames; frames
+  // without a triggering swap batch (hedge/time triggers, restores,
+  // snapshots) carry a fresh id that is persisted nowhere.
+  string event_id = 10;
 }
 
 // NettingThreshold: |delta| threshold at which the netting engine fires a
