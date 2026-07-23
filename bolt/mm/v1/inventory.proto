@@ -106,6 +106,16 @@ message Inventory {
   // configured direction (LONG, SHORT). Empty when no engine config is
   // currently loaded for the asset.
   repeated NettingThreshold netting_thresholds = 9;
+
+  // inventory_event_id: Unique id of this emitted frame (UUID), for
+  // cross-component traceability. Distinct from `id`, which tracks the
+  // ledger row and repeats across frames.
+  string inventory_event_id = 10;
+
+  // swap_ids: swap_id of each swap in the batch that produced this frame.
+  // Empty on non-swap frames (HEDGE_TRIGGER, TIME_TRIGGER,
+  // CLOSE_HEDGING_RESTORE, snapshot).
+  repeated string swap_ids = 11;
 }
 
 // NettingThreshold: |delta| threshold at which the netting engine fires a
