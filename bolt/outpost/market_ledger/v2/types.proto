@@ -94,6 +94,8 @@ enum CexOrderStrategy {
   CEX_ORDER_STRATEGY_POC = 2;
   // CEX_ORDER_STRATEGY_IOC: Execute immediately and cancel any unfilled remainder.
   CEX_ORDER_STRATEGY_IOC = 3;
+  // CEX_ORDER_STRATEGY_FOK: Execute the full order immediately or cancel it entirely.
+  CEX_ORDER_STRATEGY_FOK = 4;
 }
 
 // FinishAs: Terminal disposition class of a CEX order at the rung where it
