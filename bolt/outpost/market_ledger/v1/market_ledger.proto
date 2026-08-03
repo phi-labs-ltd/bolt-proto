@@ -398,7 +398,7 @@ message CexOrderRecord {
   uint32 bucket_idx = 1;
   // rung_idx: Position in Bucket.timeout_ladder (0-based) — which rung this order was placed at.
   uint32 rung_idx = 2;
-  // client_order_id: Client-supplied idempotency key, formatted "t-<internal_order_id>-<bucket_idx>".
+  // client_order_id: Client-supplied idempotency key, formatted "t-<hedge_id>-<bucket_idx>-<L|M>".
   string client_order_id = 3;
   // cex_order_id: CEX-assigned order ID. Empty if placement failed before the CEX returned an id.
   string cex_order_id = 4;
