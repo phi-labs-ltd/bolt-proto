@@ -1,0 +1,222 @@
+syntax = "proto3";
+
+package bolt.mm.v2;
+
+import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// InventoryService: InventoryService for subscribing to the running ledger
+// inventory.
+service InventoryService {
+  // Streams the running ledger inventory.
+  rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
+  // Get the latest inventory for all requested instruments on the running ledger.
+  rpc GetLatestInventory(GetLatestInventoryRequest) returns (GetLatestInventoryResponse);
+}
+
+// Instrument: Canonical market key — base leg and its quote counterpart.
+message Instrument {
+  // base_asset: Base asset symbol (e.g. "SUI").
+  string base_asset = 1;
+  // quote_asset: Quote asset symbol (e.g. "USDC").
+  string quote_asset = 2;
+}
+
+// SubscribeInventoryRequest: Request for subscribing to the running ledger
+// inventory.
+message SubscribeInventoryRequest {
+  // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
+  // Empty = every instrument the server tracks for this client.
+  repeated Instrument instruments = 1;
+}
+
+// SubscribeInventoryResponse: One frame of the inventory stream.
+//
+// The server sends exactly one Snapshot frame on connect carrying every
+// running-ledger Inventory the subscription matches, followed by Update
+// frames — one per instrument whose state just changed. Consumers branch on
+// the oneof tag; per-frame freshness is read from Inventory.emitted_at_ms.
+message SubscribeInventoryResponse {
+  // payload: Discriminated payload — Snapshot on connect, Update thereafter.
+  oneof payload {
+    // snapshot: Initial bulk state, sent once at the start of the stream.
+    Snapshot snapshot = 1;
+    // update: Live state change for a single instrument.
+    Update update = 2;
+  }
+}
+
+// GetLatestInventoryRequest: Request for the latest inventory for all requested instruments on the running ledger.
+message GetLatestInventoryRequest {
+  // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
+  // Empty = every instrument the server tracks for this client.
+  repeated Instrument instruments = 1;
+}
+
+// GetLatestInventoryResponse: Response for the latest inventory for all requested instruments on the running ledger.
+message GetLatestInventoryResponse {
+  // inventories: One Inventory per running ledger the request matches.
+  repeated Inventory inventories = 1;
+}
+
+// Snapshot: Initial bulk state delivered at the start of the stream.
+message Snapshot {
+  // inventories: One Inventory per running ledger the subscription matches.
+  repeated Inventory inventories = 1;
+}
+
+// Update: A live state change for a single instrument, emitted on every commit
+// that changed the instrument's running_delta.
+message Update {
+  // inventory: The post-commit Inventory for the affected instrument.
+  Inventory inventory = 1;
+}
+
+// Inventory: Represents the current inventory of the running ledger.
+message Inventory {
+  // base_asset: Base leg of the instrument; running_delta and running_vwap are
+  // denominated in it (e.g. "SUI"). required
+  string base_asset = 1;
+
+  // quote_asset: Quote leg of the instrument (e.g. "USDC"). required
+  string quote_asset = 2;
+
+  // status: Lifecycle state of this inventory row. Consumers drop the
+  // instrument from their per-instrument state map after a single CLOSED frame.
+  InventoryStatus status = 3;
+
+  // updated_at: Server time at which this row last changed.
+  google.protobuf.Timestamp updated_at = 4;
+
+  // running_delta: Accumulated net swap delta on the running ledger for this
+  // instrument (signed, base_asset units), netted across both pool orientations.
+  bolt.common.numeric.v2.Fraction running_delta = 5;
+
+  // running_vwap: Volume-weighted average price across the running ledger's
+  // swaps. Absent when the running ledger has zero swaps (e.g. immediately
+  // after a hedge trigger reset delta to 0). Consumers must treat absent as
+  // "no VWAP currently defined" — never zero or a stale prior value.
+  optional bolt.common.numeric.v2.Fraction running_vwap = 6;
+
+  // pool_depths: Latest depth for every on-chain pool of this instrument, in
+  // either orientation — each entry carries its own base_asset. Sourced from
+  // the just-parsed swap payload at SWAP_INGESTION, and from the service's pool
+  // registry at the other trigger reasons and on snapshot replay.
+  repeated PoolDepth pool_depths = 7;
+
+  // trigger_reason: Why this inventory event was emitted. UNSPECIFIED on
+  // Snapshot entries (no real triggering cause); a concrete reason on
+  // Update entries.
+  TriggerReason trigger_reason = 8;
+
+  // netting_thresholds: Per-direction |delta| thresholds at which the netting
+  // engine will fire a hedge for this instrument. Typically one entry per
+  // configured direction (LONG, SHORT). Empty when no engine config is
+  // currently loaded for the instrument.
+  repeated NettingThreshold netting_thresholds = 9;
+
+  // event_id: UUID unique to this emitted frame. The producer persists the
+  // same id on the swap rows of the batch that triggered the frame
+  // (bolt_swap_events.inventory_event_id), linking swaps to frames; frames
+  // without a triggering swap batch (hedge/time triggers, restores,
+  // snapshots) carry a fresh id that is persisted nowhere.
+  string event_id = 10;
+
+  // time_threshold: How long the ledger carries unhedged exposure before the
+  // TIME trigger hedges it. Together with delta_nonzero_since it lets a
+  // consumer measure the distance to that trigger. required
+  google.protobuf.Duration time_threshold = 11;
+
+  // delta_nonzero_since: Start of the current unhedged exposure window. Absent
+  // while running_delta is zero — no window is open then. Preserved across a
+  // sign change: a delta crossing from long to short without touching zero
+  // keeps the original start.
+  optional google.protobuf.Timestamp delta_nonzero_since = 12;
+
+  // dust_threshold: Floor below which the TIME trigger stays suppressed, in
+  // base_asset units. An exposure under it is never hedged on time alone, no
+  // matter how long it ages — so both this and time_threshold are needed to
+  // tell whether a TIME hedge is actually approaching. required
+  bolt.common.numeric.v2.Fraction dust_threshold = 13;
+}
+
+// NettingThreshold: |delta| threshold at which the netting engine fires a
+// hedge for a single (instrument, direction) pair. Mirrors the per-direction
+// threshold field of the instrument's engine config.
+message NettingThreshold {
+  // direction: Position direction this threshold applies to (Long or Short).
+  Direction direction = 1;
+  // threshold: |delta| at which the netting engine fires a hedge for this
+  // direction (base units, as a decimal Fraction).
+  bolt.common.numeric.v2.Fraction threshold = 2;
+}
+
+// PoolDepth: Latest depth of a single on-chain pool.
+message PoolDepth {
+  // base_liquidity: Pool base-asset reserve at the time of the swap or last
+  // recorded snapshot, denominated in this pool's base_asset.
+  bolt.common.numeric.v2.Fraction base_liquidity = 1;
+
+  // quote_liquidity: Mapping of the pool quote-asset reserve at the time of the
+  // swap or last recorded snapshot.
+  map<string, bolt.common.numeric.v2.Fraction> quote_liquidity = 2;
+
+  // last_updated_ms: Epoch milliseconds when this depth was recorded — swap
+  // event timestamp at SWAP_INGESTION, pool-registry updated_at otherwise.
+  google.protobuf.Timestamp last_updated = 3;
+
+  // base_asset: This pool's base leg, which base_liquidity is denominated in.
+  // Not necessarily the instrument's base_asset. required
+  string base_asset = 4;
+}
+
+// InventoryStatus: Lifecycle state of an inventory row.
+enum InventoryStatus {
+  // INVENTORY_STATUS_UNSPECIFIED: Default zero value; status not set.
+  INVENTORY_STATUS_UNSPECIFIED = 0;
+  // OPEN: Position is live; pricefeeder prices against it.
+  INVENTORY_STATUS_OPEN = 1;
+  // CLOSING: Server is winding the position down (e.g. asset delisting,
+  // manual flatten). Pricefeeder should widen / refuse the side that
+  // would grow exposure.
+  INVENTORY_STATUS_CLOSING = 2;
+  // CLOSED: Position is settled and zero. Terminal — one final CLOSED
+  // frame is emitted, then the server stops sending updates for this
+  // instrument.
+  INVENTORY_STATUS_CLOSED = 3;
+}
+
+// Direction: MM position direction for which a netting threshold applies.
+enum Direction {
+  // DIRECTION_UNSPECIFIED: Default zero value; must not be used explicitly.
+  DIRECTION_UNSPECIFIED = 0;
+  // DIRECTION_LONG: Net-long exposure (bought more base than sold).
+  DIRECTION_LONG = 1;
+  // DIRECTION_SHORT: Net-short exposure (sold more base than bought).
+  DIRECTION_SHORT = 2;
+}
+
+// TriggerReason: Why the server emitted an Inventory frame on the running
+// ledger for an instrument. Carries the upstream cause of the state change.
+enum TriggerReason {
+  // TRIGGER_REASON_UNSPECIFIED: Default zero value. Used for Snapshot
+  // entries, which have no real triggering cause. Never emitted on Update
+  // entries.
+  TRIGGER_REASON_UNSPECIFIED = 0;
+  // TRIGGER_REASON_SWAP_INGESTION: End-of-block swap ingestion changed the
+  // instrument's running_delta. pool_depths is sourced from the just-parsed
+  // on-chain swap payload — the freshest possible reading, equal to the
+  // post-swap reserves.
+  TRIGGER_REASON_SWAP_INGESTION = 1;
+  // TRIGGER_REASON_CLOSE_HEDGING_RESTORE: close_hedging restore moved the
+  // unfilled remainder back onto the running ledger and the restore changed
+  // running_delta. No swap occurred; pool_depths is read from the service's
+  // pool registry.
+  TRIGGER_REASON_CLOSE_HEDGING_RESTORE = 2;
+  // TRIGGER_REASON_HEDGE_TRIGGER: Netting engine fired a hedge: swaps moved
+  // to an in-progress ledger, the new running row has no swaps,
+  // running_delta reset to 0, and running_vwap is absent. pool_depths is
+  // read from the service's pool registry.
+  TRIGGER_REASON_HEDGE_TRIGGER = 3;
+}
