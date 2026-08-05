@@ -60,8 +60,9 @@ message Snapshot {
   repeated Inventory inventories = 1;
 }
 
-// Update: A live state change for a single instrument, emitted on every commit
-// that changed the instrument's running_delta.
+// Update: A live frame for a single instrument. Emitted on every commit that
+// changed the instrument's running_delta or delta_nonzero_since — the delta
+// can be unchanged when only the exposure window closed.
 message Update {
   // inventory: The post-commit Inventory for the affected instrument.
   Inventory inventory = 1;
@@ -104,8 +105,10 @@ message Inventory {
 
   // netting_thresholds: Per-direction |delta| thresholds at which the netting
   // engine will fire a hedge for this instrument. Typically one entry per
-  // configured direction (LONG, SHORT). Empty when no engine config is
-  // currently loaded for the instrument.
+  // configured direction (LONG, SHORT). Empty means no engine config is
+  // currently loaded for the instrument — the same meaning on every frame: a
+  // Snapshot entry carries the same entries an Update would, so a reconnect
+  // never blanks thresholds a consumer already holds.
   repeated NettingThreshold netting_thresholds = 8;
 
   // event_id: UUID unique to this emitted frame. The producer persists the
@@ -121,9 +124,10 @@ message Inventory {
   google.protobuf.Duration time_threshold = 10;
 
   // delta_nonzero_since: Start of the current unhedged exposure window. Absent
-  // while running_delta is zero — no window is open then. Preserved across a
-  // sign change: a delta crossing from long to short without touching zero
-  // keeps the original start.
+  // when no window is open: running_delta is zero, or the clock expired on a
+  // delta below dust_threshold. Preserved across a sign change: a delta
+  // crossing from long to short without touching zero keeps the original
+  // start.
   optional google.protobuf.Timestamp delta_nonzero_since = 11;
 
   // dust_threshold: Floor below which the TIME trigger stays suppressed, in
@@ -190,7 +194,8 @@ enum Direction {
 }
 
 // TriggerReason: Why the server emitted an Inventory frame on the running
-// ledger for an instrument. Carries the upstream cause of the state change.
+// ledger for an instrument. Carries the upstream cause of the emission, which
+// is not always a change in running_delta.
 enum TriggerReason {
   // TRIGGER_REASON_UNSPECIFIED: Default zero value. Used for Snapshot
   // entries, which have no real triggering cause. Never emitted on Update
@@ -199,7 +204,9 @@ enum TriggerReason {
   // TRIGGER_REASON_SWAP_INGESTION: End-of-block swap ingestion changed the
   // instrument's running_delta. pool_depths is sourced from the just-parsed
   // on-chain swap payload — the freshest possible reading, equal to the
-  // post-swap reserves.
+  // post-swap reserves. Also carries a swap that brought running_delta to
+  // zero and cleared delta_nonzero_since; that is not a hedge and must not
+  // reset a consumer's hedge-side state.
   TRIGGER_REASON_SWAP_INGESTION = 1;
   // TRIGGER_REASON_CLOSE_HEDGING_RESTORE: close_hedging restore moved the
   // unfilled remainder back onto the running ledger and the restore changed
@@ -209,6 +216,16 @@ enum TriggerReason {
   // TRIGGER_REASON_HEDGE_TRIGGER: Netting engine fired a hedge: swaps moved
   // to an in-progress ledger, the new running row has no swaps,
   // running_delta reset to 0, and running_vwap is absent. pool_depths is
-  // read from the service's pool registry.
+  // read from the service's pool registry. Covers both the amount and the
+  // time condition — once a hedge starts, the two are indistinguishable to a
+  // consumer and need no separate reason. A zero running_delta on its own does
+  // not imply this reason: a swap can reach zero under SWAP_INGESTION.
   TRIGGER_REASON_HEDGE_TRIGGER = 3;
+  // TRIGGER_REASON_TIME_DUST_SUPPRESSED: The exposure clock reached
+  // time_threshold but |running_delta| is below dust_threshold, so no hedge
+  // fired. delta_nonzero_since is cleared — the dust keeps its delta and sits
+  // untimed until the next swap opens a fresh window. running_delta and
+  // running_vwap are unchanged; pool_depths is read from the service's pool
+  // registry. Consumers must not read this as a hedge.
+  TRIGGER_REASON_TIME_DUST_SUPPRESSED = 4;
 }
