@@ -61,8 +61,9 @@ message Snapshot {
 }
 
 // Update: A live frame for a single instrument. Emitted on every commit that
-// changed the instrument's running_delta or delta_nonzero_since — the delta
-// can be unchanged when only the exposure window closed.
+// changed the instrument's running_delta or delta_nonzero_since — the delta is
+// unchanged when the window is cleared without a hedge
+// (TIME_DUST_SUPPRESSED).
 message Update {
   // inventory: The post-commit Inventory for the affected instrument.
   Inventory inventory = 1;
