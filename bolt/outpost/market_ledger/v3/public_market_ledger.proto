@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bolt.outpost.market_ledger.v3;
 
+import "bolt/assets/v1/assets.proto";
 import "bolt/outpost/market_ledger/v3/market_ledger.proto";
 import "google/protobuf/field_mask.proto";
 
@@ -21,7 +22,7 @@ service PublicMarketLedgerService {
   rpc GetAssetConfigs(GetAssetConfigsRequest) returns (GetAssetConfigsResponse);
   // Returns the current Running ledger for the given instrument, or absent if none exists.
   rpc GetOpenMarketLedger(GetOpenMarketLedgerRequest) returns (GetOpenMarketLedgerResponse);
-  // Returns all Running ledgers across every instrument, ordered by (base_asset, quote_asset).
+  // Returns all Running ledgers across every instrument, ordered by instrument.
   rpc GetOpenMarketLedgers(GetOpenMarketLedgersRequest) returns (GetOpenMarketLedgersResponse);
   // Returns the ledger with the given id.
   rpc GetMarketLedgerById(GetMarketLedgerByIdRequest) returns (GetMarketLedgerByIdResponse);
@@ -45,10 +46,8 @@ message SubscribeMarketLedgerResponse {
 
 // GetEngineConfigsForInstrumentRequest: Request to fetch engine configs for a single instrument.
 message GetEngineConfigsForInstrumentRequest {
-  // base_asset: Base leg of the instrument to look up (e.g. "SUI"). required
-  string base_asset = 1;
-  // quote_asset: Quote leg of the instrument to look up (e.g. "USDC"). required
-  string quote_asset = 2;
+  // instrument: Market to look up (e.g. {SUI, USDC}). required
+  bolt.assets.v1.Pair instrument = 1;
 }
 
 // GetEngineConfigsForInstrumentResponse: Engine configs for the requested instrument.
@@ -93,10 +92,8 @@ message GetAssetConfigsResponse {
 
 // GetOpenMarketLedgerRequest: Request to fetch the running ledger for a single instrument.
 message GetOpenMarketLedgerRequest {
-  // base_asset: Base leg of the instrument to look up (e.g. "SUI"). required
-  string base_asset = 1;
-  // quote_asset: Quote leg of the instrument to look up (e.g. "USDC"). required
-  string quote_asset = 2;
+  // instrument: Market to look up (e.g. {SUI, USDC}). required
+  bolt.assets.v1.Pair instrument = 1;
 }
 
 // GetOpenMarketLedgerResponse: The running ledger for the requested instrument.
@@ -110,7 +107,7 @@ message GetOpenMarketLedgersRequest {}
 
 // GetOpenMarketLedgersResponse: All running ledgers across every instrument.
 message GetOpenMarketLedgersResponse {
-  // ledgers: Running ledgers ordered by (base_asset, quote_asset).
+  // ledgers: Running ledgers ordered by instrument.
   repeated MarketLedger ledgers = 1;
 }
 

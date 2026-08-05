@@ -55,10 +55,11 @@ message Bucket {
   repeated TimeoutStep timeout_ladder = 2;
 }
 
-// EngineConfig: Hedging parameters for a single (base_asset, quote_asset, direction) instrument.
+// EngineConfig: Hedging parameters for a single (instrument, direction) pair.
 message EngineConfig {
-  // base_asset: Base leg of the instrument (e.g. "SUI"). required
-  string base_asset = 1;
+  // instrument: Market this config governs. The quote leg is a hedge-policy
+  // choice and may differ from the pool's on-chain quote leg. required
+  bolt.assets.v1.Pair instrument = 1;
   // direction: Position direction this config governs (Long or Short).
   Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
@@ -70,9 +71,6 @@ message EngineConfig {
   // gap_threshold_bps: |gap| in bps between gate mid and residual VWAP at
   // which neutral flips to favorable / adverse. Zero = always non-neutral.
   bolt.common.numeric.v2.Fraction gap_threshold_bps = 5;
-  // quote_asset: Quote leg of the instrument (e.g. "USDC"). A hedge-policy
-  // choice; may differ from the pool's on-chain quote leg. required
-  string quote_asset = 6;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
@@ -167,27 +165,25 @@ message HedgeOrder {
   google.protobuf.Timestamp executed_at = 8;
   // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
   SwapType cex_order_type = 9;
-  // instrument_name: CEX instrument name (e.g. "SUI-USDC"). Set at trigger time.
-  string instrument_name = 10;
-  // denom: Quote denomination (e.g. "USDC"). Set at trigger time.
-  string denom = 11;
+  // instrument: Market the hedge was placed on. Set at trigger time.
+  bolt.assets.v1.Pair instrument = 10;
   // memo: Optional order-level note.
-  optional string memo = 12;
+  optional string memo = 11;
   // finished_at: When fill/cancel/error completed on CEX (MM-provided). Set at CloseHedging.
-  optional google.protobuf.Timestamp finished_at = 13;
+  optional google.protobuf.Timestamp finished_at = 12;
   // created_at: When this order row was inserted (service-generated).
-  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp created_at = 13;
   // updated_at: When this order row was last modified.
-  google.protobuf.Timestamp updated_at = 15;
+  google.protobuf.Timestamp updated_at = 14;
 }
 
-// MarketLedger: A market ledger row, keyed by instrument (base_asset, quote_asset).
+// MarketLedger: A market ledger row, keyed by instrument.
 message MarketLedger {
   // id: DB primary key for the ledger row.
   int64 id = 1;
-  // base_asset: Base leg of the instrument; delta and vwap are denominated in
-  // it (e.g. "SUI"). required
-  string base_asset = 2;
+  // instrument: Market this ledger row is keyed by; delta and vwap are
+  // denominated in its base leg. required
+  bolt.assets.v1.Pair instrument = 2;
   // delta: Accumulated net swap delta (signed, base units).
   bolt.common.numeric.v2.Fraction delta = 3;
   // vwap: Volume-weighted average price across accumulated swaps.
@@ -202,8 +198,6 @@ message MarketLedger {
   google.protobuf.Timestamp created_at = 8;
   // updated_at: When this ledger row was last modified.
   google.protobuf.Timestamp updated_at = 9;
-  // quote_asset: Quote leg of the instrument (e.g. "USDC"). required
-  string quote_asset = 10;
 }
 
 // MarketLedgerEvent: Live ledger state for one instrument, emitted after processing a block

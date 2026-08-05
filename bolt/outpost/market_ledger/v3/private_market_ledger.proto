@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bolt.outpost.market_ledger.v3;
 
+import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/outpost/market_ledger/v3/market_ledger.proto";
 import "bolt/outpost/market_ledger/v3/types.proto";
@@ -18,7 +19,7 @@ service PrivateMarketLedgerService {
   // ledger, returns updated event.
   rpc CloseHedging(CloseHedgingRequest) returns (CloseHedgingResponse);
   // Called by operator tooling. Inserts or replaces the engine config for a single
-  // (base_asset, quote_asset, direction) instrument.
+  // (instrument, direction) pair.
   rpc UpsertEngineConfig(UpsertEngineConfigRequest) returns (UpsertEngineConfigResponse);
   // Called by operator tooling. Inserts or replaces the asset config for a single
   // asset (sign-agnostic). Reads are exposed publicly via PublicMarketLedgerService.
@@ -36,20 +37,18 @@ message CloseHedgingRequest {
   SwapType cex_order_type = 2;
   // cex_order_records: CEX orders the hedge was decomposed into, one record per placed order.
   repeated CexOrderRecord cex_order_records = 3;
-  // instrument_name: CEX instrument used for the hedge (e.g. "SUI-USDC"). Hedge-level; one instrument per hedge.
-  string instrument_name = 4;
+  // instrument: Market used for the hedge. Hedge-level; one instrument per hedge.
+  bolt.assets.v1.Pair instrument = 4;
   // internal_order_id: Service-generated UUID echoed back from the triggering event.
   string internal_order_id = 5;
   // hedged_delta: Intent from the triggering event — signed delta the hedge was launched to cover, in base units.
   bolt.common.numeric.v2.Fraction hedged_delta = 6;
   // hedged_vwap: Intent from the triggering event — VWAP snapshot at trigger time.
   bolt.common.numeric.v2.Fraction hedged_vwap = 7;
-  // denom: Quote denomination (e.g. "USDC").
-  string denom = 8;
   // executed_at_ms: When MM initiated the hedge on CEX, as epoch milliseconds.
-  int64 executed_at_ms = 9;
+  int64 executed_at_ms = 8;
   // finished_at_ms: When fill/cancel/error completed on CEX, as epoch milliseconds.
-  int64 finished_at_ms = 10;
+  int64 finished_at_ms = 9;
 }
 
 // CexOrderRecord: One CEX order placed during the hedge. Carries the order's
