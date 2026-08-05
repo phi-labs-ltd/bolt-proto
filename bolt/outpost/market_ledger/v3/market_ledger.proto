@@ -6,14 +6,14 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
-import "bolt/outpost/market_ledger/v3/types.proto";
+import "bolt/outpost/market_ledger/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // MarketStateStrategy: Execution strategy + spread for one market state.
 message MarketStateStrategy {
   // strategy: Execution strategy.
-  ExecutionStrategy strategy = 1;
+  bolt.outpost.market_ledger.v2.ExecutionStrategy strategy = 1;
   // spread_bps: Spread in basis points applied to the limit price.
   optional bolt.common.numeric.v2.Fraction spread_bps = 2;
 }
@@ -23,7 +23,7 @@ message MarketStateStrategy {
 // Used as a repeated field in TimeoutStep.strategies (size 1 = NEUTRAL-only, size 3 = all states).
 message MarketStateEntry {
   // state: Market state this entry applies to.
-  MarketState state = 1;
+  bolt.outpost.market_ledger.v2.MarketState state = 1;
   // strategy: Strategy to apply when `state` matches.
   MarketStateStrategy strategy = 2;
   // delay: Per-state dwell override. When present, overrides the parent
@@ -41,7 +41,7 @@ message TimeoutStep {
   repeated MarketStateEntry strategies = 2;
   // cex_order_strategy: Venue-agnostic time-in-force applied to orders placed at
   // this rung. When absent, defaults to CEX_ORDER_STRATEGY_GTC.
-  optional CexOrderStrategy cex_order_strategy = 3;
+  optional bolt.outpost.market_ledger.v2.CexOrderStrategy cex_order_strategy = 3;
 }
 
 // Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
@@ -61,7 +61,7 @@ message EngineConfig {
   // choice and may differ from the pool's on-chain quote leg. required
   bolt.assets.v1.Pair instrument = 1;
   // direction: Position direction this config governs (Long or Short).
-  Direction direction = 2;
+  bolt.outpost.market_ledger.v2.Direction direction = 2;
   // threshold: Delta threshold that triggers a hedge.
   bolt.common.numeric.v2.Fraction threshold = 3;
   // buckets: Ordered list of ladder buckets. Each bucket runs its own
@@ -122,7 +122,7 @@ message SwapEvent {
   // base_liquidity: Pool base-asset liquidity at the time of the swap.
   bolt.assets.v1.Balance base_liquidity = 13;
   // swap_type: Classification of the swap (e.g. buy, sell).
-  SwapType swap_type = 14;
+  bolt.outpost.market_ledger.v2.SwapType swap_type = 14;
   // originator: Partner that originated this swap.
   bolt.common.partners.v1.Partner originator = 15;
   // timestamp: On-chain timestamp of the swap, if available.
@@ -164,7 +164,7 @@ message HedgeOrder {
   // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
   google.protobuf.Timestamp executed_at = 8;
   // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
-  SwapType cex_order_type = 9;
+  bolt.outpost.market_ledger.v2.SwapType cex_order_type = 9;
   // instrument: Market the hedge was placed on. Set at trigger time.
   bolt.assets.v1.Pair instrument = 10;
   // memo: Optional order-level note.
@@ -189,7 +189,7 @@ message MarketLedger {
   // vwap: Volume-weighted average price across accumulated swaps.
   bolt.common.numeric.v2.Fraction vwap = 4;
   // status: Current lifecycle state of this ledger row.
-  LedgerStatus status = 5;
+  bolt.outpost.market_ledger.v2.LedgerStatus status = 5;
   // initial_height: Sui checkpoint height of the first swap in this ledger.
   uint64 initial_height = 6;
   // last_height: Sui checkpoint height of the most recent swap in this ledger.
@@ -224,7 +224,7 @@ message MarketLedgerEvent {
   // bolt_hedge_orders.trigger_reason (also AMOUNT or TIME — pre-cutover hedges
   // are backfilled to AMOUNT). UNSPECIFIED is the proto3 enum default sentinel
   // and is not expected on the wire from a post-cutover server.
-  TriggerReason trigger_reason = 6;
+  bolt.outpost.market_ledger.v2.TriggerReason trigger_reason = 6;
   // is_replay: True iff this event is a reconnect catch-up replay, not a fresh
   // trigger. The server always sets this field. MM branches behaviour on it
   // (CEX reconcile vs place-fresh-order).

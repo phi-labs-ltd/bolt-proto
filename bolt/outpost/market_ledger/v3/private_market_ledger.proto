@@ -5,8 +5,8 @@ package bolt.outpost.market_ledger.v3;
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/outpost/market_ledger/v2/types.proto";
 import "bolt/outpost/market_ledger/v3/market_ledger.proto";
-import "bolt/outpost/market_ledger/v3/types.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -36,7 +36,7 @@ message CloseHedgingRequest {
   // Looked up via the 1:1 UNIQUE(ledger_event_id) on bolt_hedge_orders.
   int64 ledger_event_id = 1;
   // cex_order_type: The actual CEX order side (Buy/Sell) at execution time.
-  SwapType cex_order_type = 2;
+  bolt.outpost.market_ledger.v2.SwapType cex_order_type = 2;
   // cex_order_records: CEX orders the hedge was decomposed into, one record per placed order.
   repeated CexOrderRecord cex_order_records = 3;
   // instrument: Market used for the hedge. Hedge-level; one instrument per hedge.
@@ -67,7 +67,7 @@ message CexOrderRecord {
   // instrument_name: CEX instrument the order was placed on (e.g. "SUI-USDC").
   string instrument_name = 5;
   // cex_order_type: Buy or sell side of the order.
-  SwapType cex_order_type = 6;
+  bolt.outpost.market_ledger.v2.SwapType cex_order_type = 6;
   // cex_order_kind: Whether the order was placed as limit or market.
   bolt.cex.adapter.v1.OrderKind cex_order_kind = 7;
   // amount: Planned order size (intent), in base-asset units.
@@ -97,9 +97,9 @@ message CexOrderRecord {
   // response_msg: Raw CEX response payload for forensics. Stored directly into a JSONB column.
   google.protobuf.Struct response_msg = 19;
   // strategy: Pricing/execution strategy applied at this rung (the rung that placed this order).
-  ExecutionStrategy strategy = 20;
+  bolt.outpost.market_ledger.v2.ExecutionStrategy strategy = 20;
   // market_condition: Market state assessed at this rung when the order was placed — favorable, neutral, or adverse.
-  MarketState market_condition = 21;
+  bolt.outpost.market_ledger.v2.MarketState market_condition = 21;
 }
 
 // CloseHedgingResponse: Result of a CloseHedging call.
