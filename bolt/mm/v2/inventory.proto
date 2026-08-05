@@ -75,70 +75,68 @@ message Update {
 
 // Inventory: Represents the current inventory of the running ledger.
 message Inventory {
-  // base_asset: Base leg of the instrument; running_delta and running_vwap are
-  // denominated in it (e.g. "SUI"). required
-  string base_asset = 1;
-
-  // quote_asset: Quote leg of the instrument (e.g. "USDC"). required
-  string quote_asset = 2;
+  // instrument: Market this inventory row is keyed by; running_delta and
+  // running_vwap are denominated in its base leg. required
+  Instrument instrument = 1;
 
   // status: Lifecycle state of this inventory row. Consumers drop the
   // instrument from their per-instrument state map after a single CLOSED frame.
-  InventoryStatus status = 3;
+  InventoryStatus status = 2;
 
   // updated_at: Server time at which this row last changed.
-  google.protobuf.Timestamp updated_at = 4;
+  google.protobuf.Timestamp updated_at = 3;
 
   // running_delta: Accumulated net swap delta on the running ledger for this
-  // instrument (signed, base_asset units), netted across both pool orientations.
-  bolt.common.numeric.v2.Fraction running_delta = 5;
+  // instrument (signed, instrument base-asset units), netted across both pool
+  // orientations.
+  bolt.common.numeric.v2.Fraction running_delta = 4;
 
   // running_vwap: Volume-weighted average price across the running ledger's
   // swaps. Absent when the running ledger has zero swaps (e.g. immediately
   // after a hedge trigger reset delta to 0). Consumers must treat absent as
   // "no VWAP currently defined" — never zero or a stale prior value.
-  optional bolt.common.numeric.v2.Fraction running_vwap = 6;
+  optional bolt.common.numeric.v2.Fraction running_vwap = 5;
 
   // pool_depths: Latest depth for every on-chain pool of this instrument, in
   // either orientation — each entry carries its own base_asset. Sourced from
   // the just-parsed swap payload at SWAP_INGESTION, and from the service's pool
   // registry at the other trigger reasons and on snapshot replay.
-  repeated PoolDepth pool_depths = 7;
+  repeated PoolDepth pool_depths = 6;
 
   // trigger_reason: Why this inventory event was emitted. UNSPECIFIED on
   // Snapshot entries (no real triggering cause); a concrete reason on
   // Update entries.
-  TriggerReason trigger_reason = 8;
+  TriggerReason trigger_reason = 7;
 
   // netting_thresholds: Per-direction |delta| thresholds at which the netting
   // engine will fire a hedge for this instrument. Typically one entry per
   // configured direction (LONG, SHORT). Empty when no engine config is
   // currently loaded for the instrument.
-  repeated NettingThreshold netting_thresholds = 9;
+  repeated NettingThreshold netting_thresholds = 8;
 
   // event_id: UUID unique to this emitted frame. The producer persists the
   // same id on the swap rows of the batch that triggered the frame
   // (bolt_swap_events.inventory_event_id), linking swaps to frames; frames
   // without a triggering swap batch (hedge/time triggers, restores,
   // snapshots) carry a fresh id that is persisted nowhere.
-  string event_id = 10;
+  string event_id = 9;
 
   // time_threshold: How long the ledger carries unhedged exposure before the
   // TIME trigger hedges it. Together with delta_nonzero_since it lets a
   // consumer measure the distance to that trigger. required
-  google.protobuf.Duration time_threshold = 11;
+  google.protobuf.Duration time_threshold = 10;
 
   // delta_nonzero_since: Start of the current unhedged exposure window. Absent
   // while running_delta is zero — no window is open then. Preserved across a
   // sign change: a delta crossing from long to short without touching zero
   // keeps the original start.
-  optional google.protobuf.Timestamp delta_nonzero_since = 12;
+  optional google.protobuf.Timestamp delta_nonzero_since = 11;
 
   // dust_threshold: Floor below which the TIME trigger stays suppressed, in
-  // base_asset units. An exposure under it is never hedged on time alone, no
-  // matter how long it ages — so both this and time_threshold are needed to
-  // tell whether a TIME hedge is actually approaching. required
-  bolt.common.numeric.v2.Fraction dust_threshold = 13;
+  // instrument base-asset units. An exposure under it is never hedged on time
+  // alone, no matter how long it ages — so both this and time_threshold are
+  // needed to tell whether a TIME hedge is actually approaching. required
+  bolt.common.numeric.v2.Fraction dust_threshold = 12;
 }
 
 // NettingThreshold: |delta| threshold at which the netting engine fires a
