@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package bolt.mm.v2;
 
+import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -15,20 +16,12 @@ service InventoryService {
   rpc GetLatestInventory(GetLatestInventoryRequest) returns (GetLatestInventoryResponse);
 }
 
-// Instrument: Canonical market key — base leg and its quote counterpart.
-message Instrument {
-  // base_asset: Base asset symbol (e.g. "SUI").
-  string base_asset = 1;
-  // quote_asset: Quote asset symbol (e.g. "USDC").
-  string quote_asset = 2;
-}
-
 // SubscribeInventoryRequest: Request for subscribing to the running ledger
 // inventory.
 message SubscribeInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
-  repeated Instrument instruments = 1;
+  repeated bolt.assets.v1.Pair instruments = 1;
 }
 
 // SubscribeInventoryResponse: One frame of the inventory stream.
@@ -51,7 +44,7 @@ message SubscribeInventoryResponse {
 message GetLatestInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
-  repeated Instrument instruments = 1;
+  repeated bolt.assets.v1.Pair instruments = 1;
 }
 
 // GetLatestInventoryResponse: Response for the latest inventory for all requested instruments on the running ledger.
@@ -77,7 +70,7 @@ message Update {
 message Inventory {
   // instrument: Market this inventory row is keyed by; running_delta and
   // running_vwap are denominated in its base leg. required
-  Instrument instrument = 1;
+  bolt.assets.v1.Pair instrument = 1;
 
   // status: Lifecycle state of this inventory row. Consumers drop the
   // instrument from their per-instrument state map after a single CLOSED frame.
