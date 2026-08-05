@@ -137,7 +137,7 @@ message PoolDepth {
   // swap or last recorded snapshot.
   map<string, bolt.common.numeric.v2.Fraction> quote_liquidity = 2;
 
-  // last_updated_ms: Epoch milliseconds when this depth was recorded — swap
+  // last_updated: Epoch timestamp when this depth was recorded — swap
   // event timestamp at SWAP_INGESTION, pool-registry updated_at otherwise.
   google.protobuf.Timestamp last_updated = 3;
 }
