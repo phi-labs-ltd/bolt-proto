@@ -29,7 +29,8 @@ message SubscribeInventoryRequest {
 // The server sends exactly one Snapshot frame on connect carrying every
 // running-ledger Inventory the subscription matches, followed by Update
 // frames — one per instrument whose state just changed. Consumers branch on
-// the oneof tag; per-frame freshness is read from Inventory.emitted_at_ms.
+// the oneof tag; the age of the state in a frame is read from
+// Inventory.updated_at.
 message SubscribeInventoryResponse {
   // payload: Discriminated payload — Snapshot on connect, Update thereafter.
   oneof payload {
