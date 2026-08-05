@@ -49,8 +49,9 @@ message TimeoutStep {
 // bucket_idx (no field carried explicitly).
 message Bucket {
   // percent_bps: Share of the hedge routed to this bucket, in basis points
-  // (10000 = 100%). Sum across buckets is expected to be 10000.
-  uint32 percent_bps = 1;
+  // (10000 = 100%). Sum across buckets is expected to be 10000. Carried as a
+  // Fraction like every other bps field, so the unit has one representation.
+  bolt.common.numeric.v2.Fraction percent_bps = 1;
   // timeout_ladder: Ordered list of timeout rungs for this bucket.
   repeated TimeoutStep timeout_ladder = 2;
 }
