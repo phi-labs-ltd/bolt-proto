@@ -1,0 +1,233 @@
+syntax = "proto3";
+
+package bolt.outpost.market_ledger.v3;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/cex/adapter/v1/cex.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/common/partners/v1/partners.proto";
+import "bolt/outpost/market_ledger/v2/types.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// MarketStateStrategy: Execution strategy + spread for one market state.
+message MarketStateStrategy {
+  // strategy: Execution strategy.
+  bolt.outpost.market_ledger.v2.ExecutionStrategy strategy = 1;
+  // spread_bps: Spread in basis points applied to the limit price.
+  optional bolt.common.numeric.v2.Fraction spread_bps = 2;
+}
+
+// MarketStateEntry: (state, strategy, delay) tuple for one market condition within a rung (TimeoutStep).
+// Carries the execution strategy and an optional dwell override for FAVORABLE, NEUTRAL, or ADVERSE.
+// Used as a repeated field in TimeoutStep.strategies (size 1 = NEUTRAL-only, size 3 = all states).
+message MarketStateEntry {
+  // state: Market state this entry applies to.
+  bolt.outpost.market_ledger.v2.MarketState state = 1;
+  // strategy: Strategy to apply when `state` matches.
+  MarketStateStrategy strategy = 2;
+  // delay: Per-state dwell override. When present, overrides the parent
+  // TimeoutStep.delay for this market state only. Absent = use TimeoutStep.delay.
+  optional google.protobuf.Duration delay = 3;
+}
+
+// TimeoutStep: One rung of the hedge timeout ladder. `strategies` size is
+// 1 (NEUTRAL only) or 3 (FAVORABLE+NEUTRAL+ADVERSE, all unique).
+message TimeoutStep {
+  // delay: Default dwell for this rung, shared across all market states. Individual
+  // states may override via MarketStateEntry.delay; absent per-state delay falls back here.
+  google.protobuf.Duration delay = 1;
+  // strategies: (state, strategy, delay) entries; size 1 (NEUTRAL) or 3 (unique).
+  repeated MarketStateEntry strategies = 2;
+  // cex_order_strategy: Venue-agnostic time-in-force applied to orders placed at
+  // this rung. When absent, defaults to CEX_ORDER_STRATEGY_GTC.
+  optional bolt.outpost.market_ledger.v2.CexOrderStrategy cex_order_strategy = 3;
+}
+
+// Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
+// with its own timeout ladder. Position within EngineConfig.buckets is the
+// bucket_idx (no field carried explicitly).
+message Bucket {
+  // percent_bps: Share of the hedge routed to this bucket, in basis points
+  // (10000 = 100%). Sum across buckets is expected to be 10000. Carried as a
+  // Fraction like every other bps field, so the unit has one representation.
+  bolt.common.numeric.v2.Fraction percent_bps = 1;
+  // timeout_ladder: Ordered list of timeout rungs for this bucket.
+  repeated TimeoutStep timeout_ladder = 2;
+}
+
+// EngineConfig: Hedging parameters for a single (instrument, direction) pair.
+message EngineConfig {
+  // instrument: Market this config governs. The quote leg is a hedge-policy
+  // choice and may differ from the pool's on-chain quote leg. required
+  bolt.assets.v1.Pair instrument = 1;
+  // direction: Position direction this config governs (Long or Short).
+  bolt.outpost.market_ledger.v2.Direction direction = 2;
+  // threshold: Delta threshold that triggers a hedge.
+  bolt.common.numeric.v2.Fraction threshold = 3;
+  // buckets: Ordered list of ladder buckets. Each bucket runs its own
+  // timeout_ladder over its percent_bps slice of the hedge. Position in this
+  // list is the bucket_idx.
+  repeated Bucket buckets = 4;
+  // gap_threshold_bps: |gap| in bps between gate mid and residual VWAP at
+  // which neutral flips to favorable / adverse. Zero = always non-neutral.
+  bolt.common.numeric.v2.Fraction gap_threshold_bps = 5;
+}
+
+// AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
+// dust floor apply to long and short equally, so they are not split per direction.
+// Service-managed: writes happen via UpsertAssetConfig on PrivateMarketLedgerService
+// (operator tooling); reads are exposed via GetAssetConfig / GetAssetConfigs on
+// PublicMarketLedgerService. Not carried on MarketLedgerEvent and not required by
+// MM (MM is a pure executor; it does not act on these values).
+message AssetConfig {
+  // asset: Base asset symbol (e.g. "SUI"). Primary key.
+  string asset = 1;
+  // time_threshold: How long unhedged delta may sit before a TIME trigger fires.
+  // Uses google.protobuf.Duration for unit safety and consistency with TimeoutStep.delay.
+  google.protobuf.Duration time_threshold = 2;
+  // dust_threshold: Below this absolute delta, TIME triggers are suppressed (dust filter).
+  // Sign-agnostic; gates TIME only — AMOUNT fires regardless. Set to 0 to disable.
+  bolt.common.numeric.v2.Fraction dust_threshold = 3;
+  // in_progress_expiry: How long an in_progress ledger may live before being marked
+  // abandoned at subscribe time. Must be > 0.
+  google.protobuf.Duration in_progress_expiry = 4;
+}
+
+// SwapEvent: A single swap event ingested from the on-chain pool.
+message SwapEvent {
+  // id: DB primary key for the swap event row.
+  int64 id = 1;
+  // swap_id: Unique on-chain swap identifier.
+  string swap_id = 2;
+  // tx_id: Sui transaction digest that contains this swap.
+  string tx_id = 3;
+  // base_asset: Base asset symbol for the pool (e.g. "SUI").
+  string base_asset = 4;
+  // height: Sui checkpoint height at which the swap occurred.
+  uint64 height = 5;
+  // source: Pool or DEX source identifier.
+  string source = 6;
+  // sender: On-chain address that initiated the swap.
+  string sender = 7;
+  // input: Amount and asset sent into the pool.
+  bolt.assets.v1.Balance input = 8;
+  // output: Amount and asset received from the pool.
+  bolt.assets.v1.Balance output = 9;
+  // protocol_fee: Fee collected by the protocol.
+  bolt.assets.v1.Balance protocol_fee = 10;
+  // lp_fee: Fee collected by liquidity providers.
+  bolt.assets.v1.Balance lp_fee = 11;
+  // price: Effective swap price (quote per base).
+  bolt.common.numeric.v2.Fraction price = 12;
+  // base_liquidity: Pool base-asset liquidity at the time of the swap.
+  bolt.assets.v1.Balance base_liquidity = 13;
+  // swap_type: Classification of the swap (e.g. buy, sell).
+  bolt.outpost.market_ledger.v2.SwapType swap_type = 14;
+  // originator: Partner that originated this swap.
+  bolt.common.partners.v1.Partner originator = 15;
+  // timestamp: On-chain timestamp of the swap, if available.
+  optional google.protobuf.Timestamp timestamp = 16;
+  // created_at: When this swap event row was inserted in the DB.
+  google.protobuf.Timestamp created_at = 17;
+  // Quote_liquidity: Pool quote-asset liquidity at the time of the swap.
+  bolt.assets.v1.Balance quote_liquidity = 18;
+  // quote_asset: Quote asset symbol for the pool (e.g. "USDC"). Absent when the
+  // pool's quote leg was unknown at ingestion time.
+  optional string quote_asset = 19;
+}
+
+// HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
+//
+// Field units:
+//   Base (SUI):       hedged_delta, filled_amount
+//   Quote (USDC):     executed_amount (filled_amount × avg_price)
+//   Quote/base ratio: avg_price
+//   Currency-tagged:  fee (see fee_currency)
+message HedgeOrder {
+  // hedge_id: DB primary key. Distinct from cex_order_id.
+  int64 hedge_id = 1;
+  // ledger_id: FK to the in_progress bolt_market_ledgers row.
+  int64 ledger_id = 2;
+  // ledger_event_id: FK to bolt_market_ledger_events. UNIQUE — one hedge per event.
+  int64 ledger_event_id = 3;
+  // cex_order_status: Lifecycle state of this hedge order.
+  bolt.cex.adapter.v1.OrderStatus cex_order_status = 4;
+  // hedged_delta: Delta subtracted from running ledger at trigger time (signed, base units).
+  bolt.common.numeric.v2.Fraction hedged_delta = 5;
+  // hedged_vwap: VWAP snapshot at trigger time.
+  bolt.common.numeric.v2.Fraction hedged_vwap = 6;
+  // internal_order_id: Service-generated UUID (UUID v4) created at trigger time.
+  // The server always populates this field on emitted events; MM uses it as the
+  // CEX-side idempotency key. Kept as `optional` for wire-format stability with
+  // older clients; semantically required by the post-cutover server-side contract.
+  optional string internal_order_id = 7;
+  // executed_at: When MM initiated the hedge on CEX (MM-provided, millis converted to timestamp).
+  google.protobuf.Timestamp executed_at = 8;
+  // cex_order_type: Buy or sell side of the hedge. Set at trigger time.
+  bolt.outpost.market_ledger.v2.SwapType cex_order_type = 9;
+  // instrument: Market the hedge was placed on. Set at trigger time.
+  bolt.assets.v1.Pair instrument = 10;
+  // memo: Optional order-level note.
+  optional string memo = 11;
+  // finished_at: When fill/cancel/error completed on CEX (MM-provided). Set at CloseHedging.
+  optional google.protobuf.Timestamp finished_at = 12;
+  // created_at: When this order row was inserted (service-generated).
+  google.protobuf.Timestamp created_at = 13;
+  // updated_at: When this order row was last modified.
+  google.protobuf.Timestamp updated_at = 14;
+}
+
+// MarketLedger: A market ledger row, keyed by instrument.
+message MarketLedger {
+  // id: DB primary key for the ledger row.
+  int64 id = 1;
+  // instrument: Market this ledger row is keyed by; delta and vwap are
+  // denominated in its base leg. required
+  bolt.assets.v1.Pair instrument = 2;
+  // delta: Accumulated net swap delta (signed, base units).
+  bolt.common.numeric.v2.Fraction delta = 3;
+  // vwap: Volume-weighted average price across accumulated swaps.
+  bolt.common.numeric.v2.Fraction vwap = 4;
+  // status: Current lifecycle state of this ledger row.
+  bolt.outpost.market_ledger.v2.LedgerStatus status = 5;
+  // initial_height: Sui checkpoint height of the first swap in this ledger.
+  uint64 initial_height = 6;
+  // last_height: Sui checkpoint height of the most recent swap in this ledger.
+  uint64 last_height = 7;
+  // created_at: When this ledger row was first created.
+  google.protobuf.Timestamp created_at = 8;
+  // updated_at: When this ledger row was last modified.
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// MarketLedgerEvent: Live ledger state for one instrument, emitted after processing a block
+// or after CloseHedging adjusts the running delta.
+//
+// Only the running ledger row is sent. In_progress/closed rows are internal bookkeeping.
+// In-flight hedges (cex_order_status: created/open) are visible via the hedge_orders field.
+// Terminal orders (filled/partially_filled/cancelled/partially_filled_cancelled/closed/error) are excluded.
+message MarketLedgerEvent {
+  // ledger: Always the running ledger row.
+  MarketLedger ledger = 1;
+  // ledger_event_id: Persistent ID from bolt_market_ledger_events.
+  int64 ledger_event_id = 2;
+  // swaps: Swap events accumulated in this ledger, in insertion order.
+  // Omitted unless requested via field_mask path "swaps".
+  repeated SwapEvent swaps = 3;
+  // hedge_orders: In-flight hedge orders (cex_order_status=open) for this instrument.
+  // Omitted unless requested via field_mask path "hedge_orders".
+  repeated HedgeOrder hedge_orders = 4;
+  // engine_configs: Engine configs for this instrument (up to two entries: one per direction).
+  repeated EngineConfig engine_configs = 5;
+  // trigger_reason: Why this event fired. The server always sets this field —
+  // AMOUNT or TIME on fresh events, and on replay it carries the persisted
+  // bolt_hedge_orders.trigger_reason (also AMOUNT or TIME — pre-cutover hedges
+  // are backfilled to AMOUNT). UNSPECIFIED is the proto3 enum default sentinel
+  // and is not expected on the wire from a post-cutover server.
+  bolt.outpost.market_ledger.v2.TriggerReason trigger_reason = 6;
+  // is_replay: True iff this event is a reconnect catch-up replay, not a fresh
+  // trigger. The server always sets this field. MM branches behaviour on it
+  // (CEX reconcile vs place-fresh-order).
+  bool is_replay = 7;
+}
