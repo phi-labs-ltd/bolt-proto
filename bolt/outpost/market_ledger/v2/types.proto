@@ -98,6 +98,16 @@ enum CexOrderStrategy {
   CEX_ORDER_STRATEGY_FOK = 4;
 }
 
+// BookPriceSource: The book price a downstream ladder rung uses.
+enum BookPriceSource {
+  // BOOK_PRICE_SOURCE_UNSPECIFIED: No recommendation supplied; consumer applies its own default.
+  BOOK_PRICE_SOURCE_UNSPECIFIED = 0;
+  // BOOK_PRICE_SOURCE_RAW: Use the raw book price.
+  BOOK_PRICE_SOURCE_RAW = 1;
+  // BOOK_PRICE_SOURCE_SMOOTHED: Use the smoothed book price.
+  BOOK_PRICE_SOURCE_SMOOTHED = 2;
+}
+
 // FinishAs: Terminal disposition class of a CEX order at the rung where it
 // settled. Distinct from `bolt.cex.adapter.v1.OrderStatus`, which models the
 // in-flight lifecycle state (open / closed / cancelled / etc.). Default zero

@@ -42,6 +42,8 @@ message TimeoutStep {
   // cex_order_strategy: Venue-agnostic time-in-force applied to orders placed at
   // this rung. When absent, defaults to CEX_ORDER_STRATEGY_GTC.
   optional bolt.outpost.market_ledger.v2.CexOrderStrategy cex_order_strategy = 3;
+  // book_price_source: Which book price the consumer should use at this rung.
+  optional bolt.outpost.market_ledger.v2.BookPriceSource book_price_source = 4;
 }
 
 // Bucket: A single ladder bucket. Splits the hedge into a percentage-sized slice
