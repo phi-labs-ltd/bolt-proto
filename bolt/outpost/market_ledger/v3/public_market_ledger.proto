@@ -10,7 +10,7 @@ import "google/protobuf/field_mask.proto";
 service PublicMarketLedgerService {
   // Streams the running ledger as the initial snapshot, then live updates per block.
   // In-flight hedges are included via the hedge_orders field (cex_order_status=open).
-  // field_mask paths: "swaps", "hedge_orders" opt in to those fields.
+  // field_mask path: "hedge_orders" opts in to that field.
   rpc SubscribeMarketLedger(SubscribeMarketLedgerRequest) returns (stream SubscribeMarketLedgerResponse);
   // Returns all configs for the given instrument (both Long and Short directions).
   rpc GetEngineConfigsForInstrument(GetEngineConfigsForInstrumentRequest) returns (GetEngineConfigsForInstrumentResponse);
@@ -32,7 +32,7 @@ service PublicMarketLedgerService {
 
 // SubscribeMarketLedgerRequest: Request to stream live ledger state.
 message SubscribeMarketLedgerRequest {
-  // field_mask: Paths "swaps", "hedge_orders" to opt in to those fields.
+  // field_mask: Path "hedge_orders" to opt in to that field.
   optional google.protobuf.FieldMask field_mask = 1;
 }
 
