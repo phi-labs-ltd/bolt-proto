@@ -5,7 +5,6 @@ package bolt.outpost.market_ledger.v3;
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/common/numeric/v2/numeric.proto";
-import "bolt/common/partners/v1/partners.proto";
 import "bolt/outpost/market_ledger/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -96,49 +95,6 @@ message AssetConfig {
   google.protobuf.Duration in_progress_expiry = 4;
 }
 
-// SwapEvent: A single swap event ingested from the on-chain pool.
-message SwapEvent {
-  // id: DB primary key for the swap event row.
-  int64 id = 1;
-  // swap_id: Unique on-chain swap identifier.
-  string swap_id = 2;
-  // tx_id: Sui transaction digest that contains this swap.
-  string tx_id = 3;
-  // base_asset: Base asset symbol for the pool (e.g. "SUI").
-  string base_asset = 4;
-  // height: Sui checkpoint height at which the swap occurred.
-  uint64 height = 5;
-  // source: Pool or DEX source identifier.
-  string source = 6;
-  // sender: On-chain address that initiated the swap.
-  string sender = 7;
-  // input: Amount and asset sent into the pool.
-  bolt.assets.v1.Balance input = 8;
-  // output: Amount and asset received from the pool.
-  bolt.assets.v1.Balance output = 9;
-  // protocol_fee: Fee collected by the protocol.
-  bolt.assets.v1.Balance protocol_fee = 10;
-  // lp_fee: Fee collected by liquidity providers.
-  bolt.assets.v1.Balance lp_fee = 11;
-  // price: Effective swap price (quote per base).
-  bolt.common.numeric.v2.Fraction price = 12;
-  // base_liquidity: Pool base-asset liquidity at the time of the swap.
-  bolt.assets.v1.Balance base_liquidity = 13;
-  // swap_type: Classification of the swap (e.g. buy, sell).
-  bolt.outpost.market_ledger.v2.SwapType swap_type = 14;
-  // originator: Partner that originated this swap.
-  bolt.common.partners.v1.Partner originator = 15;
-  // timestamp: On-chain timestamp of the swap, if available.
-  optional google.protobuf.Timestamp timestamp = 16;
-  // created_at: When this swap event row was inserted in the DB.
-  google.protobuf.Timestamp created_at = 17;
-  // Quote_liquidity: Pool quote-asset liquidity at the time of the swap.
-  bolt.assets.v1.Balance quote_liquidity = 18;
-  // quote_asset: Quote asset symbol for the pool (e.g. "USDC"). Absent when the
-  // pool's quote leg was unknown at ingestion time.
-  optional string quote_asset = 19;
-}
-
 // HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
 //
 // Field units:
@@ -214,9 +170,9 @@ message MarketLedgerEvent {
   MarketLedger ledger = 1;
   // ledger_event_id: Persistent ID from bolt_market_ledger_events.
   int64 ledger_event_id = 2;
-  // swaps: Swap events accumulated in this ledger, in insertion order.
-  // Omitted unless requested via field_mask path "swaps".
-  repeated SwapEvent swaps = 3;
+  // swaps: removed, unused.
+  reserved 3;
+  reserved "swaps";
   // hedge_orders: In-flight hedge orders (cex_order_status=open) for this instrument.
   // Omitted unless requested via field_mask path "hedge_orders".
   repeated HedgeOrder hedge_orders = 4;
