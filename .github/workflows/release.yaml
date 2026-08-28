@@ -1,0 +1,48 @@
+name: Publish crate to Kellnr
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: ${{ !github.event.release.prerelease }}
+    name: Publish bolt-proto to Kellnr
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          buf_api_token: ${{ secrets.BUF_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Generate the bolt-proto crate
+        run: just rust
+
+      - name: Set crate version from release title
+        shell: bash
+        env:
+          RELEASE_TITLE: ${{ github.event.release.name }}
+        run: |
+          if [[ ! "$RELEASE_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release title '$RELEASE_TITLE' is not in the expected v<major>.<minor>.<patch> format"
+            exit 1
+          fi
+          version="${RELEASE_TITLE#v}"
+          sed -i -E "s/^(version[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" rust/Cargo.toml
+          echo "Publishing bolt-proto $version"
+
+      - name: Docs
+        working-directory: rust
+        run: cargo doc --package bolt-proto --no-deps
+
+      - name: Publish
+        working-directory: rust
+        run: |
+          cargo login --registry kellnr "${{ secrets.CARGO_REGISTRIES_KELLNR_TOKEN }}"
+          cargo publish --registry kellnr --allow-dirty
