@@ -1,3 +1,11 @@
+default: rust go
+
+rust:
+    buf generate --template buf.gen.rust.yaml
+
+go:
+    buf generate --template buf.gen.go.yaml
+
 podman-claude-build:
     podman build -t podman-proto-dev . -f Dockerfile.claude
 

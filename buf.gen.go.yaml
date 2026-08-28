@@ -21,4 +21,4 @@ plugins:
       - require_unimplemented_servers=false
 
 inputs:
-  - directory: ..
+  - directory: .

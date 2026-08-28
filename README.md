@@ -17,15 +17,15 @@ To build the proto files into generated types, use the examples folder.
 ### Rust
 
 ```sh
-cd examples; buf generate --template buf.gen.rust.yaml
+buf generate --template buf.gen.rust.yaml
 ```
 
-The generated Rust code will be created inside the `examples/rust` folder.
+The generated Rust code will be created inside the `rust` folder.
 
 ### Golang
 
 ```sh
-cd examples; buf generate --template buf.gen.go.yaml
+buf generate --template buf.gen.go.yaml
 ```
 
-The generated Go code will be created inside the `examples/go` folder.
+The generated Go code will be created inside the `go` folder.

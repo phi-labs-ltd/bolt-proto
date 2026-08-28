@@ -17,4 +17,4 @@ plugins:
       - no_client=false
 
 inputs:
-  - directory: ..
+  - directory: .
