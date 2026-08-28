@@ -1,6 +1,7 @@
 default: rust go
 
 rust:
+    rm -rf rust/src
     buf generate --template buf.gen.rust.yaml
 
 go:

@@ -1,0 +1,18 @@
+[package]
+name        = "bolt-proto"
+version     = "0.1.0"
+edition     = "2021"
+description = "Generated Rust types and gRPC clients/servers for the Bolt Protocol protobuf schemas."
+repository  = "https://github.com/phi-labs-ltd/bolt-proto"
+publish     = ["kellnr"]
+# Required: src/ is gitignored, and cargo's default file discovery honours
+# .gitignore, so without `include` the crate publishes with an empty src/.
+include = ["src/**/*.rs", "Cargo.toml"]
+
+# Versions track the pinned buf plugins in ../buf.gen.rust.yaml.
+[dependencies]
+bytes        = "1"
+pbjson-types = "0.9"
+prost        = "0.14.1"
+tonic        = "0.14.1"
+tonic-prost  = "0.14.1"

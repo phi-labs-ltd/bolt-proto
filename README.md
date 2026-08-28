@@ -17,10 +17,21 @@ To build the proto files into generated types, use the examples folder.
 ### Rust
 
 ```sh
-buf generate --template buf.gen.rust.yaml
+just rust
 ```
 
-The generated Rust code will be created inside the `rust` folder.
+This produces the `bolt-proto` crate at `rust/`, ready to publish to kellnr:
+
+- `rust/Cargo.toml` is committed and holds the crate version — bump it there before publishing.
+- `rust/src/` is generated and gitignored: one module file per proto package, plus a `lib.rs`
+  exposing the `bolt::{domain}::{subdomain}::v{N}` module tree.
+
+Publishing requires the kellnr index URL in `.cargo/config.toml` and a token in
+`CARGO_REGISTRIES_KELLNR_TOKEN`:
+
+```sh
+cd rust && cargo publish --registry kellnr
+```
 
 ### Golang
 
