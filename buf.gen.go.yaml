@@ -1,0 +1,24 @@
+version: v2
+
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/phi-labs-ltd/bolt-proto/go
+
+plugins:
+  # Generate Go protobuf code
+  - remote: buf.build/protocolbuffers/go:v1.28.1
+    out: ./go
+    opt:
+      - paths=source_relative
+
+  # Generate Go gRPC code
+  - remote: buf.build/grpc/go:v1.2.0
+    out: ./go
+    opt:
+      - paths=source_relative
+      - require_unimplemented_servers=false
+
+inputs:
+  - directory: ..
