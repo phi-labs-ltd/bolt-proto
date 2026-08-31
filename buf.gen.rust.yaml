@@ -1,0 +1,30 @@
+version: v2
+plugins:
+  - remote: buf.build/community/neoeinstein-prost:v0.5.0
+    out: ./rust/src
+    opt:
+      - enable_type_names
+      - bytes=.
+      - compile_well_known_types
+      - extern_path=.google.protobuf=::pbjson_types
+      - file_descriptor_set
+      - flat_output_dir
+
+  - remote: buf.build/community/neoeinstein-tonic:v0.5.0
+    out: ./rust/src
+    opt:
+      - compile_well_known_types
+      - no_server=false
+      - no_client=false
+      - flat_output_dir
+
+  - remote: buf.build/community/neoeinstein-prost-crate:v0.5.0
+    out: ./rust/src
+    opt:
+      - no_features
+      - include_file=lib.rs
+      - flat_output_dir
+      - only_include=.bolt
+
+inputs:
+  - directory: .

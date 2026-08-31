@@ -1,0 +1,28 @@
+name: Rust CI
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  rust:
+    name: Generate crate and lint
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          buf_api_token: ${{ secrets.BUF_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Generate the bolt-proto crate
+        run: just rust
+
+      - name: Clippy
+        working-directory: rust
+        run: cargo clippy --all-targets -- -D warnings
