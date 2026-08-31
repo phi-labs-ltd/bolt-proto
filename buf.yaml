@@ -1,11 +1,5 @@
 version: v2
 name: buf.build/philabs/bolt-proto
 
-lint:
-  use:
-    - STANDARD
-    - COMMENTS
-    - FILE_LOWER_SNAKE_CASE
-breaking:
-  use:
-    - FILE
+policies:
+  - policy: buf.policy.yaml
