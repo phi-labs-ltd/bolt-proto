@@ -8,11 +8,11 @@ publish     = ["kellnr"]
 include = ["src/**/*.rs", "Cargo.toml"]
 
 [dependencies]
-bytes        = "1.12"
-pbjson-types = "0.9"
-prost        = "0.14.4"
-tonic        = "0.14.6"
-tonic-prost  = "0.14.6"
+bytes       = "1.12"
+prost       = "0.14.4"
+prost-types = "0.14.4"
+tonic       = "0.14.6"
+tonic-prost = "0.14.6"
 
 [lints.clippy]
 large_enum_variant = "allow"

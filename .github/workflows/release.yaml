@@ -12,9 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
         with:
-          buf_api_token: ${{ secrets.BUF_TOKEN }}
+          setup_only: true
+          version: 1.72.0
+          token: ${{ secrets.BUF_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: Swatinem/rust-cache@v2
