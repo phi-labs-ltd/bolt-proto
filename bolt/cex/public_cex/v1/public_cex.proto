@@ -21,7 +21,7 @@ service PublicCexService {
   rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
   // Endpoint to list tradable instruments and their order constraints.
   rpc GetInstruments(GetInstrumentsRequest) returns (GetInstrumentsResponse);
-  // Endpoint to stream best bid/ask updates. 
+  // Endpoint to stream best bid/ask updates.
   rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
 }
 
