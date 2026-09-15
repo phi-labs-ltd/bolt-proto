@@ -19,3 +19,77 @@ enum JournalType {
   // Trading type
   JOURNAL_TYPE_TRADING = 1;
 }
+
+// Supported centralized exchanges. Numbering matches bolt.cex.client.v1.Exchange.
+enum Exchange {
+  // Unspecified - should never be used
+  EXCHANGE_UNSPECIFIED = 0;
+  // Crypto.com exchange
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // Gate.io exchange
+  EXCHANGE_GATEIO = 2;
+  // Binance exchange
+  EXCHANGE_BINANCE = 3;
+  // Bybit exchange
+  EXCHANGE_BYBIT = 4;
+  // OKX exchange
+  EXCHANGE_OKX = 5;
+}
+
+// Side of an order - determines whether the base asset is bought or sold.
+// Numbering matches bolt.cex.adapter.v1.OrderSide.
+enum OrderSide {
+  // Unspecified - should never be used
+  ORDER_SIDE_UNSPECIFIED = 0;
+  // Buy the BASE asset with the QUOTE asset
+  ORDER_SIDE_BUY = 1;
+  // Sell the BASE asset for the QUOTE asset
+  ORDER_SIDE_SELL = 2;
+}
+
+// Kind of order placed on the exchange. Numbering matches bolt.cex.adapter.v1.OrderKind.
+enum OrderKind {
+  // Unspecified - should never be used
+  ORDER_KIND_UNSPECIFIED = 0;
+  // Market order, executed at the prevailing price
+  ORDER_KIND_MARKET = 1;
+  // Limit order, executed at a specified price or better
+  ORDER_KIND_LIMIT = 2;
+}
+
+// How long an order stays live on the exchange before it is dropped.
+enum TimeInForce {
+  // Unspecified - should never be used
+  TIME_IN_FORCE_UNSPECIFIED = 0;
+  // Immediate-or-cancel. Market orders only
+  TIME_IN_FORCE_IOC = 1;
+  // Good-till-cancelled
+  TIME_IN_FORCE_GTC = 2;
+  // Pending-or-cancelled, a post-only order that is dropped if it would take
+  TIME_IN_FORCE_POC = 3;
+  // Fill-or-kill. Market orders only
+  TIME_IN_FORCE_FOK = 4;
+}
+
+// Status of a CEX order through its lifecycle.
+// Numbering matches bolt.cex.adapter.v1.OrderStatus and cex_client::OrderStatus.
+enum OrderStatus {
+  // Unspecified - should never be used
+  ORDER_STATUS_UNSPECIFIED = 0;
+  // Order was cancelled before any fill
+  ORDER_STATUS_CANCELLED = 1;
+  // Order was cancelled after a partial fill. Terminal
+  ORDER_STATUS_PARTIALLY_FILLED_CANCELLED = 2;
+  // Order was fully filled. Terminal
+  ORDER_STATUS_FILLED = 3;
+  // Order created but not yet submitted to the exchange
+  ORDER_STATUS_CREATED = 4;
+  // Order submitted and resting on the exchange
+  ORDER_STATUS_OPEN = 5;
+  // Order partially filled, unfilled portion not expected to fill. Terminal
+  ORDER_STATUS_PARTIALLY_FILLED = 6;
+  // Order closed post-settlement. Terminal
+  ORDER_STATUS_CLOSED = 7;
+  // The exchange reported an error for this order
+  ORDER_STATUS_ERROR = 8;
+}
