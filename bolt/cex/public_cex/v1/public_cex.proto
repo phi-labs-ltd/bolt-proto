@@ -3,8 +3,9 @@ syntax = "proto3";
 package bolt.cex.public_cex.v1;
 
 import "bolt/assets/v1/assets.proto";
+import "bolt/cex/public_cex/v1/types.proto";
 import "bolt/cex/types/v1/types.proto";
-import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
 // Unauthenticated CEX market data. Every request names the exchange, so a caller
@@ -28,9 +29,9 @@ service PublicCexService {
 // PriceLevel: One resting order book level.
 message PriceLevel {
   // price: Price of the level in quote asset units, as a rational (e.g. 5/4 for 1.25).
-  bolt.common.numeric.v1.Fraction price = 1;
+  bolt.common.numeric.v2.Fraction price = 1;
   // quantity: Size resting at this price, in base asset units.
-  bolt.common.numeric.v1.Fraction quantity = 2;
+  bolt.common.numeric.v2.Fraction quantity = 2;
 }
 
 // GetOrderBookRequest: Request for a pair's order book.
@@ -62,13 +63,13 @@ message GetPriceDetailedRequest {
 // GetPriceDetailedResponse: Response to GetPriceDetailedRequest.
 message GetPriceDetailedResponse {
   // bid: Best bid price in quote asset units.
-  bolt.common.numeric.v1.Fraction bid = 1;
+  bolt.common.numeric.v2.Fraction bid = 1;
   // bid_size: Size resting at the best bid, in base asset units.
-  bolt.common.numeric.v1.Fraction bid_size = 2;
+  bolt.common.numeric.v2.Fraction bid_size = 2;
   // ask: Best ask price in quote asset units.
-  bolt.common.numeric.v1.Fraction ask = 3;
+  bolt.common.numeric.v2.Fraction ask = 3;
   // ask_size: Size resting at the best ask, in base asset units.
-  bolt.common.numeric.v1.Fraction ask_size = 4;
+  bolt.common.numeric.v2.Fraction ask_size = 4;
 }
 
 // GetPriceRequest: Request for a pair's mid price.
@@ -82,7 +83,7 @@ message GetPriceRequest {
 // GetPriceResponse: Response to GetPriceRequest.
 message GetPriceResponse {
   // price: Mid price, computed as (bid + ask) / 2. This is not the last traded price.
-  bolt.common.numeric.v1.Fraction price = 1;
+  bolt.common.numeric.v2.Fraction price = 1;
 }
 
 // GetPricesRequest: Request for mid prices across several pairs.
@@ -106,10 +107,18 @@ message PriceResult {
   // result: The price, or the failure reason for this pair alone.
   oneof result {
     // price: Mid price, computed as (bid + ask) / 2.
-    bolt.common.numeric.v1.Fraction price = 2;
+    bolt.common.numeric.v2.Fraction price = 2;
     // error: Why this pair failed. Other pairs in the batch are unaffected.
-    string error = 3;
+    PriceError error = 3;
   }
+}
+
+// PriceError: Machine-readable reason a pair could not be priced, with an optional human-readable detail.
+message PriceError {
+  // reason: Machine-readable failure reason.
+  PriceErrorReason reason = 1;
+  // detail: Human-readable detail for logs and debugging; not for programmatic matching.
+  optional string detail = 2;
 }
 
 // GetInstrumentsRequest: Request for an exchange's tradable instruments.
@@ -132,17 +141,17 @@ message Instrument {
   // Informational only; it is not accepted as input anywhere.
   string native_name = 2;
   // price_tick_size: Smallest price increment the exchange accepts (e.g. 1/1000000).
-  bolt.common.numeric.v1.Fraction price_tick_size = 3;
+  bolt.common.numeric.v2.Fraction price_tick_size = 3;
   // price_decimals: Decimal places the exchange accepts on price.
   uint32 price_decimals = 4;
   // quantity_tick_size: Smallest quantity increment the exchange accepts.
-  bolt.common.numeric.v1.Fraction quantity_tick_size = 5;
+  bolt.common.numeric.v2.Fraction quantity_tick_size = 5;
   // quantity_decimals: Decimal places the exchange accepts on quantity.
   uint32 quantity_decimals = 6;
   // min_base_quantity: Smallest order size in base asset units. Unset when the exchange publishes none.
-  optional bolt.common.numeric.v1.Fraction min_base_quantity = 7;
+  optional bolt.common.numeric.v2.Fraction min_base_quantity = 7;
   // min_quote_amount: Smallest order notional in quote asset units. Unset when the exchange publishes none.
-  optional bolt.common.numeric.v1.Fraction min_quote_amount = 8;
+  optional bolt.common.numeric.v2.Fraction min_quote_amount = 8;
 }
 
 // SubscribeBookTickerRequest: Request to stream best bid/ask updates.
@@ -157,23 +166,23 @@ message SubscribeBookTickerRequest {
 message SubscribeBookTickerResponse {
   // pair: The pair this update is for.
   bolt.assets.v1.Pair pair = 1;
-  // native_name: The exchange's own name for the instrument (e.g. "ATOM_USDT"),
-  // matching Instrument.native_name. Carried so consumers keyed by native name
-  // can route the update without a pair lookup.
-  string native_name = 9;
   // best_bid_price: Best bid price in quote asset units.
-  bolt.common.numeric.v1.Fraction best_bid_price = 2;
+  bolt.common.numeric.v2.Fraction best_bid_price = 2;
   // best_bid_quantity: Size resting at the best bid, in base asset units.
-  bolt.common.numeric.v1.Fraction best_bid_quantity = 3;
+  bolt.common.numeric.v2.Fraction best_bid_quantity = 3;
   // best_ask_price: Best ask price in quote asset units.
-  bolt.common.numeric.v1.Fraction best_ask_price = 4;
+  bolt.common.numeric.v2.Fraction best_ask_price = 4;
   // best_ask_quantity: Size resting at the best ask, in base asset units.
-  bolt.common.numeric.v1.Fraction best_ask_quantity = 5;
-  // update_id: Exchange sequence number for the update. Zero when the exchange
-  // sends none, so gaps are only detectable when this is non-zero.
-  uint64 update_id = 6;
+  bolt.common.numeric.v2.Fraction best_ask_quantity = 5;
+  // update_id: Exchange sequence number for the update. Unset when the exchange
+  // sends none, so gaps are only detectable when this is set.
+  optional uint64 update_id = 6;
   // updated_at: When the exchange reported generating the update. Unset when the exchange sends none.
   optional google.protobuf.Timestamp updated_at = 7;
   // fetched_at: When the server received and parsed the update.
   google.protobuf.Timestamp fetched_at = 8;
+  // native_name: The exchange's own name for the instrument (e.g. "ATOM_USDT"),
+  // matching Instrument.native_name. Carried so consumers keyed by native name
+  // can route the update without a pair lookup.
+  string native_name = 9;
 }
