@@ -17,6 +17,8 @@ service PublicSettlementService {
   rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
   // Endpoint to fetch balances of BASE asset.
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Endpoint to fetch the assets held by a wallet address.
+  rpc GetWalletBalances(GetWalletBalancesRequest) returns (GetWalletBalancesResponse);
   // Endpoint to fetch the trade details.
   rpc GetTrade(GetTradeRequest) returns (GetTradeResponse);
   // Endpoint to fetch trades given block height.
@@ -97,6 +99,20 @@ message GetBalancesResponse {
   uint64 height = 3;
   // quotes: QUOTE assets balances.
   repeated bolt.assets.v1.Balance quotes = 4;
+}
+
+// GetWalletBalancesRequest: Request fetching the assets held by a wallet address.
+message GetWalletBalancesRequest {
+  // address: Wallet address to fetch the balances for. required.
+  string address = 1;
+  // assets: Assets to fetch the balances for. e.g "SUI", "USDC".
+  repeated string assets = 2;
+}
+
+// GetWalletBalancesResponse: Response for GetWalletBalancesRequest.
+message GetWalletBalancesResponse {
+  // balances: Balance held by the address, one per requested asset.
+  repeated bolt.assets.v1.Balance balances = 1;
 }
 
 // GetTradeRequest: Request fetching specific trade details.

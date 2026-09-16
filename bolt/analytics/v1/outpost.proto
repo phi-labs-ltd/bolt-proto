@@ -4,8 +4,14 @@ package bolt.analytics.v1;
 
 import "bolt/assets/v1/assets.proto";
 
-// Service for outpost analytics
+// Service for outpost analytics.
+//
+// Deprecated: superseded by bolt.outpost.settlement.v2.PublicSettlementService, which
+// serves both queries on the same endpoint (GetBalances by GetWalletBalances, and Info
+// by SettlementInfo).
 service OutpostService {
+  option deprecated = true;
+
   // Get balances for any given address
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
   // Get information about the outpost
