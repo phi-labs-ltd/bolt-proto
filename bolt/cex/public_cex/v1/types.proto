@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package bolt.cex.public_cex.v1;
+
+// PriceErrorReason: Why a pair could not be priced in a batch price query.
+enum PriceErrorReason {
+  // PRICE_ERROR_REASON_UNSPECIFIED: Default zero value; must not be used explicitly.
+  PRICE_ERROR_REASON_UNSPECIFIED = 0;
+  // PRICE_ERROR_REASON_UNKNOWN_PAIR: The requested pair is not supported on this exchange.
+  PRICE_ERROR_REASON_UNKNOWN_PAIR = 1;
+  // PRICE_ERROR_REASON_NO_LIQUIDITY: No live bid/ask is available to compute a price.
+  PRICE_ERROR_REASON_NO_LIQUIDITY = 2;
+  // PRICE_ERROR_REASON_EXCHANGE_UNAVAILABLE: The upstream exchange connection is down or unresponsive.
+  PRICE_ERROR_REASON_EXCHANGE_UNAVAILABLE = 3;
+  // PRICE_ERROR_REASON_INTERNAL: Any other server-side failure, such as a rate
+  // limit, a parse error, or a price that cannot be represented as a Fraction.
+  // See `detail` for the specifics.
+  PRICE_ERROR_REASON_INTERNAL = 4;
+}
