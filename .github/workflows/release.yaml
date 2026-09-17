@@ -6,7 +6,6 @@ permissions:
   contents: read
 jobs:
   publish:
-    if: ${{ !github.event.release.prerelease }}
     name: Publish bolt-proto to Kellnr
     runs-on: self-hosted
     steps:
@@ -30,12 +29,21 @@ jobs:
         shell: bash
         env:
           RELEASE_TITLE: ${{ github.event.release.name }}
+          IS_PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
-          if [[ ! "$RELEASE_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release title '$RELEASE_TITLE' is not in the expected v<major>.<minor>.<patch> format"
+          if [[ ! "$RELEASE_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Release title '$RELEASE_TITLE' is not in the expected v<major>.<minor>.<patch>[-<pre>] format"
             exit 1
           fi
           version="${RELEASE_TITLE#v}"
+          if [[ "$IS_PRERELEASE" == "true" && "$version" != *-* ]]; then
+            echo "::error::Release is labeled Pre-release but '$RELEASE_TITLE' has no pre-release suffix (e.g. v1.2.3-rc.1)"
+            exit 1
+          fi
+          if [[ "$IS_PRERELEASE" != "true" && "$version" == *-* ]]; then
+            echo "::error::'$RELEASE_TITLE' has a pre-release suffix but the release is not labeled Pre-release"
+            exit 1
+          fi
           sed -i -E "s/^(version[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" rust/Cargo.toml
           echo "Publishing bolt-proto $version"
 
