@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package bolt.cex.public_cex.v1;
+package bolt.cex.public.v1;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/cex/public_cex/v1/types.proto";
+import "bolt/cex/public/v1/types.proto";
 import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "google/protobuf/timestamp.proto";

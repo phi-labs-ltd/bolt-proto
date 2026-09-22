@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package bolt.cex.public_cex.v1;
+package bolt.cex.public.v1;
 
 // PriceErrorReason: Why a pair could not be priced in a batch price query.
 enum PriceErrorReason {
