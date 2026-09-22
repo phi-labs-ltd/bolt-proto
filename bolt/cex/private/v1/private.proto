@@ -305,8 +305,8 @@ message WithdrawResponse {
 message GetWithdrawalRecordsRequest {
   // exchange: The exchange to query. required
   bolt.cex.types.v1.Exchange exchange = 1;
-  // asset: The asset to list withdrawals for (e.g. "SUI"). required
-  string asset = 2;
+  // assets: The assets to list withdrawals for (e.g. "SUI"). required, must be non-empty
+  repeated string assets = 2;
 }
 
 // GetWithdrawalRecordsResponse: Response to GetWithdrawalRecordsRequest.
@@ -336,11 +336,14 @@ message WithdrawalRecord {
   // timestamp: When the exchange recorded the withdrawal. Unset when the
   // exchange's value cannot be interpreted.
   optional google.protobuf.Timestamp timestamp = 8;
-  // txid: On-chain transaction id. Empty until the exchange broadcasts.
-  string txid = 9;
+  // tx_id: On-chain transaction id. Empty until the exchange broadcasts.
+  string tx_id = 9;
   // block_number: Block the transaction landed in. Empty or "0" until confirmed,
   // and on exchanges that do not report it.
   string block_number = 10;
+  // asset: The asset withdrawn (e.g. "SUI"), so records from a multi-asset
+  // query can be attributed back to the asset they belong to.
+  string asset = 11;
 }
 
 // SubscribeOrdersRequest: Request to stream order state changes for the account.
