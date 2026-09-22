@@ -1,0 +1,358 @@
+syntax = "proto3";
+
+package bolt.cex.private.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/cex/types/v1/types.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+// Authenticated CEX account and trading operations. Every request names the
+// exchange, so a caller can switch exchanges at runtime by changing one field.
+// Instruments are always addressed as a Pair; the server resolves the exchange's
+// native instrument name. Order ids, by contrast, are exchange-assigned and
+// opaque, so every response that carries one echoes the exchange back.
+service PrivateCexService {
+  // Endpoint to get the account's asset balances.
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Endpoint to get the exchange's deposit address for an asset.
+  rpc GetDepositAddress(GetDepositAddressRequest) returns (GetDepositAddressResponse);
+  // Endpoint to place an order. Returns once the exchange acknowledges it, which
+  // may be before the order fills; poll GetOrderStatus or use WaitForOrder for
+  // the terminal state.
+  rpc ExecuteOrder(ExecuteOrderRequest) returns (ExecuteOrderResponse);
+  // Endpoint to get the current state of one order.
+  rpc GetOrderStatus(GetOrderStatusRequest) returns (GetOrderStatusResponse);
+  // Endpoint to list the ids of orders currently resting on an instrument.
+  rpc GetOpenOrders(GetOpenOrdersRequest) returns (GetOpenOrdersResponse);
+  // Endpoint to cancel one order.
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  // Endpoint to modify a resting limit order in place where the exchange
+  // supports it, replacing it otherwise.
+  rpc UpdateOrder(UpdateOrderRequest) returns (UpdateOrderResponse);
+  // Endpoint to poll an order until it reaches a terminal state. The server
+  // polls with exponential backoff and holds the request open, so the deadline
+  // must be shorter than the server's request timeout; see WaitForOrderRequest.
+  rpc WaitForOrder(WaitForOrderRequest) returns (WaitForOrderResponse);
+  // Endpoint to withdraw an asset to an off-exchange address. Completion
+  // semantics are exchange-specific: some return once the request is accepted,
+  // others once the withdrawal completes.
+  rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Endpoint to list recent withdrawal records for an asset, newest first.
+  rpc GetWithdrawalRecords(GetWithdrawalRecordsRequest) returns (GetWithdrawalRecordsResponse);
+  // Endpoint to stream order state changes for the account. The stream survives
+  // exchange reconnects, but the server-side buffer is bounded: a consumer that
+  // falls behind loses the intervening updates rather than the stream itself.
+  // Exchanges with no websocket feed fail the call with UNIMPLEMENTED; callers
+  // should fall back to polling GetOrderStatus. Every other status is a real
+  // error and should be retried or surfaced.
+  rpc SubscribeOrders(SubscribeOrdersRequest) returns (stream SubscribeOrdersResponse);
+}
+
+// LimitOrder: The price and lifetime of a limit order.
+message LimitOrder {
+  // price: Limit price in quote asset units, as a rational (e.g. 5/4 for 1.25).
+  bolt.common.numeric.v2.Fraction price = 1;
+  // time_in_force: How long the order stays live before the exchange drops it.
+  bolt.cex.types.v1.TimeInForce time_in_force = 2;
+}
+
+// MarketOrder: A market order, which carries no price or lifetime of its own.
+message MarketOrder {}
+
+// Order: An order to place on the exchange.
+message Order {
+  // pair: The pair to trade. required
+  bolt.assets.v1.Pair pair = 1;
+  // side: Whether the base asset is bought or sold. required
+  bolt.cex.types.v1.OrderSide side = 2;
+  // amount: Size to trade, denominated in `denom`. required
+  bolt.common.numeric.v2.Fraction amount = 3;
+  // denom: The asset `amount` is denominated in, which is one leg of `pair`. required
+  string denom = 4;
+  // kind: Whether this is a market or a limit order. required
+  oneof kind {
+    // market: Execute at the prevailing price.
+    MarketOrder market = 5;
+    // limit: Execute at the given price or better.
+    LimitOrder limit = 6;
+  }
+  // client_order_id: Caller-supplied tag echoed back by the exchange, used to
+  // recognise an order placed by a request whose response was lost. ASCII
+  // alphanumerics plus `_`, `-` and `.` only; other bytes are rejected.
+  string client_order_id = 7;
+}
+
+// WireOrder: The order as actually submitted, after server-side quantization to
+// the instrument's tick size and minimum size.
+message WireOrder {
+  // amount: Size submitted, denominated in `denom`, after quantization.
+  bolt.common.numeric.v2.Fraction amount = 1;
+  // native_name: The exchange's own name for the instrument (e.g. "ATOM_USDT").
+  string native_name = 2;
+  // side: Whether the base asset was bought or sold.
+  bolt.cex.types.v1.OrderSide side = 3;
+  // kind: Whether this was submitted as a market or a limit order.
+  bolt.cex.types.v1.OrderKind kind = 4;
+  // denom: The asset `amount` is denominated in.
+  string denom = 5;
+}
+
+// OrderInfo: The exchange's current view of one order.
+message OrderInfo {
+  // exchange: The exchange that issued `order_id`. Send this back on any RPC
+  // addressing this order; an id is only meaningful on its issuing exchange.
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order_id: The exchange-assigned order id, opaque to the caller.
+  string order_id = 2;
+  // status: Where the order is in its lifecycle.
+  bolt.cex.types.v1.OrderStatus status = 3;
+  // exec_amount: Filled quantity in base asset units.
+  bolt.common.numeric.v2.Fraction exec_amount = 4;
+  // filled_total: Cumulative quote asset notional of the fills.
+  bolt.common.numeric.v2.Fraction filled_total = 5;
+  // filled_amount: Filled quantity as the exchange reports it, in the order's own denom.
+  bolt.common.numeric.v2.Fraction filled_amount = 6;
+  // avg_deal_price: Average fill price. Zero when the order is unfilled.
+  bolt.common.numeric.v2.Fraction avg_deal_price = 7;
+  // fee: Fee charged. Unset when the exchange does not report one.
+  optional bolt.common.numeric.v2.Fraction fee = 8;
+  // fee_currency: Asset the fee was charged in. Unset when `fee` is unset.
+  optional string fee_currency = 9;
+  // wire_order: What was actually submitted. Unset for orders the server did not place.
+  optional WireOrder wire_order = 10;
+}
+
+// GetBalancesRequest: Request for the account's asset balances.
+message GetBalancesRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+}
+
+// GetBalancesResponse: Response to GetBalancesRequest.
+message GetBalancesResponse {
+  // balances: One entry per asset the account holds.
+  repeated AssetBalance balances = 1;
+}
+
+// AssetBalance: An account balance and how much of it can be withdrawn.
+message AssetBalance {
+  // asset: Asset name (e.g. "SUI").
+  string asset = 1;
+  // amount: Amount held, as a rational.
+  bolt.common.numeric.v2.Fraction amount = 2;
+  // max_withdrawable_amount: Amount currently withdrawable, which may be less
+  // than `amount` when the exchange locks part of the balance. Unset when the
+  // exchange does not report a limit.
+  optional bolt.common.numeric.v2.Fraction max_withdrawable_amount = 3;
+}
+
+// GetDepositAddressRequest: Request for the exchange's deposit address for an asset.
+message GetDepositAddressRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // asset: The asset to deposit (e.g. "SUI"). required
+  string asset = 2;
+  // fallback_network: Network to use when the exchange publishes more than one
+  // and the asset does not imply a single choice (e.g. "SUI").
+  optional string fallback_network = 3;
+}
+
+// GetDepositAddressResponse: Response to GetDepositAddressRequest.
+message GetDepositAddressResponse {
+  // address: The address to send the deposit to.
+  string address = 1;
+  // memo: Memo that must accompany the transfer. Unset when the asset needs none;
+  // omitting a required memo loses the deposit.
+  optional string memo = 2;
+}
+
+// ExecuteOrderRequest: Request to place an order.
+message ExecuteOrderRequest {
+  // exchange: The exchange to place the order on. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order: The order to place. required
+  Order order = 2;
+}
+
+// ExecuteOrderResponse: Response to ExecuteOrderRequest.
+message ExecuteOrderResponse {
+  // order: The exchange's view of the placed order, including its assigned id.
+  OrderInfo order = 1;
+}
+
+// GetOrderStatusRequest: Request for the current state of one order.
+message GetOrderStatusRequest {
+  // exchange: The exchange that issued `order_id`. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order_id: The exchange-assigned order id. required
+  string order_id = 2;
+  // pair: The pair the order was placed on, which some exchanges require to
+  // look the order up. required
+  bolt.assets.v1.Pair pair = 3;
+}
+
+// GetOrderStatusResponse: Response to GetOrderStatusRequest.
+message GetOrderStatusResponse {
+  // order: The exchange's current view of the order.
+  OrderInfo order = 1;
+}
+
+// GetOpenOrdersRequest: Request for the orders resting on an instrument.
+message GetOpenOrdersRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pair: The pair to query. required
+  bolt.assets.v1.Pair pair = 2;
+}
+
+// GetOpenOrdersResponse: Response to GetOpenOrdersRequest.
+message GetOpenOrdersResponse {
+  // order_ids: Ids of the orders currently resting on the instrument.
+  repeated string order_ids = 1;
+}
+
+// CancelOrderRequest: Request to cancel one order.
+message CancelOrderRequest {
+  // exchange: The exchange that issued `order_id`. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order_id: The exchange-assigned order id. required
+  string order_id = 2;
+  // pair: The pair the order was placed on. required
+  bolt.assets.v1.Pair pair = 3;
+}
+
+// CancelOrderResponse: Response to CancelOrderRequest.
+message CancelOrderResponse {
+  // order: The order's state after the cancel. An order that filled just before
+  // the request lands comes back filled rather than cancelled.
+  OrderInfo order = 1;
+}
+
+// UpdateOrderRequest: Request to modify a resting limit order.
+message UpdateOrderRequest {
+  // exchange: The exchange that issued `order_id`. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order_id: The exchange-assigned order id to modify. required
+  string order_id = 2;
+  // order: The replacement order. Its pair must match the original's. required
+  Order order = 3;
+}
+
+// UpdateOrderResponse: Response to UpdateOrderRequest.
+message UpdateOrderResponse {
+  // order: The order's state after the update. `order_id` changes when the
+  // exchange could not modify in place and replaced the order instead.
+  OrderInfo order = 1;
+}
+
+// WaitForOrderRequest: Request to poll an order until it reaches a terminal state.
+message WaitForOrderRequest {
+  // exchange: The exchange that issued `order_id`. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // order_id: The exchange-assigned order id. required
+  string order_id = 2;
+  // pair: The pair the order was placed on. required
+  bolt.assets.v1.Pair pair = 3;
+  // timeout: How long to wait before giving up. required, and must be shorter
+  // than the server's request timeout, which cuts the call off regardless.
+  google.protobuf.Duration timeout = 4;
+  // cancel_on_timeout: Cancel the order when `timeout` elapses. When false the
+  // order's current state is returned and the order is left resting.
+  bool cancel_on_timeout = 5;
+  // poll_interval: Initial gap between status polls. It doubles after each
+  // non-terminal response, up to `max_poll_interval`. Defaults to 2s when unset.
+  optional google.protobuf.Duration poll_interval = 6;
+  // max_poll_interval: Upper bound on the backoff. Defaults to 30s when unset.
+  optional google.protobuf.Duration max_poll_interval = 7;
+}
+
+// WaitForOrderResponse: Response to WaitForOrderRequest.
+message WaitForOrderResponse {
+  // order: The order's state when polling stopped.
+  OrderInfo order = 1;
+  // timed_out: True when `timeout` elapsed before the order reached a terminal
+  // state, so `order.status` is the last state seen rather than a final one.
+  bool timed_out = 2;
+}
+
+// WithdrawRequest: Request to withdraw an asset off the exchange.
+message WithdrawRequest {
+  // exchange: The exchange to withdraw from. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // asset: The asset to withdraw (e.g. "SUI"). required
+  string asset = 2;
+  // amount: How much to withdraw, in `asset` units. required
+  bolt.common.numeric.v2.Fraction amount = 3;
+  // network: Network to withdraw over (e.g. "SUI"). required
+  string network = 4;
+  // to_address: Destination address. required
+  string to_address = 5;
+  // memo: Memo to attach to the transfer. Unset when the destination needs none.
+  optional string memo = 6;
+}
+
+// WithdrawResponse: Response to WithdrawRequest.
+message WithdrawResponse {
+  // withdrawn_amount: Amount the exchange reported withdrawing, net of its fee.
+  // Unset when the exchange only acknowledges the request without reporting an
+  // amount; use GetWithdrawalRecords to follow it.
+  optional bolt.common.numeric.v2.Fraction withdrawn_amount = 1;
+}
+
+// GetWithdrawalRecordsRequest: Request for recent withdrawals of an asset.
+message GetWithdrawalRecordsRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // asset: The asset to list withdrawals for (e.g. "SUI"). required
+  string asset = 2;
+}
+
+// GetWithdrawalRecordsResponse: Response to GetWithdrawalRecordsRequest.
+message GetWithdrawalRecordsResponse {
+  // records: Recent withdrawal records, newest first.
+  repeated WithdrawalRecord records = 1;
+}
+
+// WithdrawalRecord: One withdrawal as the exchange reports it. This is a
+// diagnostic view for correlating an in-flight withdrawal with its exchange-side
+// state, so most fields are passed through unnormalized.
+message WithdrawalRecord {
+  // id: The exchange-assigned withdrawal id.
+  string id = 1;
+  // status: The exchange's own status label. Not normalized across exchanges.
+  string status = 2;
+  // amount: Amount withdrawn.
+  bolt.common.numeric.v2.Fraction amount = 3;
+  // fee: Fee the exchange charged.
+  bolt.common.numeric.v2.Fraction fee = 4;
+  // address: Destination address.
+  string address = 5;
+  // fail_reason: Why the withdrawal failed. Empty when it did not.
+  string fail_reason = 6;
+  // chain: The exchange's own name for the network used.
+  string chain = 7;
+  // timestamp: When the exchange recorded the withdrawal. Unset when the
+  // exchange's value cannot be interpreted.
+  optional google.protobuf.Timestamp timestamp = 8;
+  // txid: On-chain transaction id. Empty until the exchange broadcasts.
+  string txid = 9;
+  // block_number: Block the transaction landed in. Empty or "0" until confirmed,
+  // and on exchanges that do not report it.
+  string block_number = 10;
+}
+
+// SubscribeOrdersRequest: Request to stream order state changes for the account.
+message SubscribeOrdersRequest {
+  // exchange: The exchange to stream from. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+}
+
+// SubscribeOrdersResponse: A single order state change.
+message SubscribeOrdersResponse {
+  // order: The order's state as of this update.
+  OrderInfo order = 1;
+  // fetched_at: When the server received and parsed the update.
+  google.protobuf.Timestamp fetched_at = 2;
+}
