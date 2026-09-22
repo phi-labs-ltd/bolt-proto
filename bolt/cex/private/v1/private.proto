@@ -154,9 +154,9 @@ message GetDepositAddressRequest {
   bolt.cex.types.v1.Exchange exchange = 1;
   // asset: The asset to deposit (e.g. "SUI"). required
   string asset = 2;
-  // fallback_network: Network to use when the exchange publishes more than one
+  // network: Network to use when the exchange publishes more than one
   // and the asset does not imply a single choice (e.g. "SUI").
-  optional string fallback_network = 3;
+  optional string network = 3;
 }
 
 // GetDepositAddressResponse: Response to GetDepositAddressRequest.
