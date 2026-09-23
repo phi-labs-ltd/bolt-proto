@@ -78,10 +78,8 @@ message Order {
     // limit: Execute at the given price or better.
     LimitOrder limit = 6;
   }
-  // client_order_id: Caller-supplied tag echoed back by the exchange, used to
-  // recognise an order placed by a request whose response was lost. ASCII
-  // alphanumerics plus `_`, `-` and `.` only; other bytes are rejected.
-  string client_order_id = 7;
+  // client_order_id: Caller's own key for the order, returned in OrderInfo.
+  optional string client_order_id = 7;
 }
 
 // WireOrder: The order as actually submitted, after server-side quantization to
@@ -89,8 +87,8 @@ message Order {
 message WireOrder {
   // amount: Size submitted, denominated in `denom`, after quantization.
   bolt.common.numeric.v2.Fraction amount = 1;
-  // native_name: The exchange's own name for the instrument (e.g. "ATOM_USDT").
-  string native_name = 2;
+  // pair: The pair the order was submitted on.
+  bolt.assets.v1.Pair pair = 2;
   // side: Whether the base asset was bought or sold.
   bolt.cex.types.v1.OrderSide side = 3;
   // kind: Whether this was submitted as a market or a limit order.
@@ -122,6 +120,9 @@ message OrderInfo {
   optional string fee_currency = 9;
   // wire_order: What was actually submitted. Unset for orders the server did not place.
   optional WireOrder wire_order = 10;
+  // client_order_id: The order's client id, as set on Order or created by the
+  // server. Unset when the exchange does not report one.
+  optional string client_order_id = 11;
 }
 
 // GetBalancesRequest: Request for the account's asset balances.
