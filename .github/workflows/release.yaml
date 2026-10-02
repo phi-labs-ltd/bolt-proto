@@ -6,7 +6,7 @@ permissions:
   contents: read
 jobs:
   publish:
-    name: Publish bolt-proto to Kellnr
+    name: Publish bolt-proto and cex-proto to Kellnr
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
@@ -22,8 +22,8 @@ jobs:
         with:
           workspaces: rust
 
-      - name: Generate the bolt-proto crate
-        run: just rust
+      - name: Generate the bolt-proto and cex-proto crates
+        run: just rust cex-rust
 
       - name: Set crate version from release title
         shell: bash
@@ -35,15 +35,17 @@ jobs:
             exit 1
           fi
           version="${RELEASE_TITLE#v}"
-          sed -i -E "s/^(version[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" rust/Cargo.toml
-          echo "Publishing bolt-proto $version"
+          sed -i -E "s/^(version[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" rust/bolt/Cargo.toml rust/cex/Cargo.toml
+          sed -i -E "/^bolt-proto[[:space:]]*=/ s/version[[:space:]]*=[[:space:]]*\"[^\"]*\"/version = \"=$version\"/" rust/cex/Cargo.toml
+          echo "Publishing bolt-proto and cex-proto $version"
 
       - name: Docs
         working-directory: rust
-        run: cargo doc --package bolt-proto --no-deps
+        run: cargo doc --workspace --no-deps
 
       - name: Publish
         working-directory: rust
         run: |
           cargo login --registry kellnr "${{ secrets.CARGO_REGISTRIES_KELLNR_TOKEN }}"
-          cargo publish --registry kellnr --allow-dirty
+          cargo publish --package bolt-proto --registry kellnr --allow-dirty
+          cargo publish --package cex-proto --registry kellnr --allow-dirty
