@@ -64,11 +64,11 @@ message GetPricesRequest {
 // GetPricesResponse: Prices response.
 message GetPricesResponse {
   // prices: Prices in request order.
-  repeated PairPrice prices = 1;
+  repeated Price prices = 1;
 }
 
-// PairPrice: Mid price of a pair.
-message PairPrice {
+// Price: Mid price of a pair.
+message Price {
   // pair: Pair.
   bolt.assets.v1.Pair pair = 1;
   // price: Mid price.
