@@ -23,7 +23,7 @@ jobs:
           workspaces: rust
 
       - name: Generate the bolt-proto and cex-proto crates
-        run: just rust cex-rust
+        run: just rust
 
       - name: Clippy
         working-directory: rust

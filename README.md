@@ -17,7 +17,7 @@ To build the proto files into generated types, use the examples folder.
 ### Rust
 
 ```sh
-just rust cex-rust
+just rust
 ```
 
 This produces two crates in the `rust/` workspace, ready to publish to kellnr:
