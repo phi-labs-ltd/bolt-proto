@@ -20,17 +20,25 @@ To build the proto files into generated types, use the examples folder.
 just rust
 ```
 
-This produces the `bolt-proto` crate at `rust/`, ready to publish to kellnr:
+This produces two crates in the `rust/` workspace, ready to publish to kellnr:
 
-- `rust/Cargo.toml` is committed and holds the crate version — bump it there before publishing.
-- `rust/src/` is generated and gitignored: one module file per proto package, plus a `lib.rs`
-  exposing the `bolt::{domain}::{subdomain}::v{N}` module tree.
+- `rust/bolt` is `bolt-proto`, generated from `bolt/`.
+- `rust/cex` is `cex-proto`, generated from `cex/`. It depends on `bolt-proto` for the shared `bolt.*` types.
+
+For each crate:
+
+- `Cargo.toml` is committed and holds the crate version — bump it there before publishing.
+- `src/` is generated and gitignored: one module file per proto package, plus a `lib.rs`
+  exposing the module tree (`bolt::{domain}::{subdomain}::v{N}` or `cex::{subdomain}::v{N}`).
+
+A release publishes both crates at the version in the release title.
 
 Publishing requires the kellnr index URL in `.cargo/config.toml` and a token in
 `CARGO_REGISTRIES_KELLNR_TOKEN`:
 
 ```sh
-cd rust && cargo publish --registry kellnr
+cd rust && cargo publish --package bolt-proto --registry kellnr
+cd rust && cargo publish --package cex-proto --registry kellnr
 ```
 
 ### Golang
