@@ -1,5 +1,5 @@
 .DS_Store
-/rust/src
+/rust/*/src
 /rust/target
 /rust/Cargo.lock
 /go

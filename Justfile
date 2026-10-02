@@ -1,7 +1,10 @@
-default: rust go
+default: rust cex-rust go
 
 rust:
     buf generate --template buf.gen.rust.yaml
+
+cex-rust:
+    buf generate --template buf.gen.cex.rust.yaml
 
 go:
     buf generate --template buf.gen.go.yaml

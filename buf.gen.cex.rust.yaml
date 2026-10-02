@@ -4,31 +4,33 @@ clean: true
 plugins:
   # Message types, one module per proto package.
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
-    out: ./rust/bolt/src
+    out: ./rust/cex/src
     opt:
       - enable_type_names
       - bytes=.
       - file_descriptor_set
+      - extern_path=.bolt=::bolt_proto::bolt
       - flat_output_dir
 
   # gRPC clients and servers.
   - remote: buf.build/community/neoeinstein-tonic:v0.5.0
-    out: ./rust/bolt/src
+    out: ./rust/cex/src
     opt:
       - no_server=false
       - no_client=false
+      - extern_path=.bolt=::bolt_proto::bolt
       - flat_output_dir
 
   # Crate lib.rs: the module tree over every generated file.
   - remote: buf.build/community/neoeinstein-prost-crate:v0.5.0
-    out: ./rust/bolt/src
+    out: ./rust/cex/src
     opt:
       - no_features
       - include_file=lib.rs
       - flat_output_dir
-      - only_include=.bolt
+      - only_include=.cex
 
 inputs:
   - directory: .
     paths:
-      - bolt
+      - cex
