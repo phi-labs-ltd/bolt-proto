@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package cex.public.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/cex/types/v1/types.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/timestamp.proto";
+
+// Unauthenticated CEX market data. Every request names the exchange, so a caller
+// can switch exchanges at runtime by changing one field. Instruments are always
+// addressed as a Pair; the server resolves the exchange's native instrument name,
+// so callers carry no exchange-specific knowledge.
+//
+// Errors are reported as gRPC status codes, never as partial results inside a
+// response. An invalid pair or argument fails the whole call with INVALID_ARGUMENT
+// (do not retry), while a transient condition such as an unreachable exchange
+// fails it with UNAVAILABLE (retry later).
+service PublicCexService {
+  // Endpoint to get the order book for a pair.
+  // Fails with INVALID_ARGUMENT for an unknown pair and UNAVAILABLE when the exchange is unreachable.
+  rpc GetOrderBook(GetOrderBookRequest) returns (GetOrderBookResponse);
+  // Endpoint to get mid prices for one or more pairs in one call.
+  // Fails with INVALID_ARGUMENT if any pair is unknown, FAILED_PRECONDITION if any
+  // pair has no live bid/ask, and UNAVAILABLE when the exchange is unreachable.
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+  // Endpoint to check that every given pair is tradable on an exchange.
+  // Succeeds with an empty response, or fails with INVALID_ARGUMENT if any pair is not supported.
+  rpc ValidateAssets(ValidateAssetsRequest) returns (ValidateAssetsResponse);
+  // Endpoint to stream best bid/ask updates across one or more exchanges.
+  rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
+}
+
+// PriceLevel: One resting order book level.
+message PriceLevel {
+  // price: Price of the level in quote asset units, as a rational (e.g. 5/4 for 1.25).
+  bolt.common.numeric.v2.Fraction price = 1;
+  // quantity: Size resting at this price, in base asset units.
+  bolt.common.numeric.v2.Fraction quantity = 2;
+}
+
+// ExchangePairs: A set of pairs on one exchange.
+message ExchangePairs {
+  // exchange: The exchange the pairs belong to. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pairs: The pairs on that exchange. required, must be non-empty
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// GetOrderBookRequest: Request for a pair's order book.
+message GetOrderBookRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pair: The pair to query. required
+  bolt.assets.v1.Pair pair = 2;
+  // depth: Levels to return per side. Defaults to 50 when unset.
+  optional uint32 depth = 3;
+}
+
+// GetOrderBookResponse: Response to GetOrderBookRequest.
+message GetOrderBookResponse {
+  // asks: Sell levels, ascending by price.
+  repeated PriceLevel asks = 1;
+  // bids: Buy levels, descending by price.
+  repeated PriceLevel bids = 2;
+}
+
+// GetPricesRequest: Request for mid prices across one or more pairs.
+message GetPricesRequest {
+  // exchange: The exchange to query. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pairs: The pairs to price. required, must be non-empty
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// GetPricesResponse: Response to GetPricesRequest.
+message GetPricesResponse {
+  // prices: One entry per requested pair, in request order.
+  repeated PairPrice prices = 1;
+}
+
+// PairPrice: Mid price for one pair.
+message PairPrice {
+  // pair: The pair this price is for.
+  bolt.assets.v1.Pair pair = 1;
+  // price: Mid price in quote asset units, computed as (bid + ask) / 2. This is not the last traded price.
+  bolt.common.numeric.v2.Fraction price = 2;
+}
+
+// ValidateAssetsRequest: Request to check that pairs are tradable on an exchange.
+message ValidateAssetsRequest {
+  // exchange: The exchange to check against. required
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pairs: The pairs to validate. required, must be non-empty
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// ValidateAssetsResponse: Response to ValidateAssetsRequest. Empty because success means every pair is valid;
+// otherwise the call fails with INVALID_ARGUMENT.
+message ValidateAssetsResponse {}
+
+// SubscribeBookTickerRequest: Request to stream best bid/ask updates.
+message SubscribeBookTickerRequest {
+  // exchange_pairs: The pairs to stream, grouped by exchange, so one subscription can span several exchanges.
+  // required, must be non-empty
+  repeated ExchangePairs exchange_pairs = 1;
+}
+
+// SubscribeBookTickerResponse: A single best bid/ask update for one instrument.
+message SubscribeBookTickerResponse {
+  // exchange: The exchange this update is from.
+  bolt.cex.types.v1.Exchange exchange = 1;
+  // pair: The pair this update is for.
+  bolt.assets.v1.Pair pair = 2;
+  // best_bid_price: Best bid price in quote asset units.
+  bolt.common.numeric.v2.Fraction best_bid_price = 3;
+  // best_bid_quantity: Size resting at the best bid, in base asset units.
+  bolt.common.numeric.v2.Fraction best_bid_quantity = 4;
+  // best_ask_price: Best ask price in quote asset units.
+  bolt.common.numeric.v2.Fraction best_ask_price = 5;
+  // best_ask_quantity: Size resting at the best ask, in base asset units.
+  bolt.common.numeric.v2.Fraction best_ask_quantity = 6;
+  // update_id: Exchange sequence number for the update. Unset when the exchange
+  // sends none, so gaps are only detectable when this is set.
+  optional uint64 update_id = 7;
+  // updated_at: When the exchange reported generating the update. Unset when the exchange sends none.
+  optional google.protobuf.Timestamp updated_at = 8;
+  // fetched_at: When the server received and parsed the update.
+  google.protobuf.Timestamp fetched_at = 9;
+}
