@@ -3,8 +3,8 @@ syntax = "proto3";
 package cex.public.v1;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "cex/types/v1/types.proto";
 import "google/protobuf/timestamp.proto";
 
 // Unauthenticated CEX market data.
@@ -30,7 +30,7 @@ message PriceLevel {
 // ExchangePairs: Pairs on one exchange.
 message ExchangePairs {
   // exchange: Exchange. required
-  bolt.cex.types.v1.Exchange exchange = 1;
+  cex.types.v1.Exchange exchange = 1;
   // pairs: Pairs. required
   repeated bolt.assets.v1.Pair pairs = 2;
 }
@@ -38,7 +38,7 @@ message ExchangePairs {
 // GetOrderBookRequest: Order book request.
 message GetOrderBookRequest {
   // exchange: Exchange. required
-  bolt.cex.types.v1.Exchange exchange = 1;
+  cex.types.v1.Exchange exchange = 1;
   // pair: Pair. required
   bolt.assets.v1.Pair pair = 2;
   // depth: Levels per side.
@@ -62,7 +62,7 @@ message GetOrderBookResponse {
 // GetPricesRequest: Prices request.
 message GetPricesRequest {
   // exchange: Exchange. required
-  bolt.cex.types.v1.Exchange exchange = 1;
+  cex.types.v1.Exchange exchange = 1;
   // pairs: Pairs. required
   repeated bolt.assets.v1.Pair pairs = 2;
 }
@@ -84,7 +84,7 @@ message Price {
 // ValidateAssetsRequest: Validation request.
 message ValidateAssetsRequest {
   // exchange: Exchange. required
-  bolt.cex.types.v1.Exchange exchange = 1;
+  cex.types.v1.Exchange exchange = 1;
   // pairs: Pairs. required
   repeated bolt.assets.v1.Pair pairs = 2;
 }
@@ -101,7 +101,7 @@ message SubscribeBookTickerRequest {
 // SubscribeBookTickerResponse: Best bid/ask update.
 message SubscribeBookTickerResponse {
   // exchange: Exchange.
-  bolt.cex.types.v1.Exchange exchange = 1;
+  cex.types.v1.Exchange exchange = 1;
   // pair: Pair.
   bolt.assets.v1.Pair pair = 2;
   // order_book: Order book.

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cex.types.v1;
+
+// Exchange: Supported centralized exchanges.
+enum Exchange {
+  // EXCHANGE_UNSPECIFIED: Unspecified.
+  EXCHANGE_UNSPECIFIED = 0;
+  // EXCHANGE_CRYPTODOTCOM: Crypto.com.
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // EXCHANGE_GATEIO: Gate.io.
+  EXCHANGE_GATEIO = 2;
+  // EXCHANGE_BINANCE: Binance.
+  EXCHANGE_BINANCE = 3;
+  // EXCHANGE_BYBIT: Bybit.
+  EXCHANGE_BYBIT = 4;
+  // EXCHANGE_OKX: OKX.
+  EXCHANGE_OKX = 5;
+}
