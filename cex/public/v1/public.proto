@@ -3,7 +3,6 @@ syntax = "proto3";
 package cex.public.v1;
 
 import "bolt/assets/v1/assets.proto";
-import "bolt/common/numeric/v2/numeric.proto";
 import "cex/types/v1/types.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -19,22 +18,6 @@ service PublicCexService {
   rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
 }
 
-// PriceLevel: Order book level.
-message PriceLevel {
-  // price: Level price.
-  bolt.common.numeric.v2.Fraction price = 1;
-  // quantity: Level size.
-  bolt.common.numeric.v2.Fraction quantity = 2;
-}
-
-// ExchangePairs: Pairs on one exchange.
-message ExchangePairs {
-  // exchange: Exchange. required
-  cex.types.v1.Exchange exchange = 1;
-  // pairs: Pairs. required
-  repeated bolt.assets.v1.Pair pairs = 2;
-}
-
 // GetOrderBookRequest: Order book request.
 message GetOrderBookRequest {
   // exchange: Exchange. required
@@ -45,18 +28,10 @@ message GetOrderBookRequest {
   optional uint32 depth = 3;
 }
 
-// OrderBook: Order book sides.
-message OrderBook {
-  // asks: Ascending by price.
-  repeated PriceLevel asks = 1;
-  // bids: Descending by price.
-  repeated PriceLevel bids = 2;
-}
-
 // GetOrderBookResponse: Order book response.
 message GetOrderBookResponse {
   // order_book: Order book.
-  OrderBook order_book = 1;
+  cex.types.v1.OrderBook order_book = 1;
 }
 
 // GetPricesRequest: Prices request.
@@ -70,15 +45,7 @@ message GetPricesRequest {
 // GetPricesResponse: Prices response.
 message GetPricesResponse {
   // prices: Prices in request order.
-  repeated Price prices = 1;
-}
-
-// Price: Mid price of a pair.
-message Price {
-  // pair: Pair.
-  bolt.assets.v1.Pair pair = 1;
-  // price: Mid price.
-  bolt.common.numeric.v2.Fraction price = 2;
+  repeated cex.types.v1.Price prices = 1;
 }
 
 // ValidateAssetsRequest: Validation request.
@@ -95,7 +62,7 @@ message ValidateAssetsResponse {}
 // SubscribeBookTickerRequest: Subscription request.
 message SubscribeBookTickerRequest {
   // exchange_pairs: Pairs per exchange. required
-  repeated ExchangePairs exchange_pairs = 1;
+  repeated cex.types.v1.ExchangePairs exchange_pairs = 1;
 }
 
 // SubscribeBookTickerResponse: Best bid/ask update.
@@ -105,7 +72,7 @@ message SubscribeBookTickerResponse {
   // pair: Pair.
   bolt.assets.v1.Pair pair = 2;
   // order_book: Order book.
-  OrderBook order_book = 3;
+  cex.types.v1.OrderBook order_book = 3;
   // update_id: Exchange sequence number.
   optional uint64 update_id = 4;
   // updated_at: Exchange update time.
