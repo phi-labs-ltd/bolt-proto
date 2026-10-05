@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package cex.types.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+
+// Exchange: Supported centralized exchanges.
+enum Exchange {
+  // EXCHANGE_UNSPECIFIED: Unspecified.
+  EXCHANGE_UNSPECIFIED = 0;
+  // EXCHANGE_CRYPTODOTCOM: Crypto.com.
+  EXCHANGE_CRYPTODOTCOM = 1;
+  // EXCHANGE_GATEIO: Gate.io.
+  EXCHANGE_GATEIO = 2;
+  // EXCHANGE_BINANCE: Binance.
+  EXCHANGE_BINANCE = 3;
+  // EXCHANGE_BYBIT: Bybit.
+  EXCHANGE_BYBIT = 4;
+  // EXCHANGE_OKX: OKX.
+  EXCHANGE_OKX = 5;
+}
+
+// PriceLevel: Order book level.
+message PriceLevel {
+  // price: Level price.
+  bolt.common.numeric.v2.Fraction price = 1;
+  // quantity: Level size.
+  bolt.common.numeric.v2.Fraction quantity = 2;
+}
+
+// ExchangePairs: Pairs on one exchange.
+message ExchangePairs {
+  // exchange: Exchange. required
+  Exchange exchange = 1;
+  // pairs: Pairs. required
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// OrderBook: Order book sides.
+message OrderBook {
+  // asks: Ascending by price.
+  repeated PriceLevel asks = 1;
+  // bids: Descending by price.
+  repeated PriceLevel bids = 2;
+}
+
+// Price: Mid price of a pair.
+message Price {
+  // pair: Pair.
+  bolt.assets.v1.Pair pair = 1;
+  // price: Mid price.
+  bolt.common.numeric.v2.Fraction price = 2;
+}

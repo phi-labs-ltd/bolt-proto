@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+package cex.public.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "cex/types/v1/types.proto";
+import "google/protobuf/timestamp.proto";
+
+// Unauthenticated CEX market data.
+service PublicCexService {
+  // Get an order book.
+  rpc GetOrderBook(GetOrderBookRequest) returns (GetOrderBookResponse);
+  // Get mid prices.
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+  // Validate pairs.
+  rpc ValidateAssets(ValidateAssetsRequest) returns (ValidateAssetsResponse);
+  // Stream best bid/ask updates.
+  rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
+}
+
+// GetOrderBookRequest: Order book request.
+message GetOrderBookRequest {
+  // exchange: Exchange. required
+  cex.types.v1.Exchange exchange = 1;
+  // pair: Pair. required
+  bolt.assets.v1.Pair pair = 2;
+  // depth: Levels per side.
+  optional uint32 depth = 3;
+}
+
+// GetOrderBookResponse: Order book response.
+message GetOrderBookResponse {
+  // order_book: Order book.
+  cex.types.v1.OrderBook order_book = 1;
+}
+
+// GetPricesRequest: Prices request.
+message GetPricesRequest {
+  // exchange: Exchange. required
+  cex.types.v1.Exchange exchange = 1;
+  // pairs: Pairs. required
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// GetPricesResponse: Prices response.
+message GetPricesResponse {
+  // prices: Prices in request order.
+  repeated cex.types.v1.Price prices = 1;
+}
+
+// ValidateAssetsRequest: Validation request.
+message ValidateAssetsRequest {
+  // exchange: Exchange. required
+  cex.types.v1.Exchange exchange = 1;
+  // pairs: Pairs. required
+  repeated bolt.assets.v1.Pair pairs = 2;
+}
+
+// ValidateAssetsResponse: Validation response.
+message ValidateAssetsResponse {}
+
+// SubscribeBookTickerRequest: Subscription request.
+message SubscribeBookTickerRequest {
+  // exchange_pairs: Pairs per exchange. required
+  repeated cex.types.v1.ExchangePairs exchange_pairs = 1;
+}
+
+// SubscribeBookTickerResponse: Best bid/ask update.
+message SubscribeBookTickerResponse {
+  // exchange: Exchange.
+  cex.types.v1.Exchange exchange = 1;
+  // pair: Pair.
+  bolt.assets.v1.Pair pair = 2;
+  // order_book: Order book.
+  cex.types.v1.OrderBook order_book = 3;
+  // update_id: Exchange sequence number.
+  optional uint64 update_id = 4;
+  // updated_at: Exchange update time.
+  optional google.protobuf.Timestamp updated_at = 5;
+  // fetched_at: Server receive time.
+  google.protobuf.Timestamp fetched_at = 6;
+}
