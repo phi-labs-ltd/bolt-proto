@@ -346,6 +346,9 @@ service PrivateSettlementService {
   rpc Transfer(TransferRequest) returns (TransferResponse);
   // Endpoint to get the balance of a specific asset in the settlement client wallet.
   rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  // Endpoint to sweep each given asset from every pool holding it into the pool where it is base.
+  // Withdraws are always full (LP reserve only, never protocol fees) and funds never leave the contracts.
+  rpc Rebalance(RebalanceRequest) returns (RebalanceResponse);
 }
 
 // SwapBuyRequest: Request to swap assets. Should be invoked by the user to swap assets.
@@ -594,6 +597,21 @@ message GetBalanceRequest {
 message GetBalanceResponse {
   // balance: The balance of the queried asset.
   Asset balance = 1;
+}
+
+// RebalanceRequest: Request to sweep assets back into the pools where they are base.
+message RebalanceRequest {
+  // assets: The assets to sweep, e.g. ["SUI", "USDC"]. On EVM the Rebalancer contract always sweeps
+  // every registered pool, so this list is ignored; on Sui each asset is resolved to its base pool and
+  // every pool holding it as quote.
+  repeated string assets = 1;
+}
+
+// RebalanceResponse: Response to the RebalanceRequest.
+message RebalanceResponse {
+  // tx_ids: The hashes of the submitted rebalance transactions. One on EVM; on Sui one or more,
+  // depending on how the sweep is batched.
+  repeated string tx_ids = 1;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
