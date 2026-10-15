@@ -612,6 +612,10 @@ message RebalanceResponse {
   // tx_ids: The hashes of the submitted rebalance transactions. One on EVM; on Sui one or more,
   // depending on how the sweep is batched.
   repeated string tx_ids = 1;
+  // base_liquidity: Total BASE liquidity of every swept pool after the rebalance, one entry per
+  // pool, in rational values e.g. 5/3. On EVM every registered pool is swept. A rebalance is not a
+  // trade, so SubscribeTrades does not report it; the caller updates its view of the pools from this.
+  repeated bolt.assets.v1.Balance base_liquidity = 2;
 }
 
 // Asset: The asset being traded. e.g. BTC, ETH
