@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 package bolt.assets.v2;
+
 import "bolt/common/numeric/v2/numeric.proto";
 
 // Balance: Specific asset balance.
