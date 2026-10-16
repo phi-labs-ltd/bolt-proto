@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package bolt.outpost.settlement.public.v3;
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+import "bolt/assets/v2/assets.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/common/partners/v1/partners.proto";
+
+service PublicSettlementService {
+  rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
+  rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
+  rpc GetLiquidityUpdates(GetLiquidityUpdatesRequest) returns (GetLiquidityUpdatesResponse);
+  rpc SubscribeLiquidityUpdates(SubscribeLiquidityUpdatesRequest) returns (stream SubscribeLiquidityUpdatesResponse);
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+message GetPoolRequest {
+  string base_asset = 1;
+}
+
+message GetPoolResponse {
+  Pool pool = 1;
+}
+
+message GetPoolsRequest {
+    repeated string base_assets = 1;
+}
+
+message GetPoolsResponse {
+  repeated Pool pools = 1;
+}
+
+message GetLiquidityUpdatesRequest {
+  oneof query {
+    string tx_hash = 1;
+    BlockHeights block_heights = 2;
+  }
+  google.protobuf.FieldMask field_mask = 3;
+}
+
+message GetLiquidityUpdatesResponse {
+  repeated LiquidityUpdate updates = 1;
+}
+
+message SubscribeLiquidityUpdatesRequest {
+    google.protobuf.FieldMask field_mask = 1;
+}
+
+message SubscribeLiquidityUpdatesResponse {
+  repeated LiquidityUpdate updates = 1;
+  uint64 height = 2;
+}
+
+message GetBalancesRequest {
+  string address = 1;
+  repeated string assets = 2;
+}
+
+message GetBalancesResponse {
+  repeated bolt.assets.v2.Balance balances = 1;
+}
+
+message InfoRequest {}
+
+message InfoResponse {
+  string network_id = 1;
+}
+
+message BlockHeights {
+  repeated uint64 heights = 1;
+}
+
+message Pool {
+    bolt.assets.v2.Balance base_liquidity = 1;
+    repeated bolt.assets.v2.Balance quote_liquidity = 2;
+    bolt.assets.v2.Balance base_deposited = 3;
+}
+
+message Trade {
+    string tx_hash = 1;
+    string tx_id = 2;
+    string trader = 3;
+    uint64 block_height = 4;
+    bolt.assets.v2.Balance quote_in = 5;
+    bolt.assets.v2.Balance base_out = 6;
+    bolt.common.numeric.v2.Fraction price = 7;
+    bolt.assets.v2.Balance base_liquidity = 8;
+    bolt.assets.v2.Balance quote_liquidity = 9;
+    bolt.common.numeric.v2.Fraction protocol_fee = 10;
+    bolt.common.numeric.v2.Fraction lp_fee = 11;
+    bolt.common.numeric.v2.Fraction dynamic_fee = 12;
+    google.protobuf.Timestamp swap_timestamp = 13;
+    bolt.common.partners.v1.Partner originator = 14;
+}
+
+message Deposit {
+    string tx_hash = 1;
+    string tx_id = 2;
+    string trader = 3;
+    uint64 block_height = 4;
+    bolt.assets.v2.Balance deposit_amount = 5;
+    bolt.assets.v2.Balance base_liquidity = 6;
+    bolt.assets.v2.Balance base_deposited = 7;
+    google.protobuf.Timestamp deposit_timestamp = 8;
+}
+
+message Withdrawal {
+    string tx_hash = 1;
+    string tx_id = 2;
+    string trader = 3;
+    uint64 block_height = 4;
+    bolt.assets.v2.Balance base_withdrawn = 5;
+    repeated bolt.assets.v2.Balance quotes_withdrawn = 6;
+    google.protobuf.Timestamp withdrawal_timestamp = 8;
+}
+
+message LiquidityUpdate {
+    oneof update {
+        Deposit deposit = 1;
+        Withdrawal withdrawal = 2;
+        Trade trade = 3;
+    }
+
+}
