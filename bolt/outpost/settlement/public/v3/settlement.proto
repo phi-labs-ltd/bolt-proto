@@ -2,17 +2,14 @@ syntax = "proto3";
 
 package bolt.outpost.settlement.public.v3;
 
-import "google/protobuf/field_mask.proto";
-import "google/protobuf/timestamp.proto";
-
 import "bolt/assets/v2/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 
 // PublicSettlementService: Public read-only access to settlement pools, liquidity updates and balances.
 service PublicSettlementService {
-  // Endpoint to fetch the pool for a base asset.
-  rpc GetPool(GetPoolRequest) returns (GetPoolResponse);
   // Endpoint to fetch pools by base asset.
   rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
   // Endpoint to fetch liquidity updates by transaction hash or block heights.
@@ -23,18 +20,6 @@ service PublicSettlementService {
   rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
   // Endpoint to query the settlement info.
   rpc Info(InfoRequest) returns (InfoResponse);
-}
-
-// GetPoolRequest: Request to fetch the pool for a base asset.
-message GetPoolRequest {
-  // base_asset: Base asset of the pool to fetch (e.g. "SUI").
-  string base_asset = 1;
-}
-
-// GetPoolResponse: Response to the GetPoolRequest.
-message GetPoolResponse {
-  // pool: Description of the pool.
-  Pool pool = 1;
 }
 
 // GetPoolsRequest: Request to fetch pools by base asset.
