@@ -1,0 +1,190 @@
+syntax = "proto3";
+
+package bolt.outpost.settlement.public.v3;
+
+import "bolt/assets/v2/assets.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/common/partners/v1/partners.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+// PublicSettlementService: Public read-only access to settlement pools, liquidity updates and balances.
+service PublicSettlementService {
+  // Endpoint to fetch pools by base asset.
+  rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
+  // Endpoint to fetch liquidity updates by transaction hash or block heights.
+  rpc GetLiquidityUpdates(GetLiquidityUpdatesRequest) returns (GetLiquidityUpdatesResponse);
+  // Endpoint to subscribe to liquidity updates.
+  rpc SubscribeLiquidityUpdates(SubscribeLiquidityUpdatesRequest) returns (stream SubscribeLiquidityUpdatesResponse);
+  // Endpoint to fetch the assets held by a wallet address.
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse);
+  // Endpoint to query the settlement info.
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// GetPoolsRequest: Request to fetch pools by base asset.
+message GetPoolsRequest {
+  // base_assets: Base assets of the pools to fetch (e.g. "SUI", "USDC"). If empty, all pools are returned.
+  repeated string base_assets = 1;
+}
+
+// GetPoolsResponse: Response to the GetPoolsRequest.
+message GetPoolsResponse {
+  // pools: Description of the fetched pools.
+  repeated Pool pools = 1;
+}
+
+// GetLiquidityUpdatesRequest: Request to fetch liquidity updates by transaction hash or block heights.
+message GetLiquidityUpdatesRequest {
+  // query: Selector for the liquidity updates to fetch.
+  oneof query {
+    // tx_hash: Hash/digest of the transaction to fetch liquidity updates for.
+    string tx_hash = 1;
+    // block_heights: Block heights to fetch liquidity updates for.
+    BlockHeights block_heights = 2;
+  }
+  // field_mask: Liquidity update types to include: "deposit", "withdrawal", "trade", or "*" for all.
+  google.protobuf.FieldMask field_mask = 3;
+}
+
+// GetLiquidityUpdatesResponse: Response to the GetLiquidityUpdatesRequest.
+message GetLiquidityUpdatesResponse {
+  // updates: Liquidity updates matching the query.
+  repeated LiquidityUpdate updates = 1;
+}
+
+// SubscribeLiquidityUpdatesRequest: Request starting liquidity updates subscription.
+message SubscribeLiquidityUpdatesRequest {
+  // field_mask: Liquidity update types to include: "deposit", "withdrawal", "trade", or "*" for all.
+  google.protobuf.FieldMask field_mask = 1;
+}
+
+// SubscribeLiquidityUpdatesResponse: Streamed response for SubscribeLiquidityUpdatesRequest.
+message SubscribeLiquidityUpdatesResponse {
+  // updates: Liquidity updates that happened at the block height.
+  repeated LiquidityUpdate updates = 1;
+  // block_height: Block height at which the liquidity updates happened.
+  uint64 block_height = 2;
+}
+
+// GetBalancesRequest: Request fetching the assets held by a wallet address.
+message GetBalancesRequest {
+  // address: Wallet address to fetch the balances for.
+  string address = 1;
+  // assets: Assets to fetch the balances for (e.g. "SUI", "USDC"). If empty, all assets are returned.
+  repeated string assets = 2;
+}
+
+// GetBalancesResponse: Response for GetBalancesRequest.
+message GetBalancesResponse {
+  // balances: Balances held by the address.
+  repeated bolt.assets.v2.Balance balances = 1;
+}
+
+// InfoRequest: Queries for settlement info.
+message InfoRequest {}
+
+// InfoResponse: Response for InfoRequest.
+message InfoResponse {
+  // network_id: Network identifier where the settlement sync is deployed.
+  string network_id = 1;
+}
+
+// BlockHeights: List of block heights.
+message BlockHeights {
+  // block_height: Block heights.
+  repeated uint64 block_height = 1;
+}
+
+// Pool: Description of a single liquidity pool.
+message Pool {
+  // base_liquidity: Base reserve of the pool.
+  bolt.assets.v2.Balance base_liquidity = 1;
+  // quote_liquidity: Quote token reserves of the pool.
+  repeated bolt.assets.v2.Balance quote_liquidity = 2;
+  // base_deposited: Sum of base deposits since the last base withdrawal.
+  bolt.assets.v2.Balance base_deposited = 3;
+}
+
+// Trade: A swap in which a trader paid quote tokens and received base tokens.
+message Trade {
+  // tx_hash: Hash/digest of the transaction.
+  string tx_hash = 1;
+  // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
+  string tx_id = 2;
+  // trader: Address that paid the quote tokens and received the base tokens.
+  string trader = 3;
+  // block_height: Block height at which the trade happened.
+  uint64 block_height = 4;
+  // quote_in: Quote tokens paid by the trader.
+  bolt.assets.v2.Balance quote_in = 5;
+  // base_out: Base tokens received by the trader, after fees.
+  bolt.assets.v2.Balance base_out = 6;
+  // price: Oracle price used for the trade, quote per base.
+  bolt.common.numeric.v2.Fraction price = 7;
+  // base_liquidity: Base reserve of the pool after the trade.
+  bolt.assets.v2.Balance base_liquidity = 8;
+  // quote_liquidity: Reserve of the paid quote token after the trade, including quote_in.
+  bolt.assets.v2.Balance quote_liquidity = 9;
+  // protocol_fee: Protocol fee amount of the trade, in base asset units.
+  bolt.common.numeric.v2.Fraction protocol_fee = 10;
+  // lp_fee: Liquidity provider fee amount of the trade, in base asset units.
+  bolt.common.numeric.v2.Fraction lp_fee = 11;
+  // dynamic_fee: Dynamic fee amount of the trade, in base asset units.
+  bolt.common.numeric.v2.Fraction dynamic_fee = 12;
+  // swap_timestamp: Timestamp of the trade.
+  google.protobuf.Timestamp swap_timestamp = 13;
+  // originator: The partner that originated the trade.
+  bolt.common.partners.v1.Partner originator = 14;
+}
+
+// Deposit: A deposit of base tokens into the pool by a liquidity provider.
+message Deposit {
+  // tx_hash: Hash/digest of the transaction.
+  string tx_hash = 1;
+  // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
+  string tx_id = 2;
+  // trader: Address of the liquidity provider that deposited.
+  string trader = 3;
+  // block_height: Block height at which the deposit happened.
+  uint64 block_height = 4;
+  // deposit_amount: Base tokens deposited.
+  bolt.assets.v2.Balance deposit_amount = 5;
+  // base_liquidity: Base reserve of the pool after the deposit.
+  bolt.assets.v2.Balance base_liquidity = 6;
+  // base_deposited: Sum of base deposits since the last base withdrawal, including this one.
+  bolt.assets.v2.Balance base_deposited = 7;
+  // deposit_timestamp: Timestamp of the deposit.
+  google.protobuf.Timestamp deposit_timestamp = 8;
+}
+
+// Withdrawal: A withdrawal of pool reserves by a liquidity provider.
+message Withdrawal {
+  // tx_hash: Hash/digest of the transaction.
+  string tx_hash = 1;
+  // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
+  string tx_id = 2;
+  // trader: Address of the liquidity provider that withdrew.
+  string trader = 3;
+  // block_height: Block height at which the withdrawal happened.
+  uint64 block_height = 4;
+  // base_withdrawn: Base tokens withdrawn.
+  bolt.assets.v2.Balance base_withdrawn = 5;
+  // quotes_withdrawn: Quote tokens withdrawn.
+  repeated bolt.assets.v2.Balance quotes_withdrawn = 6;
+  // withdrawal_timestamp: Timestamp of the withdrawal.
+  google.protobuf.Timestamp withdrawal_timestamp = 8;
+}
+
+// LiquidityUpdate: A single change to pool liquidity.
+message LiquidityUpdate {
+  // update: The kind of liquidity update.
+  oneof update {
+    // deposit: Base tokens deposited into the pool.
+    Deposit deposit = 1;
+    // withdrawal: Reserves withdrawn from the pool.
+    Withdrawal withdrawal = 2;
+    // trade: Swap executed against the pool.
+    Trade trade = 3;
+  }
+}
