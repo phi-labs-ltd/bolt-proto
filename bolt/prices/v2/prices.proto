@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package bolt.prices.v2;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v2/numeric.proto";
+import "google/protobuf/timestamp.proto";
+
+// PricesService defines the gRPC service for fetching and streaming prices of trading pairs from chain.
+service PricesService {
+  // Endpoint to fetch multiple pairs prices in batch.
+  rpc GetPrices(GetPricesRequest) returns (GetPricesResponse);
+
+  // Endpoint to subscribe on multiple pairs price changes.
+  rpc StreamPrices(StreamPricesRequest) returns (stream StreamPricesResponse);
+
+  // Endpoint to query for available price pairs.
+  rpc GetPricePairs(GetPricePairsRequest) returns (GetPricePairsResponse);
+
+  // Endpoint to query for price venue information.
+  rpc Info(InfoRequest) returns (InfoResponse);
+}
+
+// Request message for fetching prices of multiple trading pairs.
+message GetPricesRequest {
+  // pairs: The list of trading pairs to fetch prices for. If empty should return all the prices.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}
+
+// Response message containing the prices for the requested trading pairs.
+message GetPricesResponse {
+  // prices: The list of prices for the requested trading pairs.
+  repeated Price prices = 1;
+}
+
+// Request message for subscribing to price changes of multiple trading pairs.
+message StreamPricesRequest {
+  // pairs: The list of trading pairs to subscribe for price changes. If empty should subscribe to all pairs.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}
+
+// Response message containing the updated prices for the subscribed trading pairs.
+message StreamPricesResponse {
+  // prices: The list of updated prices for the subscribed trading pairs.
+  repeated Price prices = 1;
+}
+
+// Request message for querying available price pairs.
+message GetPricePairsRequest {}
+
+// Response message containing the available trading pairs.
+message GetPricePairsResponse {
+  // pairs: The list of available trading pairs.
+  repeated bolt.assets.v1.Pair pairs = 1;
+}
+
+// Request message for querying price venue information.
+message InfoRequest {}
+// Response message containing price venue information.
+message InfoResponse {
+  // network_id: The network identifier of the price venue.
+  string network_id = 1;
+}
+
+// Price represents the price information for a specific trading pair.
+message Price {
+  // pair: The pair associated with the price. e.g. ATOM/USDT
+  bolt.assets.v1.Pair pair = 1;
+  // bid: The bid price of the pair, in rational values. e.g. 1250/13
+  bolt.common.numeric.v2.Fraction bid = 2;
+  // ask: The ask price of the pair, in rational values. e.g. 1250/13
+  bolt.common.numeric.v2.Fraction ask = 3;
+  // updated_at: The timestamp when the price was updated for the last time.
+  google.protobuf.Timestamp updated_at = 4;
+  // expiry: The timestamp when the price expires.
+  google.protobuf.Timestamp expiry = 5;
+}
