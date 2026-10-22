@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package bolt.outpost.settlement.private.v3;
+
+import "bolt/assets/v2/assets.proto";
+
+// PrivateSettlementService: Private access for the liquidity provider to manage pool liquidity and the signer wallet.
+service PrivateSettlementService {
+  // Endpoint to sweep assets back into the pools where they are base.
+  // Each withdraw takes the whole LP reserve, never the protocol fees. The funds stay in the contracts.
+  rpc Rebalance(RebalanceRequest) returns (RebalanceResponse);
+  // Endpoint to deposit base asset into the pool.
+  rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
+  // Endpoint to withdraw one asset from the pool.
+  rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+  // Endpoint to transfer assets from the signer wallet to another address.
+  // On an error, some transfers can already be on chain. The error message gives their hashes.
+  rpc Transfer(TransferRequest) returns (TransferResponse);
+  // Endpoint to query the settlement info.
+  rpc Info(InfoRequest) returns (InfoResponse);
+  // Endpoint to fetch the balance of one asset in the signer wallet.
+  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+}
+
+// RebalanceRequest: Request to sweep assets back into the pools where they are base.
+message RebalanceRequest {
+  // assets: The assets to sweep (e.g. "SUI", "USDC").
+  // The service withdraws each asset from every pool that holds it and deposits it into the pool where it is base.
+  // An empty list gives INVALID_ARGUMENT.
+  // required
+  repeated string assets = 1;
+}
+
+// RebalanceResponse: Response to the RebalanceRequest.
+message RebalanceResponse {
+  // tx_ids: The hashes of the submitted rebalance transactions.
+  repeated string tx_ids = 1;
+}
+
+// DepositBaseRequest: Request to deposit base asset into its pool.
+message DepositBaseRequest {
+  // amount: The base asset and amount to deposit (e.g. 1000 USDC). The asset names the pool where it is base.
+  // required
+  bolt.assets.v2.Balance amount = 1;
+}
+
+// DepositBaseResponse: Response to the DepositBaseRequest.
+message DepositBaseResponse {
+  // amount: The amount of base asset deposited (e.g. 1000 USDC).
+  bolt.assets.v2.Balance amount = 1;
+  // tx_id: The hash of the transaction.
+  string tx_id = 2;
+}
+
+// WithdrawRequest: Request to withdraw the whole LP reserve of one asset from a pool, never the protocol fees.
+// The funds go to the signer wallet (see InfoResponse.whoami).
+// If asset is pool_base_asset, the service withdraws the base reserve. An empty reserve gives a zero amount.
+message WithdrawRequest {
+  // pool_base_asset: The base asset of the pool to withdraw from (e.g. "USDC").
+  // required
+  string pool_base_asset = 1;
+  // asset: The asset to withdraw from the pool (e.g. "SUI").
+  // required
+  string asset = 2;
+}
+
+// WithdrawResponse: Response to the WithdrawRequest.
+message WithdrawResponse {
+  // withdrawn: The amount of asset withdrawn (e.g. 1000 SUI).
+  bolt.assets.v2.Balance withdrawn = 1;
+  // tx_id: The hash of the transaction.
+  string tx_id = 2;
+}
+
+// TransferRequest: Request to transfer assets from the signer wallet to another address.
+message TransferRequest {
+  // to_address: The address to transfer the assets to.
+  // required
+  string to_address = 1;
+  // assets: The assets to transfer. An empty list gives INVALID_ARGUMENT.
+  // required
+  repeated bolt.assets.v2.Balance assets = 2;
+}
+
+// TransferResponse: Response to the TransferRequest.
+message TransferResponse {
+  // tx_ids: The hashes of the transfer transactions, in the order the service sends them.
+  // Sui gives one hash for the whole request. EVM gives one hash for each asset.
+  repeated string tx_ids = 1;
+}
+
+// InfoRequest: Request to get information about the settlement.
+message InfoRequest {}
+
+// InfoResponse: Response to the InfoRequest.
+message InfoResponse {
+  // network_id: Network identifier where the settlement service is deployed.
+  string network_id = 1;
+  // whoami: The address of the signer who submits the transactions.
+  string whoami = 2;
+}
+
+// GetBalanceRequest: Request to get the balance of one asset in the signer wallet.
+message GetBalanceRequest {
+  // asset: The asset to query (e.g. "USDC").
+  // required
+  string asset = 1;
+}
+
+// GetBalanceResponse: Response to the GetBalanceRequest.
+message GetBalanceResponse {
+  // balance: The balance of the queried asset.
+  bolt.assets.v2.Balance balance = 1;
+}
