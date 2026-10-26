@@ -8,6 +8,7 @@ import "bolt/assets/v2/assets.proto";
 service PrivateSettlementService {
   // Endpoint to sweep assets back into the pools where they are base.
   // Each withdraw takes the whole LP reserve, never the protocol fees. The funds stay in the contracts.
+  // On an error, some sweeps can already be on chain. The error message gives their hashes.
   rpc Rebalance(RebalanceRequest) returns (RebalanceResponse);
   // Endpoint to deposit base asset into the pool.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
@@ -25,15 +26,17 @@ service PrivateSettlementService {
 message RebalanceRequest {
   // assets: The assets to sweep (e.g. "SUI", "USDC").
   // The service withdraws each asset from every pool that holds it and deposits it into the pool where it is base.
-  // An empty list gives INVALID_ARGUMENT.
+  // An empty list or a duplicate asset gives INVALID_ARGUMENT.
   // required
   repeated string assets = 1;
 }
 
 // RebalanceResponse: Response to the RebalanceRequest.
 message RebalanceResponse {
-  // tx_ids: The hashes of the submitted rebalance transactions.
-  repeated string tx_ids = 1;
+  // tx_ids: key: an asset of RebalanceRequest.assets. value: the hash of the transaction that swept it.
+  // An asset with nothing to sweep still has a hash.
+  // EVM gives one hash for all assets. Sui gives one hash for all assets or one hash for each asset.
+  map<string, string> tx_ids = 1;
 }
 
 // DepositBaseRequest: Request to deposit base asset into its pool.
