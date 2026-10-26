@@ -12,6 +12,7 @@ service PrivateSettlementService {
   // Endpoint to deposit base asset into the pool.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
   // Endpoint to withdraw one or more assets from a pool.
+  // On an error, some withdrawals can already be on chain. The error message gives their hashes.
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
   // Endpoint to transfer assets from the signer wallet to another address.
   // On an error, some transfers can already be on chain. The error message gives their hashes.
@@ -66,10 +67,12 @@ message WithdrawRequest {
 
 // WithdrawResponse: Response to the WithdrawRequest.
 message WithdrawResponse {
-  // withdrawn: The amount of asset withdrawn (e.g. 1000 SUI).
-  bolt.assets.v2.Balance withdrawn = 1;
-  // tx_id: The hash of the transaction.
-  string tx_id = 2;
+  // withdrawn: The amounts withdrawn (e.g. 1000 SUI), in the order of WithdrawRequest.assets.
+  // An empty reserve gives a zero amount in its slot.
+  repeated bolt.assets.v2.Balance withdrawn = 1;
+  // tx_ids: key: an asset of WithdrawRequest.assets. value: the hash of the transaction that withdrew it.
+  // Sui gives one hash for the whole request. EVM gives one hash for each asset.
+  map<string, string> tx_ids = 2;
 }
 
 // TransferRequest: Request to transfer assets from the signer wallet to another address.
@@ -77,16 +80,16 @@ message TransferRequest {
   // to_address: The address to transfer the assets to.
   // required
   string to_address = 1;
-  // assets: The assets to transfer. An empty list gives INVALID_ARGUMENT.
+  // assets: The assets to transfer. An empty list or a duplicate asset gives INVALID_ARGUMENT.
   // required
   repeated bolt.assets.v2.Balance assets = 2;
 }
 
 // TransferResponse: Response to the TransferRequest.
 message TransferResponse {
-  // tx_ids: The hashes of the transfer transactions, in the order the service sends them.
+  // tx_ids: key: an asset of TransferRequest.assets. value: the hash of the transaction that transferred it.
   // Sui gives one hash for the whole request. EVM gives one hash for each asset.
-  repeated string tx_ids = 1;
+  map<string, string> tx_ids = 1;
 }
 
 // InfoRequest: Request to get information about the settlement and the signer wallet balances.
