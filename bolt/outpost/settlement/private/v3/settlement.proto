@@ -11,7 +11,7 @@ service PrivateSettlementService {
   rpc Rebalance(RebalanceRequest) returns (RebalanceResponse);
   // Endpoint to deposit base asset into the pool.
   rpc DepositBase(DepositBaseRequest) returns (DepositBaseResponse);
-  // Endpoint to withdraw one asset from the pool.
+  // Endpoint to withdraw one or more assets from a pool.
   rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
   // Endpoint to transfer assets from the signer wallet to another address.
   // On an error, some transfers can already be on chain. The error message gives their hashes.
@@ -51,16 +51,17 @@ message DepositBaseResponse {
   string tx_id = 2;
 }
 
-// WithdrawRequest: Request to withdraw the whole LP reserve of one asset from a pool, never the protocol fees.
+// WithdrawRequest: Request to withdraw the whole LP reserve of each listed asset from a pool, never the protocol fees.
 // The funds go to the signer wallet (see InfoResponse.whoami).
-// If asset is base_asset, the service withdraws the base reserve. An empty reserve gives a zero amount.
+// An empty list or a duplicate asset gives INVALID_ARGUMENT.
 message WithdrawRequest {
   // base_asset: The base asset of the pool to withdraw from (e.g. "USDC").
   // required
   string base_asset = 1;
-  // asset: The asset to withdraw from the pool (e.g. "SUI").
+  // assets: The assets to withdraw from that pool (e.g. "SUI", "USDC").
+  // The list can include base_asset, which withdraws the base reserve.
   // required
-  string asset = 2;
+  repeated string assets = 2;
 }
 
 // WithdrawResponse: Response to the WithdrawRequest.
