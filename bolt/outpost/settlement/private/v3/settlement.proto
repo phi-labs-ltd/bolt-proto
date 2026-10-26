@@ -16,10 +16,8 @@ service PrivateSettlementService {
   // Endpoint to transfer assets from the signer wallet to another address.
   // On an error, some transfers can already be on chain. The error message gives their hashes.
   rpc Transfer(TransferRequest) returns (TransferResponse);
-  // Endpoint to query the settlement info.
+  // Endpoint to query the settlement info and the signer wallet balances.
   rpc Info(InfoRequest) returns (InfoResponse);
-  // Endpoint to fetch the balance of one asset in the signer wallet.
-  rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
 }
 
 // RebalanceRequest: Request to sweep assets back into the pools where they are base.
@@ -89,8 +87,13 @@ message TransferResponse {
   repeated string tx_ids = 1;
 }
 
-// InfoRequest: Request to get information about the settlement.
-message InfoRequest {}
+// InfoRequest: Request to get information about the settlement and the signer wallet balances.
+// An unknown or a duplicate asset gives INVALID_ARGUMENT. A failed chain read gives UNAVAILABLE.
+message InfoRequest {
+  // assets: The assets to get the signer wallet balances for (e.g. "SUI", "USDC").
+  // An empty list gives no balances and no chain reads. Use it for identity checks.
+  repeated string assets = 1;
+}
 
 // InfoResponse: Response to the InfoRequest.
 message InfoResponse {
@@ -98,17 +101,6 @@ message InfoResponse {
   string network_id = 1;
   // whoami: The address of the signer who submits the transactions.
   string whoami = 2;
-}
-
-// GetBalanceRequest: Request to get the balance of one asset in the signer wallet.
-message GetBalanceRequest {
-  // asset: The asset to query (e.g. "USDC").
-  // required
-  string asset = 1;
-}
-
-// GetBalanceResponse: Response to the GetBalanceRequest.
-message GetBalanceResponse {
-  // balance: The balance of the queried asset.
-  bolt.assets.v2.Balance balance = 1;
+  // balances: The signer wallet balances, in the order of InfoRequest.assets.
+  repeated bolt.assets.v2.Balance balances = 3;
 }
