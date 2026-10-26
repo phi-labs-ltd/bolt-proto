@@ -53,11 +53,11 @@ message DepositBaseResponse {
 
 // WithdrawRequest: Request to withdraw the whole LP reserve of one asset from a pool, never the protocol fees.
 // The funds go to the signer wallet (see InfoResponse.whoami).
-// If asset is pool_base_asset, the service withdraws the base reserve. An empty reserve gives a zero amount.
+// If asset is base_asset, the service withdraws the base reserve. An empty reserve gives a zero amount.
 message WithdrawRequest {
-  // pool_base_asset: The base asset of the pool to withdraw from (e.g. "USDC").
+  // base_asset: The base asset of the pool to withdraw from (e.g. "USDC").
   // required
-  string pool_base_asset = 1;
+  string base_asset = 1;
   // asset: The asset to withdraw from the pool (e.g. "SUI").
   // required
   string asset = 2;
