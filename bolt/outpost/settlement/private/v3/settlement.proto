@@ -38,14 +38,15 @@ message RebalanceResponse {
 // DepositBaseRequest: Request to deposit base asset into its pool.
 message DepositBaseRequest {
   // amount: The base asset and amount to deposit (e.g. 1000 USDC). The asset names the pool where it is base.
+  // The amount must be greater than zero. Otherwise the call gives INVALID_ARGUMENT.
   // required
   bolt.assets.v2.Balance amount = 1;
 }
 
 // DepositBaseResponse: Response to the DepositBaseRequest.
 message DepositBaseResponse {
-  // amount: The amount of base asset deposited (e.g. 1000 USDC).
-  bolt.assets.v2.Balance amount = 1;
+  // base_liquidity: Base reserve of the pool after the deposit.
+  bolt.assets.v2.Balance base_liquidity = 1;
   // tx_id: The hash of the transaction.
   string tx_id = 2;
 }
