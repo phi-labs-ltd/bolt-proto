@@ -74,4 +74,6 @@ message Price {
   google.protobuf.Timestamp updated_at = 4;
   // expiry: The timestamp when the price expires.
   google.protobuf.Timestamp expiry = 5;
+  // id: Unique identifier of the price.
+  string id = 6;
 }
