@@ -41,8 +41,8 @@ message StreamPricesRequest {
 
 // Response message containing the updated prices for the subscribed trading pairs.
 message StreamPricesResponse {
-  reserved 1;
-  reserved "prices";
+  // prices: Deprecated. Use update instead.
+  repeated Price prices = 1 [deprecated = true];
 
   // update: Either an updated price or the id of a removed price.
   oneof update {
