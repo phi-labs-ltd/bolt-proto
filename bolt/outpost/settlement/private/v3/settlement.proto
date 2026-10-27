@@ -33,10 +33,11 @@ message RebalanceRequest {
 
 // RebalanceResponse: Response to the RebalanceRequest.
 message RebalanceResponse {
-  // tx_ids: key: an asset of RebalanceRequest.assets. value: the hash of the transaction that swept it.
+  // memo: Metadata for logging and tracing.
+  // key: an asset of RebalanceRequest.assets. value: the hash of the transaction that swept it.
   // An asset with nothing to sweep still has a hash.
   // EVM gives one hash for all assets. Sui gives one hash for all assets or one hash for each asset.
-  map<string, string> tx_ids = 1;
+  map<string, string> memo = 1;
 }
 
 // DepositBaseRequest: Request to deposit base asset into its pool.
@@ -51,8 +52,9 @@ message DepositBaseRequest {
 message DepositBaseResponse {
   // base_liquidity: Base reserve of the pool after the deposit.
   bolt.assets.v2.Balance base_liquidity = 1;
-  // tx_id: The hash of the transaction.
-  string tx_id = 2;
+  // memo: Metadata for logging and tracing.
+  // key: the asset of DepositBaseRequest.amount. value: the hash of the transaction.
+  map<string, string> memo = 2;
 }
 
 // WithdrawRequest: Request to withdraw the whole LP reserve of each listed asset from a pool, never the protocol fees.
@@ -73,9 +75,10 @@ message WithdrawResponse {
   // withdrawn: The amounts withdrawn (e.g. 1000 SUI), in the order of WithdrawRequest.assets.
   // An empty reserve gives a zero amount in its slot.
   repeated bolt.assets.v2.Balance withdrawn = 1;
-  // tx_ids: key: an asset of WithdrawRequest.assets. value: the hash of the transaction that withdrew it.
+  // memo: Metadata for logging and tracing.
+  // key: an asset of WithdrawRequest.assets. value: the hash of the transaction that withdrew it.
   // Sui gives one hash for the whole request. EVM gives one hash for each asset.
-  map<string, string> tx_ids = 2;
+  map<string, string> memo = 2;
 }
 
 // TransferRequest: Request to transfer assets from the signer wallet to another address.
@@ -90,9 +93,10 @@ message TransferRequest {
 
 // TransferResponse: Response to the TransferRequest.
 message TransferResponse {
-  // tx_ids: key: an asset of TransferRequest.assets. value: the hash of the transaction that transferred it.
+  // memo: Metadata for logging and tracing.
+  // key: an asset of TransferRequest.assets. value: the hash of the transaction that transferred it.
   // Sui gives one hash for the whole request. EVM gives one hash for each asset.
-  map<string, string> tx_ids = 1;
+  map<string, string> memo = 1;
 }
 
 // InfoRequest: Request to get information about the settlement and the signer wallet balances.
