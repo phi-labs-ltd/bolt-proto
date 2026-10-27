@@ -58,7 +58,7 @@ message DepositBaseResponse {
 }
 
 // WithdrawRequest: Request to withdraw the whole LP reserve of each listed asset from a pool, never the protocol fees.
-// The funds go to the signer wallet (see InfoResponse.whoami).
+// The funds go to the signer wallet (see InfoResponse.signer_address).
 // An empty list or a duplicate asset gives INVALID_ARGUMENT.
 message WithdrawRequest {
   // base_asset: The base asset of the pool to withdraw from (e.g. "USDC").
@@ -111,8 +111,8 @@ message InfoRequest {
 message InfoResponse {
   // network_id: Network identifier where the settlement service is deployed.
   string network_id = 1;
-  // whoami: The address of the signer who submits the transactions.
-  string whoami = 2;
+  // signer_address: The address of the signer who submits the transactions.
+  string signer_address = 2;
   // balances: The signer wallet balances, in the order of InfoRequest.assets.
   repeated bolt.assets.v2.Balance balances = 3;
 }
