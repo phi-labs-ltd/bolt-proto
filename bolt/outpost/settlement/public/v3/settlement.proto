@@ -186,5 +186,7 @@ message LiquidityUpdate {
     Withdrawal withdrawal = 2;
     // trade: Swap executed against the pool.
     Trade trade = 3;
+    // removed: tx_id of the deposit, withdrawal or trade that was reverted.
+    string removed = 4;
   }
 }
