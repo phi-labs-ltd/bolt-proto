@@ -42,7 +42,6 @@ message StreamPricesRequest {
 // Response message containing the updated prices for the subscribed trading pairs.
 message StreamPricesResponse {
   reserved 1;
-  reserved "prices";
 
   // update: Either updated prices or the id of a removed price.
   oneof update {
