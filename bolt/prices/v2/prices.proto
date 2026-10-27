@@ -42,20 +42,15 @@ message StreamPricesRequest {
 // Response message containing the updated prices for the subscribed trading pairs.
 message StreamPricesResponse {
   reserved 1;
+  reserved "prices";
 
-  // update: Either updated prices or the id of a removed price.
+  // update: Either an updated price or the id of a removed price.
   oneof update {
-    // prices: The updated prices for the subscribed trading pairs.
-    PriceList prices = 2;
+    // price: An updated price for a subscribed trading pair.
+    Price price = 2;
     // removed: The id of the price that was removed (see Price.id).
     string removed = 3;
   }
-}
-
-// PriceList: A list of prices.
-message PriceList {
-  // prices: The list of prices.
-  repeated Price prices = 1;
 }
 
 // Request message for querying available price pairs.
