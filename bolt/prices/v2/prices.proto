@@ -41,8 +41,16 @@ message StreamPricesRequest {
 
 // Response message containing the updated prices for the subscribed trading pairs.
 message StreamPricesResponse {
-  // prices: The list of updated prices for the subscribed trading pairs.
-  repeated Price prices = 1;
+  reserved 1;
+  reserved "prices";
+
+  // update: Either an updated price or the id of a removed price.
+  oneof update {
+    // price: An updated price for a subscribed trading pair.
+    Price price = 2;
+    // removed: The id of the price that was removed (see Price.id).
+    string removed = 3;
+  }
 }
 
 // Request message for querying available price pairs.
@@ -74,4 +82,6 @@ message Price {
   google.protobuf.Timestamp updated_at = 4;
   // expiry: The timestamp when the price expires.
   google.protobuf.Timestamp expiry = 5;
+  // id: Unique identifier of the price.
+  string id = 6;
 }
