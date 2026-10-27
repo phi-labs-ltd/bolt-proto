@@ -112,7 +112,6 @@ message SwapResponse {
   // output: The asset and amount received from the swap.
   bolt.assets.v2.Balance output = 1;
   // memo: Metadata for logging and tracing.
-  // key: the asset of SwapRequest.input. value: the hash of the transaction.
   map<string, string> memo = 2;
 }
 
