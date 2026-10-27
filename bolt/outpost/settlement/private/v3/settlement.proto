@@ -18,6 +18,8 @@ service PrivateSettlementService {
   // Endpoint to transfer assets from the signer wallet to another address.
   // On an error, some transfers can already be on chain. The error message gives their hashes.
   rpc Transfer(TransferRequest) returns (TransferResponse);
+  // Endpoint to swap an asset held by the signer wallet.
+  rpc Swap(SwapRequest) returns (SwapResponse);
   // Endpoint to query the settlement info and the signer wallet balances.
   rpc Info(InfoRequest) returns (InfoResponse);
 }
@@ -97,6 +99,23 @@ message TransferResponse {
   // key: an asset of TransferRequest.assets. value: the hash of the transaction that transferred it.
   // Sui gives one hash for the whole request. EVM gives one hash for each asset.
   map<string, string> memo = 1;
+}
+
+// SwapRequest: Request to swap an asset held by the signer wallet.
+message SwapRequest {
+  // input: The asset and amount to swap (e.g. 1000 USDC).
+  // The amount must be greater than zero. Otherwise the call gives INVALID_ARGUMENT.
+  // required
+  bolt.assets.v2.Balance input = 1;
+}
+
+// SwapResponse: Response to the SwapRequest.
+message SwapResponse {
+  // output: The asset and amount received from the swap.
+  bolt.assets.v2.Balance output = 1;
+  // memo: Metadata for logging and tracing.
+  // key: the asset of SwapRequest.input. value: the hash of the transaction.
+  map<string, string> memo = 2;
 }
 
 // InfoRequest: Request to get information about the settlement and the signer wallet balances.
