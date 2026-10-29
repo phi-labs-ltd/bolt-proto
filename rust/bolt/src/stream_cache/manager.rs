@@ -1,9 +1,3 @@
-//! Drives a [`StreamCache`] from a live gRPC stream.
-//!
-//! The caller owns connecting (and reconnecting): pass the stream returned by the gRPC client.
-//! When the stream ends or errors the cache is left as-is and [`Manager::closed`] resolves; spawn
-//! a new manager with a fresh stream to resume.
-
 use std::sync::{Arc, RwLock};
 use std::time::Instant;
 

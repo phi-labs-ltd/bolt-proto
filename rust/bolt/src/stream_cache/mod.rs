@@ -1,16 +1,3 @@
-//! Reorg-aware caches for streams that emit updates and, on a reorg, only the id of the
-//! reverted update.
-//!
-//! [`Cache`] is a synchronous state machine: every method takes the current time, so it is
-//! deterministic and has no runtime dependency. [`PriceCache`] and [`LiquidityCache`] adapt it
-//! to `bolt.prices.v2.StreamPrices` and
-//! `bolt.outpost.settlement.public.v3.SubscribeLiquidityUpdates`. With the `stream-manager`
-//! feature, [`manager`] drives a cache from a live gRPC stream.
-//!
-//! Each entry moves `Latest -> Safe -> Finalized` as it ages (measured from the local receive
-//! time), or to `Removed` when the stream reports its id as reverted. Entries are pruned
-//! `prune_after` after they were received (or after they were removed).
-
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -132,7 +119,7 @@ pub enum Event {
     Pruned { id: String },
 }
 
-/// Cache of updates keyed by id; see the [module docs](self).
+/// Cache of updates keyed by id.
 #[derive(Clone, Debug)]
 pub struct Cache<T> {
     config: Config,
