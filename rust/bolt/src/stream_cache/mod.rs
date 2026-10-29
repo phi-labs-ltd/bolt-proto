@@ -60,14 +60,13 @@ pub struct Config {
 }
 
 impl Config {
-    /// Default capacity of the manager's event channel.
-    pub const DEFAULT_EVENT_BUFFER: usize = 1024;
-
-    /// Validates and builds a config.
+    /// Validates and builds a config. `event_buffer` is how many events the manager's channel
+    /// holds before slow subscribers lag.
     pub fn new(
         safe_period: Duration,
         finalization_period: Duration,
         prune_after: Duration,
+        event_buffer: usize,
     ) -> Result<Self, ConfigError> {
         if safe_period >= finalization_period {
             return Err(ConfigError::SafeNotBeforeFinalization);
@@ -75,21 +74,15 @@ impl Config {
         if prune_after <= finalization_period {
             return Err(ConfigError::PruneNotAfterFinalization);
         }
+        if event_buffer == 0 {
+            return Err(ConfigError::ZeroEventBuffer);
+        }
         Ok(Self {
             safe_period,
             finalization_period,
             prune_after,
-            event_buffer: Self::DEFAULT_EVENT_BUFFER,
+            event_buffer,
         })
-    }
-
-    /// Sets how many events the manager's channel holds before slow subscribers lag.
-    pub fn with_event_buffer(mut self, event_buffer: usize) -> Result<Self, ConfigError> {
-        if event_buffer == 0 {
-            return Err(ConfigError::ZeroEventBuffer);
-        }
-        self.event_buffer = event_buffer;
-        Ok(self)
     }
 
     /// Age after which an entry becomes [`Status::Safe`].
@@ -291,21 +284,21 @@ mod tests {
     const S: Duration = Duration::from_secs(1);
 
     fn cfg() -> Config {
-        Config::new(10 * S, 30 * S, 60 * S).unwrap()
+        Config::new(10 * S, 30 * S, 60 * S, 16).unwrap()
     }
 
     #[test]
     fn config_validation() {
         assert_eq!(
-            Config::new(30 * S, 30 * S, 60 * S),
+            Config::new(30 * S, 30 * S, 60 * S, 16),
             Err(ConfigError::SafeNotBeforeFinalization)
         );
         assert_eq!(
-            Config::new(10 * S, 30 * S, 30 * S),
+            Config::new(10 * S, 30 * S, 30 * S, 16),
             Err(ConfigError::PruneNotAfterFinalization)
         );
         assert_eq!(
-            cfg().with_event_buffer(0),
+            Config::new(10 * S, 30 * S, 60 * S, 0),
             Err(ConfigError::ZeroEventBuffer)
         );
     }

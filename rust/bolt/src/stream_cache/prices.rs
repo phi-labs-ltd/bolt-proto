@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn price_then_removed() {
         let s = Duration::from_secs(1);
-        let mut c = PriceCache::new(Config::new(s, 2 * s, 3 * s).unwrap());
+        let mut c = PriceCache::new(Config::new(s, 2 * s, 3 * s, 16).unwrap());
         let t0 = Instant::now();
         c.apply(price("p1", "SUI"), t0);
         c.apply(price("p2", "SUI"), t0 + s / 2);

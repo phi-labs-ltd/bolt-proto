@@ -199,7 +199,7 @@ mod tests {
 
     fn cfg() -> Config {
         let s = Duration::from_secs(1);
-        Config::new(10 * s, 30 * s, 60 * s).unwrap()
+        Config::new(10 * s, 30 * s, 60 * s, 16).unwrap()
     }
 
     #[tokio::test(start_paused = true)]
