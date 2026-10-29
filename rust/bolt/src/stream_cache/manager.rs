@@ -8,8 +8,6 @@ use super::{Config, Entry, Event, LiquidityCache, PriceCache, StreamCache};
 use crate::bolt::outpost::settlement::public::v3::SubscribeLiquidityUpdatesResponse;
 use crate::bolt::prices::v2::StreamPricesResponse;
 
-const EVENT_BUFFER: usize = 1024;
-
 /// Manager for `StreamPrices`.
 pub type PriceManager = Manager<PriceCache>;
 /// Manager for `SubscribeLiquidityUpdates`.
@@ -62,7 +60,7 @@ where
         S: Stream<Item = Result<C::Response, tonic::Status>> + Send + 'static,
     {
         let state = Arc::new(RwLock::new(cache));
-        let (events, _) = broadcast::channel(EVENT_BUFFER);
+        let (events, _) = broadcast::channel(cache.cache().config().event_buffer());
         let (done_tx, done) = watch::channel(None);
         let (shutdown, shutdown_rx) = watch::channel(false);
         tokio::spawn(run(

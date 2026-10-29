@@ -30,6 +30,8 @@ pub enum ConfigError {
     SafeNotBeforeFinalization,
     /// `prune_after` must be strictly greater than `finalization_period`.
     PruneNotAfterFinalization,
+    /// `event_buffer` must be at least 1.
+    ZeroEventBuffer,
 }
 
 impl std::fmt::Display for ConfigError {
@@ -41,6 +43,7 @@ impl std::fmt::Display for ConfigError {
             Self::PruneNotAfterFinalization => {
                 f.write_str("prune_after must be greater than finalization_period")
             }
+            Self::ZeroEventBuffer => f.write_str("event_buffer must be at least 1"),
         }
     }
 }
@@ -53,9 +56,13 @@ pub struct Config {
     safe_period: Duration,
     finalization_period: Duration,
     prune_after: Duration,
+    event_buffer: usize,
 }
 
 impl Config {
+    /// Default capacity of the manager's event channel.
+    pub const DEFAULT_EVENT_BUFFER: usize = 1024;
+
     /// Validates and builds a config.
     pub fn new(
         safe_period: Duration,
@@ -72,7 +79,17 @@ impl Config {
             safe_period,
             finalization_period,
             prune_after,
+            event_buffer: Self::DEFAULT_EVENT_BUFFER,
         })
+    }
+
+    /// Sets how many events the manager's channel holds before slow subscribers lag.
+    pub fn with_event_buffer(mut self, event_buffer: usize) -> Result<Self, ConfigError> {
+        if event_buffer == 0 {
+            return Err(ConfigError::ZeroEventBuffer);
+        }
+        self.event_buffer = event_buffer;
+        Ok(self)
     }
 
     /// Age after which an entry becomes [`Status::Safe`].
@@ -88,6 +105,11 @@ impl Config {
     /// Age after which an entry is dropped (counted from removal for removed entries).
     pub fn prune_after(&self) -> Duration {
         self.prune_after
+    }
+
+    /// Capacity of the manager's event channel.
+    pub fn event_buffer(&self) -> usize {
+        self.event_buffer
     }
 }
 
@@ -281,6 +303,10 @@ mod tests {
         assert_eq!(
             Config::new(10 * S, 30 * S, 30 * S),
             Err(ConfigError::PruneNotAfterFinalization)
+        );
+        assert_eq!(
+            cfg().with_event_buffer(0),
+            Err(ConfigError::ZeroEventBuffer)
         );
     }
 
