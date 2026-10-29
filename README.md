@@ -34,7 +34,7 @@ For each crate:
   `cex-proto`'s `src/` is fully generated.
 - `bolt-proto` ships `bolt_proto::stream_cache`: reorg-aware caches (Latest/Safe/Finalized/Removed,
   with pruning) for `prices.v2.StreamPrices` and `settlement.public.v3.SubscribeLiquidityUpdates`.
-  The tokio-based `manager` module is behind the default `stream-manager` feature.
+  The tokio-based `manager` module is behind the opt-in `stream-manager` feature.
 
 A release publishes both crates at the version in the release title.
 

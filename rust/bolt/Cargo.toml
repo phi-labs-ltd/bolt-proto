@@ -17,7 +17,6 @@ tokio        = { version = "1.54.1", features = ["rt", "sync", "time", "macros"]
 tokio-stream = { version = "0.1.19", optional = true }
 
 [features]
-default        = ["stream-manager"]
 # Async managers that drive a stream_cache from a live gRPC stream.
 stream-manager = ["dep:tokio", "dep:tokio-stream"]
 
