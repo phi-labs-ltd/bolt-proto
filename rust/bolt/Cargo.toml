@@ -5,14 +5,27 @@ edition     = "2021"
 description = "Generated Rust types and gRPC clients/servers for the Bolt Protocol protobuf schemas."
 repository  = "https://github.com/phi-labs-ltd/bolt-proto"
 publish     = ["kellnr"]
-include = ["src/**/*.rs", "Cargo.toml"]
+include = ["src/**/*.rs", "examples/**/*.rs", "Cargo.toml"]
 
 [dependencies]
-bytes       = "1.12"
-prost       = "0.14.4"
-prost-types = "0.14.4"
-tonic       = "0.14.6"
-tonic-prost = "0.14.6"
+bytes        = "1.12.1"
+prost        = "0.14.4"
+prost-types  = "0.14.4"
+tonic        = "0.14.8"
+tonic-prost  = "0.14.8"
+tokio        = { version = "1.54.1", features = ["rt", "sync", "time", "macros"], optional = true }
+tokio-stream = { version = "0.1.19", optional = true }
+
+[features]
+# Async managers that drive a stream_cache from a live gRPC stream.
+stream-manager = ["dep:tokio", "dep:tokio-stream"]
+
+[dev-dependencies]
+tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "sync", "time", "macros", "test-util"] }
+
+[[example]]
+name              = "subscribe_liquidity_updates"
+required-features = ["stream-manager"]
 
 [lints.clippy]
 large_enum_variant = "allow"

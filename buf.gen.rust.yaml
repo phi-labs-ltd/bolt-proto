@@ -1,5 +1,4 @@
 version: v2
-clean: true
 
 plugins:
   # bolt-proto: message types, one module per proto package.
@@ -30,7 +29,7 @@ plugins:
       - bolt.**
     opt:
       - no_features
-      - include_file=lib.rs
+      - include_file=generated.rs
       - flat_output_dir
       - only_include=.bolt
 
