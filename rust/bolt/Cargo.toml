@@ -24,10 +24,6 @@ stream-manager = ["dep:tokio", "dep:tokio-stream"]
 tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "sync", "time", "macros", "test-util"] }
 
 [[example]]
-name              = "stream_prices"
-required-features = ["stream-manager"]
-
-[[example]]
 name              = "subscribe_liquidity_updates"
 required-features = ["stream-manager"]
 
