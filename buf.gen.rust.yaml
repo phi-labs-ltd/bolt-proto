@@ -1,5 +1,4 @@
 version: v2
-clean: true
 
 plugins:
   # bolt-proto: message types, one module per proto package.
