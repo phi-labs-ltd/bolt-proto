@@ -1,6 +1,6 @@
 //! Usage: cargo run --example subscribe_liquidity_updates --features stream-manager -- http://localhost:50051
 
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use bolt_proto::bolt::outpost::settlement::public::v3::{
     public_settlement_service_client::PublicSettlementServiceClient,
@@ -39,6 +39,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } = event
             {
                 println!("finalized: {id} {:?}", handle.get(&id).map(|e| e.value));
+            }
+        }
+    });
+
+    // Every few seconds, look up one cached update by id and print its current status.
+    let sampler = manager.clone();
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            let entries = sampler.snapshot();
+            if entries.is_empty() {
+                continue;
+            }
+            let nanos = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .subsec_nanos();
+            let (id, _) = &entries[nanos as usize % entries.len()];
+            if let Some(entry) = sampler.get(id) {
+                println!(
+                    "sampled {id}: {:?} (cached: {})",
+                    entry.status,
+                    entries.len()
+                );
             }
         }
     });
