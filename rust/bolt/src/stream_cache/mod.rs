@@ -68,21 +68,28 @@ impl Config {
         prune_after: Duration,
         event_buffer: usize,
     ) -> Result<Self, ConfigError> {
-        if safe_period >= finalization_period {
-            return Err(ConfigError::SafeNotBeforeFinalization);
-        }
-        if prune_after <= finalization_period {
-            return Err(ConfigError::PruneNotAfterFinalization);
-        }
-        if event_buffer == 0 {
-            return Err(ConfigError::ZeroEventBuffer);
-        }
-        Ok(Self {
+        let config = Self {
             safe_period,
             finalization_period,
             prune_after,
             event_buffer,
-        })
+        };
+        config.validate()?;
+        Ok(config)
+    }
+
+    /// Checks `safe_period < finalization_period < prune_after` and `event_buffer >= 1`.
+    pub fn validate(&self) -> Result<(), ConfigError> {
+        if self.safe_period >= self.finalization_period {
+            return Err(ConfigError::SafeNotBeforeFinalization);
+        }
+        if self.prune_after <= self.finalization_period {
+            return Err(ConfigError::PruneNotAfterFinalization);
+        }
+        if self.event_buffer == 0 {
+            return Err(ConfigError::ZeroEventBuffer);
+        }
+        Ok(())
     }
 
     /// Age after which an entry becomes [`Status::Safe`].
