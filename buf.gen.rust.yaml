@@ -29,7 +29,7 @@ plugins:
       - bolt.**
     opt:
       - no_features
-      - include_file=lib.rs
+      - include_file=generated.rs
       - flat_output_dir
       - only_include=.bolt
 

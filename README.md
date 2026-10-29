@@ -28,8 +28,13 @@ This produces two crates in the `rust/` workspace, ready to publish to kellnr:
 For each crate:
 
 - `Cargo.toml` is committed and holds the crate version — bump it there before publishing.
-- `src/` is generated and gitignored: one module file per proto package, plus a `lib.rs`
-  exposing the module tree (`bolt::{domain}::{subdomain}::v{N}` or `cex::{subdomain}::v{N}`).
+- `src/` holds one generated module file per proto package (gitignored), exposing the module tree
+  (`bolt::{domain}::{subdomain}::v{N}` or `cex::{subdomain}::v{N}`). For `bolt-proto`, the tree is in
+  the generated `generated.rs`, while `lib.rs` and `stream_cache/` are hand-written and committed.
+  `cex-proto`'s `src/` is fully generated.
+- `bolt-proto` ships `bolt_proto::stream_cache`: reorg-aware caches (Latest/Safe/Finalized/Removed,
+  with pruning) for `prices.v2.StreamPrices` and `settlement.public.v3.SubscribeLiquidityUpdates`.
+  The tokio-based `manager` module is behind the default `stream-manager` feature.
 
 A release publishes both crates at the version in the release title.
 

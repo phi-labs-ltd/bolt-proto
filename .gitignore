@@ -1,5 +1,7 @@
 .DS_Store
-/rust/*/src
+/rust/cex/src
+/rust/bolt/src/bolt.*.rs
+/rust/bolt/src/generated.rs
 /rust/target
 /rust/Cargo.lock
 /go
