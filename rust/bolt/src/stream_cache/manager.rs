@@ -59,8 +59,8 @@ where
     where
         S: Stream<Item = Result<C::Response, tonic::Status>> + Send + 'static,
     {
-        let state = Arc::new(RwLock::new(cache));
         let (events, _) = broadcast::channel(cache.cache().config().event_buffer());
+        let state = Arc::new(RwLock::new(cache));
         let (done_tx, done) = watch::channel(None);
         let (shutdown, shutdown_rx) = watch::channel(false);
         tokio::spawn(run(
