@@ -2,12 +2,11 @@ syntax = "proto3";
 
 package bolt.assets.v2;
 
-import "bolt/common/numeric/v2/numeric.proto";
-
 // Balance: Specific asset balance.
 message Balance {
+  reserved 2;
   // asset: Asset name
   string asset = 1;
-  // amount: Amount of the asset. in rational values e.g 5/3
-  bolt.common.numeric.v2.Fraction amount = 2;
+  // amount: Exact amount of the asset in tokens, not raw units, as a fraction string, "n/d" or "n" for a whole number (e.g. "5/3"), at most 256 characters.
+  string amount = 3;
 }
