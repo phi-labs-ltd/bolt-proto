@@ -119,7 +119,7 @@ message SwapResponse {
 // An unknown or a duplicate asset gives INVALID_ARGUMENT. A failed chain read gives UNAVAILABLE.
 message InfoRequest {
   // assets: The assets to get the signer wallet balances for (e.g. "SUI", "USDC").
-  // An empty list gives no balances and no chain reads. Use it for identity checks.
+  // An empty list gives no balances. The native coin balance is always read.
   repeated string assets = 1;
 }
 
@@ -131,4 +131,7 @@ message InfoResponse {
   string signer_address = 2;
   // balances: The signer wallet balances, in the order of InfoRequest.assets.
   repeated bolt.assets.v2.Balance balances = 3;
+  // native_balance: The signer wallet balance of the chain's native coin (e.g. ETH, SUI), which pays the gas.
+  // Exact amount in whole coins, not raw units, as a fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
+  string native_balance = 4;
 }
