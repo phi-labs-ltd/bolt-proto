@@ -60,10 +60,15 @@ message SubscribeLiquidityUpdatesRequest {
 }
 
 // SubscribeLiquidityUpdatesResponse: Streamed response for SubscribeLiquidityUpdatesRequest.
+// The service sends at least one response every 10 seconds, also when no update matches the field_mask.
+// The first response comes at once after the subscribe.
 message SubscribeLiquidityUpdatesResponse {
-  // updates: Liquidity updates that happened at the block height.
+  // updates: Liquidity updates of this response. They happened at block_height. The list can be empty.
   repeated LiquidityUpdate updates = 1;
-  // block_height: Block height at which the liquidity updates happened.
+  // block_height: Block height of the updates. Several responses can have the same block height.
+  // In a response without updates, it is the latest block height that the service knows.
+  // It does not mean that all updates at or below it were sent.
+  // It can decrease. A response with a removed update carries the height of the reverted block.
   uint64 block_height = 2;
 }
 
@@ -88,6 +93,11 @@ message InfoRequest {}
 message InfoResponse {
   // network_id: Network identifier where the settlement sync is deployed.
   string network_id = 1;
+  // latest_block_height: The latest block height of the chain, as seen by the service when it answers.
+  // It is not final. A block at or below it can still be reverted, and the value can decrease after a reorg.
+  // It can differ from block_height in a stream response.
+  // It is not a bound of completeness. A request for a block at or below it can still fail or return no updates.
+  uint64 latest_block_height = 2;
 }
 
 // BlockHeights: List of block heights.
