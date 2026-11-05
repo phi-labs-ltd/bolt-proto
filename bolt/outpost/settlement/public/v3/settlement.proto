@@ -124,6 +124,10 @@ message Pool {
   repeated bolt.assets.v2.Balance quote_liquidity = 2;
   // base_deposited: Sum of base deposits since the last base withdrawal.
   bolt.assets.v2.Balance base_deposited = 3;
+  // address: Address of the pool contract (e.g. "0x1234567890AbcdEF1234567890aBcdef12345678").
+  string address = 4;
+  // block_height: The pool's values are its state at this block.
+  uint64 block_height = 5;
 }
 
 // Trade: A swap in which a trader paid quote tokens and received base tokens.
