@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.outpost.settlement.public.v3;
 
 import "bolt/assets/v2/assets.proto";
+import "bolt/common/numeric/v3/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
@@ -145,22 +146,22 @@ message Trade {
   bolt.assets.v2.Balance quote_in = 5;
   // base_out: Base tokens received by the trader, after fees.
   bolt.assets.v2.Balance base_out = 6;
-  reserved 7;
-  // price: Oracle price used for the trade, quote per base, as an exact fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
-  string price = 15;
+  reserved 7, 15;
+  // price: Oracle price used for the trade, in quote tokens per base token. Never negative.
+  bolt.common.numeric.v3.Fraction256 price = 20;
   // base_liquidity: Base reserve of the pool after the trade.
   bolt.assets.v2.Balance base_liquidity = 8;
   // quote_liquidity: Reserve of the paid quote token after the trade, including quote_in.
   bolt.assets.v2.Balance quote_liquidity = 9;
-  reserved 10;
-  // protocol_fee: Protocol fee amount of the trade, in base asset units, as an exact fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
-  string protocol_fee = 16;
-  reserved 11;
-  // lp_fee: Liquidity provider fee amount of the trade, in base asset units, as an exact fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
-  string lp_fee = 17;
-  reserved 12;
-  // dynamic_fee: Dynamic fee amount of the trade, in base asset units, as an exact fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
-  string dynamic_fee = 18;
+  reserved 10, 16;
+  // protocol_fee: Protocol fee amount of the trade, in base tokens, not raw units. Never negative.
+  bolt.common.numeric.v3.Fraction256 protocol_fee = 21;
+  reserved 11, 17;
+  // lp_fee: Liquidity provider fee amount of the trade, in base tokens, not raw units. Never negative.
+  bolt.common.numeric.v3.Fraction256 lp_fee = 22;
+  reserved 12, 18;
+  // dynamic_fee: Dynamic fee amount of the trade, in base tokens, not raw units. Never negative.
+  bolt.common.numeric.v3.Fraction256 dynamic_fee = 23;
   // swap_timestamp: Timestamp of the trade.
   google.protobuf.Timestamp swap_timestamp = 13;
   // originator: The partner that originated the trade.

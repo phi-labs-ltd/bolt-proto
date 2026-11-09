@@ -47,8 +47,7 @@
 ### Fields
 
 - Names: `snake_case`
-- Amounts, prices and fees that must be exact: a fraction string, `n/d` or `n` for a whole number (e.g. `"5/3"`), as in `bolt.assets.v2.Balance`; never a decimal string, which is ambiguous across systems, and not a `bolt.common.numeric` `Fraction` (v1 or v2), whose 64-bit parts can't hold every value
-- Request fields holding a fraction string: document a maximum length, as `bolt.assets.v2.Balance.amount` does; parse time grows with the square of the length
+- Amounts, prices and fees that must be exact: `bolt.common.numeric.v3.Fraction256`, as in `bolt.assets.v2.Balance`, or `Fraction128` when every value fits in 128 bits; never a decimal or fraction string, which each system parses its own way, and not a `bolt.common.numeric` `Fraction` (v1 or v2), whose 64-bit parts can't hold every value
 - Block heights: `uint64`
 - DB primary keys: `int64 id`; foreign keys: `int64 {table}_id`
 - External system IDs (CEX order IDs, tx digests): `string`
@@ -74,7 +73,7 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 - Fields: `// {field_name}: {description}.`
 - RPCs: `// Endpoint to {action}.` or `// {description}.`
 - Enum values: `// {VALUE}: {description}.`
-- Include units and examples where useful: `// price: Execution price as a fraction string (e.g. "5/4").`
+- Include units and examples where useful: `// amount: Amount in tokens, not raw units (e.g. 1.5 SUI).`
 
 ### Imports
 
