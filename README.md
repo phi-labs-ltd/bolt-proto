@@ -30,11 +30,14 @@ For each crate:
 - `Cargo.toml` is committed and holds the crate version — bump it there before publishing.
 - `src/` holds one generated module file per proto package (gitignored), exposing the module tree
   (`bolt::{domain}::{subdomain}::v{N}` or `cex::{subdomain}::v{N}`). For `bolt-proto`, the tree is in
-  the generated `generated.rs`, while `lib.rs` and `stream_cache/` are hand-written and committed.
+  the generated `generated.rs`, while `lib.rs`, `numeric.rs` and `stream_cache/` are hand-written
+  and committed.
   `cex-proto`'s `src/` is fully generated.
 - `bolt-proto` ships `bolt_proto::stream_cache`: reorg-aware caches (Latest/Safe/Finalized/Removed,
   with pruning) for `prices.v2.StreamPrices` and `settlement.public.v3.SubscribeLiquidityUpdates`.
   The tokio-based `manager` module is behind the opt-in `stream-manager` feature.
+- `bolt-proto` implements `From` in both directions between numeric v3's `UInt128` and `u128`, and
+  between `UInt256` and ruint's `U256`, which is also alloy's.
 
 A release publishes both crates at the version in the release title.
 
