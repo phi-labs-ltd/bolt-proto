@@ -9,6 +9,7 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
 // PublicSettlementService: Public read-only access to settlement pools, liquidity updates and balances.
+// Retry an UNAVAILABLE status with backoff and a limit, since it can also be a permanent node error.
 service PublicSettlementService {
   // Endpoint to fetch pools by base asset.
   rpc GetPools(GetPoolsRequest) returns (GetPoolsResponse);
