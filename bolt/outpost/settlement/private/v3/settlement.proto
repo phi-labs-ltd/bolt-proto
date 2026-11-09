@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.outpost.settlement.private.v3;
 
 import "bolt/assets/v2/assets.proto";
+import "bolt/common/numeric/v3/numeric.proto";
 
 // PrivateSettlementService: Private access for the liquidity provider to manage pool liquidity and the signer wallet.
 service PrivateSettlementService {
@@ -131,7 +132,8 @@ message InfoResponse {
   string signer_address = 2;
   // balances: The signer wallet balances, in the order of InfoRequest.assets.
   repeated bolt.assets.v2.Balance balances = 3;
+  reserved 4;
   // native_balance: The signer wallet balance of the chain's native coin (e.g. ETH, SUI), which pays the gas.
-  // Exact amount in whole coins, not raw units, as a fraction string, "n/d" or "n" for a whole number (e.g. "5/3").
-  string native_balance = 4;
+  // Exact amount in whole coins, not raw units. Never negative.
+  bolt.common.numeric.v3.Fraction256 native_balance = 5;
 }
