@@ -1,4 +1,16 @@
-default: rust go
+default: proto rust go
+
+# Format, lint and check for breaking changes against the published BSR module.
+proto: fmt lint breaking
+
+fmt:
+    buf format -w
+
+lint:
+    buf lint
+
+breaking:
+    buf breaking --against 'buf.build/philabs/bolt-proto'
 
 rust:
     buf generate --template buf.gen.rust.yaml
