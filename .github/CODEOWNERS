@@ -2,6 +2,6 @@
 # review. Requires "Require review from Code Owners" in the branch ruleset.
 
 # Buf configuration: lint/breaking policy, module config, dependency lock.
-/buf.yaml          @spoo-bar
-/buf.policy.yaml   @spoo-bar
-/buf.lock          @spoo-bar
+/buf.yaml          @spoo-bar @macku99
+/buf.policy.yaml   @spoo-bar @macku99
+/buf.lock          @spoo-bar @macku99
