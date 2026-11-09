@@ -1,4 +1,4 @@
 # Buf configuration: lint/breaking policy, module config, dependency lock.
-/buf.yaml          @spoo-bar @macku99
-/buf.policy.yaml   @spoo-bar @macku99
-/buf.lock          @spoo-bar @macku99
+/buf.yaml          @spoo-bar @macku99 @jawoznia
+/buf.policy.yaml   @spoo-bar @macku99 @jawoznia
+/buf.lock          @spoo-bar @macku99 @jawoznia
