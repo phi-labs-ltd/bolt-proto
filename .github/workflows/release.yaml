@@ -8,6 +8,8 @@ jobs:
   publish:
     name: Publish bolt-proto and cex-proto to Kellnr
     runs-on: self-hosted
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
 
@@ -26,6 +28,7 @@ jobs:
         run: just rust
 
       - name: Set crate version from release title
+        id: version
         shell: bash
         env:
           RELEASE_TITLE: ${{ github.event.release.name }}
@@ -37,6 +40,7 @@ jobs:
           version="${RELEASE_TITLE#v}"
           sed -i -E "s/^(version[[:space:]]*=[[:space:]]*)\"[^\"]*\"/\1\"$version\"/" rust/bolt/Cargo.toml rust/cex/Cargo.toml
           sed -i -E "/^bolt-proto[[:space:]]*=/ s/version[[:space:]]*=[[:space:]]*\"[^\"]*\"/version = \"=$version\"/" rust/cex/Cargo.toml
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Publishing bolt-proto and cex-proto $version"
 
       - name: Docs
@@ -49,3 +53,68 @@ jobs:
           cargo login --registry kellnr "${{ secrets.CARGO_REGISTRIES_KELLNR_TOKEN }}"
           cargo publish --package bolt-proto --registry kellnr --allow-dirty
           cargo publish --package cex-proto --registry kellnr --allow-dirty
+
+  bump-downstream:
+    name: Bump bolt-proto in ${{ matrix.repo }}
+    needs: publish
+    runs-on: self-hosted
+    permissions: {}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Downstream repos (under phi-labs-ltd) that depend on bolt-proto.
+        # To add one, append its name here.
+        repo:
+          - bolt-oracle
+          - bolt-rust-sdk
+    env:
+      VERSION: ${{ needs.publish.outputs.version }}
+    steps:
+      # GitHub does not expose the release publisher's own token to workflows,
+      # and GITHUB_TOKEN cannot write to other repos. Use a GitHub App with
+      # contents:write and pull-requests:write on the downstream repos instead.
+      # PRs opened with an App token (unlike GITHUB_TOKEN) also trigger CI.
+      - name: Mint downstream write token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.PHILABS_CI_WRITER_APP_ID }}
+          private-key: ${{ secrets.PHILABS_CI_WRITER_APP_KEY }}
+          owner: phi-labs-ltd
+          repositories: ${{ matrix.repo }}
+
+      - uses: actions/checkout@v7
+        with:
+          repository: phi-labs-ltd/${{ matrix.repo }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      # Needed only if the downstream workspace fetches other private git deps.
+      - name: Configure git for private dependencies
+        uses: phi-labs-ltd/bolt-infra-workflows/.github/actions/setup-private-git@main
+        with:
+          app-id: ${{ secrets.PHILABS_CI_READER_APP_ID }}
+          private-key: ${{ secrets.PHILABS_CI_READER_APP_KEY }}
+
+      - name: Update bolt-proto to the released version
+        shell: bash
+        run: |
+          # Move the requirement first so major/pre-release bumps also resolve,
+          # then pin the lockfile entry. Kellnr is public: no registry login.
+          sed -i -E '/^bolt-proto[[:space:]]*=/ s/version[[:space:]]*=[[:space:]]*"[^"]*"/version = "'"$VERSION"'"/' Cargo.toml
+          cargo update -p bolt-proto --precise "$VERSION"
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: chore/bump-bolt-proto
+          add-paths: |
+            Cargo.toml
+            Cargo.lock
+          commit-message: "chore: bump bolt-proto to ${{ env.VERSION }}"
+          title: "chore: bump bolt-proto to ${{ env.VERSION }}"
+          body: |
+            Automated bump of `bolt-proto` to `${{ env.VERSION }}`.
+
+            Release: ${{ github.event.release.html_url }}
+          delete-branch: true
