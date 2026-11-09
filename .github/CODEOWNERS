@@ -1,14 +1,7 @@
 # Changes to files that control breaking-change enforcement need code-owner
 # review. Requires "Require review from Code Owners" in the branch ruleset.
-#
 
 # Buf configuration: lint/breaking policy, module config, dependency lock.
 /buf.yaml          @spoo-bar
 /buf.policy.yaml   @spoo-bar
 /buf.lock          @spoo-bar
-
-# CI workflows and actions, including the Buf check and BSR publish.
-/.github/          @spoo-bar
-
-# Local tooling that mirrors the CI checks.
-/Justfile          @spoo-bar
