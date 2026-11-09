@@ -1,15 +1,14 @@
 # Changes to files that control breaking-change enforcement need code-owner
 # review. Requires "Require review from Code Owners" in the branch ruleset.
 #
-# TODO: replace @phi-labs-ltd/proto-owners with the real team or users.
 
 # Buf configuration: lint/breaking policy, module config, dependency lock.
-/buf.yaml          @phi-labs-ltd/proto-owners
-/buf.policy.yaml   @phi-labs-ltd/proto-owners
-/buf.lock          @phi-labs-ltd/proto-owners
+/buf.yaml          @spoo-bar
+/buf.policy.yaml   @spoo-bar
+/buf.lock          @spoo-bar
 
 # CI workflows and actions, including the Buf check and BSR publish.
-/.github/          @phi-labs-ltd/proto-owners
+/.github/          @spoo-bar
 
 # Local tooling that mirrors the CI checks.
-/Justfile          @phi-labs-ltd/proto-owners
+/Justfile          @spoo-bar
