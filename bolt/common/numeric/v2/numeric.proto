@@ -11,3 +11,45 @@ message Fraction {
   // Whether the number is negative or not
   bool is_negative = 3;
 }
+
+// UInt128: Unsigned 128-bit integer, split into two 64-bit limbs.
+// Value = (hi << 64) | lo.
+message UInt128 {
+  // hi: Upper 64 bits.
+  fixed64 hi = 1;
+  // lo: Lower 64 bits.
+  fixed64 lo = 2;
+}
+
+// UInt256: Unsigned 256-bit integer, split into four 64-bit limbs.
+// Value = (limb3 << 192) | (limb2 << 128) | (limb1 << 64) | limb0.
+message UInt256 {
+  // limb3: Most significant 64 bits (bits 192-255).
+  fixed64 limb3 = 1;
+  // limb2: Bits 128-191.
+  fixed64 limb2 = 2;
+  // limb1: Bits 64-127.
+  fixed64 limb1 = 3;
+  // limb0: Least significant 64 bits (bits 0-63).
+  fixed64 limb0 = 4;
+}
+
+// Fraction128: Exact rational number with 128-bit unsigned parts, sign-magnitude.
+message Fraction128 {
+  // numerator: Magnitude of the numerator.
+  UInt128 numerator = 1;
+  // denominator: Magnitude of the denominator; required, must be nonzero.
+  UInt128 denominator = 2;
+  // is_negative: True if the value is negative.
+  bool is_negative = 3;
+}
+
+// Fraction256: Exact rational number with 256-bit unsigned parts, sign-magnitude.
+message Fraction256 {
+  // numerator: Magnitude of the numerator.
+  UInt256 numerator = 1;
+  // denominator: Magnitude of the denominator; required, must be nonzero.
+  UInt256 denominator = 2;
+  // is_negative: True if the value is negative.
+  bool is_negative = 3;
+}
