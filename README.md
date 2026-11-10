@@ -36,8 +36,8 @@ For each crate:
 - `bolt-proto` ships `bolt_proto::stream_cache`: reorg-aware caches (Latest/Safe/Finalized/Removed,
   with pruning) for `prices.v2.StreamPrices` and `settlement.public.v3.SubscribeLiquidityUpdates`.
   The tokio-based `manager` module is behind the opt-in `stream-manager` feature.
-- `bolt-proto` implements `From` in both directions between numeric v3's `UInt128` and `u128`, and
-  between `UInt256` and ruint's `U256`, which is also alloy's.
+- `bolt-proto` implements `From` in both directions between numeric v3's `UInt128` and `u128`, and,
+  behind the opt-in `num` feature, between `UInt256` and ruint's `U256`, which is also alloy's.
 
 A release publishes both crates at the version in the release title.
 

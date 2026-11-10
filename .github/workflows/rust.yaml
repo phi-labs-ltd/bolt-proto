@@ -6,7 +6,7 @@ permissions:
   contents: read
 jobs:
   rust:
-    name: Generate crate and lint
+    name: Generate crates, lint and test
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7

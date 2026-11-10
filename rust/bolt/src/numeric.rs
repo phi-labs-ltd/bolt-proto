@@ -1,4 +1,7 @@
-use crate::bolt::common::numeric::v3::{UInt128, UInt256};
+use crate::bolt::common::numeric::v3::UInt128;
+#[cfg(feature = "num")]
+use crate::bolt::common::numeric::v3::UInt256;
+#[cfg(feature = "num")]
 use ruint::aliases::U256;
 
 impl From<UInt128> for u128 {
@@ -49,6 +52,7 @@ mod tests {
         assert_eq!(UInt128::from(value), proto);
     }
 
+    #[cfg(feature = "num")]
     #[test]
     fn uint256_keeps_limb3_most_significant() {
         let proto = UInt256 {
