@@ -24,6 +24,7 @@ impl From<UInt256> for U256 {
     }
 }
 
+#[cfg(feature = "num")]
 impl From<U256> for UInt256 {
     fn from(value: U256) -> Self {
         let [limb0, limb1, limb2, limb3] = value.into_limbs();
