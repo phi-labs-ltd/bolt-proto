@@ -1,24 +1,24 @@
 syntax = "proto3";
 
-package bolt.mm.v2;
+package bolt.outpost.inventory_feeder.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
 
-// HedgedExposureService: Receives the ledger's cumulative hedged exposure per
-// instrument; implemented by the pricefeeder, which posts it on-chain.
-service HedgedExposureService {
-  // Endpoint to post hedged exposure, called by the ledger on every change.
+// InventoryFeederService: Receives hedged exposure from the pricefeeder and
+// posts it on-chain.
+service InventoryFeederService {
+  // Endpoint to post hedged exposure, called by the pricefeeder on every change.
   rpc PostHedgedExposure(PostHedgedExposureRequest) returns (PostHedgedExposureResponse);
 }
 
-// PostHedgedExposureRequest: Batch of hedged exposures to post; the ledger
+// PostHedgedExposureRequest: Batch of hedged exposures to post; the pricefeeder
 // sends every instrument on startup, then only the changed ones.
 message PostHedgedExposureRequest {
   // exposures: One entry per instrument whose hedged exposure changed.
   repeated HedgedExposure exposures = 1;
   // memo: Metadata for the batch, used for logging/tracing.
-  // e.g. ledger run_id used to correlate client requests with server logs.
+  // e.g. pricefeeder run_id used to correlate client requests with server logs.
   map<string, string> memo = 2;
 }
 
@@ -30,7 +30,7 @@ message PostHedgedExposureResponse {
 }
 
 // HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
-// latest post wins, so the ledger posts sequentially.
+// latest post wins, so the pricefeeder posts sequentially.
 message HedgedExposure {
   // instrument: Instrument in ledger orientation; base = pair base. required
   bolt.assets.v1.Pair instrument = 1;
