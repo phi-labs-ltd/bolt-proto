@@ -135,9 +135,11 @@ message Pool {
 // Trade: A swap in which a trader paid quote tokens and received base tokens.
 message Trade {
   // tx_hash: Hash/digest of the transaction.
+  // The service sends the same string for the same transaction in every response, also after a reorg. Compare it as an exact string.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
-  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
+  // Treat it as opaque. The same event in the same block has the same tx_id in every response.
+  // If a reorg puts the transaction in another block, this event gets a new tx_id. Compare it as an exact string.
   string tx_id = 2;
   // trader: Address that paid the quote tokens and received the base tokens.
   string trader = 3;
@@ -176,9 +178,11 @@ message Trade {
 // Deposit: A deposit of base tokens into the pool by a liquidity provider.
 message Deposit {
   // tx_hash: Hash/digest of the transaction.
+  // The service sends the same string for the same transaction in every response, also after a reorg. Compare it as an exact string.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
-  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
+  // Treat it as opaque. The same event in the same block has the same tx_id in every response.
+  // If a reorg puts the transaction in another block, this event gets a new tx_id. Compare it as an exact string.
   string tx_id = 2;
   // trader: Address of the liquidity provider that deposited.
   string trader = 3;
@@ -197,9 +201,11 @@ message Deposit {
 // Withdrawal: A withdrawal of pool reserves by a liquidity provider.
 message Withdrawal {
   // tx_hash: Hash/digest of the transaction.
+  // The service sends the same string for the same transaction in every response, also after a reorg. Compare it as an exact string.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
-  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
+  // Treat it as opaque. The same event in the same block has the same tx_id in every response.
+  // If a reorg puts the transaction in another block, this event gets a new tx_id. Compare it as an exact string.
   string tx_id = 2;
   // trader: Address of the liquidity provider that withdrew.
   string trader = 3;
