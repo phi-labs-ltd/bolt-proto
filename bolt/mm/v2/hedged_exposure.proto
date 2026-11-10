@@ -17,11 +17,17 @@ service HedgedExposureService {
 message PostHedgedExposureRequest {
   // exposures: One entry per instrument whose hedged exposure changed.
   repeated HedgedExposure exposures = 1;
+  // memo: Metadata for the batch, used for logging/tracing.
+  // e.g. ledger run_id used to correlate client requests with server logs.
+  map<string, string> memo = 2;
 }
 
-// PostHedgedExposureResponse: Response to PostHedgedExposureRequest. Empty on
-// success.
-message PostHedgedExposureResponse {}
+// PostHedgedExposureResponse: Response to PostHedgedExposureRequest.
+message PostHedgedExposureResponse {
+  // memo: Metadata for the batch, used for logging/tracing.
+  // e.g. tx_digest, useful for logging, but not needed for logic.
+  map<string, string> memo = 1;
+}
 
 // HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
 // latest post wins, so the ledger posts sequentially.
