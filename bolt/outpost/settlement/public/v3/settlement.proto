@@ -137,7 +137,7 @@ message Trade {
   // tx_hash: Hash/digest of the transaction.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
-  // Treat it as opaque. It can change after a reorg.
+  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
   string tx_id = 2;
   // trader: Address that paid the quote tokens and received the base tokens.
   string trader = 3;
@@ -178,6 +178,7 @@ message Deposit {
   // tx_hash: Hash/digest of the transaction.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
+  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
   string tx_id = 2;
   // trader: Address of the liquidity provider that deposited.
   string trader = 3;
@@ -198,6 +199,7 @@ message Withdrawal {
   // tx_hash: Hash/digest of the transaction.
   string tx_hash = 1;
   // tx_id: Unique identifier of this event, as a single transaction may emit multiple events.
+  // Treat it as opaque. If a reorg puts the transaction in another block, this event gets a new tx_id.
   string tx_id = 2;
   // trader: Address of the liquidity provider that withdrew.
   string trader = 3;
