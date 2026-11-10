@@ -16,6 +16,7 @@ impl From<u128> for UInt128 {
     }
 }
 
+#[cfg(feature = "num")]
 /// Convert with `.into()`: `U256::from` here is ruint's own function and doesn't compile.
 impl From<UInt256> for U256 {
     fn from(value: UInt256) -> Self {
