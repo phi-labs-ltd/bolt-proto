@@ -6,112 +6,61 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
-// HedgedExposureService: Streams the ledger's cumulative hedged quantity per
-// instrument, which the inventory feeder posts on-chain as the absolute
-// hedgedExposure of the instrument's exposure entry.
+// HedgedExposureService: Streams the ledger's cumulative hedged exposure per
+// instrument, posted on-chain by the inventory feeder.
 service HedgedExposureService {
-  // Streams the cumulative hedged exposure: one Snapshot frame on connect,
-  // then one Update frame whenever an instrument's total changes or its epoch
-  // is bumped.
+  // One Snapshot on connect, then one Update per instrument change.
   rpc SubscribeHedgedExposure(SubscribeHedgedExposureRequest) returns (stream SubscribeHedgedExposureResponse);
 }
 
-// SubscribeHedgedExposureRequest: Request for subscribing to the cumulative
-// hedged exposure.
+// SubscribeHedgedExposureRequest: Request for subscribing to hedged exposure.
 message SubscribeHedgedExposureRequest {
-  // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]),
-  // matched exactly in the ledger's orientation: {USDC, SUI} does not match
-  // an instrument keyed {SUI, USDC}. Instruments the server does not track
-  // are left out of the stream, not sent with a zero total. Empty = every
-  // instrument the server tracks.
+  // instruments: Instruments to stream, in ledger orientation (e.g. [{SUI, USDC}]).
+  // Empty = all.
   repeated bolt.assets.v1.Pair instruments = 1;
 }
 
 // SubscribeHedgedExposureResponse: One frame of the hedged exposure stream.
-//
-// The server sends exactly one Snapshot frame on connect, a consistent view
-// of every HedgedExposure the subscription matches, followed by Update
-// frames — one per instrument whose total changed or whose epoch was bumped.
-// A hedge-state change that leaves the total unchanged emits no frame. Every
-// Update for an instrument has a greater (epoch, sequence) than its Snapshot
-// entry, and no change is skipped. A reconnect starts over with a fresh
-// Snapshot. Consumers branch on the oneof tag.
 message SubscribeHedgedExposureResponse {
-  // payload: Discriminated payload — Snapshot on connect, Update thereafter.
+  // payload: Snapshot on connect, Update thereafter.
   oneof payload {
-    // snapshot: Initial bulk state, sent once at the start of the stream.
+    // snapshot: Initial state of every matched instrument, sent once.
     HedgedExposureSnapshot snapshot = 1;
-    // update: New state for a single instrument.
+    // update: New state of a single instrument.
     HedgedExposureUpdate update = 2;
   }
 }
 
-// HedgedExposureSnapshot: Initial bulk state delivered at the start of the
-// stream.
+// HedgedExposureSnapshot: Initial state delivered at the start of the stream.
 message HedgedExposureSnapshot {
-  // exposures: One HedgedExposure per instrument the subscription matches,
-  // each with its current (epoch, sequence). An instrument with no hedges yet
-  // is included with a zero total (a set Fraction256 with numerator zero).
+  // exposures: One entry per matched instrument; zero if never hedged.
   repeated HedgedExposure exposures = 1;
 }
 
-// HedgedExposureUpdate: A live frame for a single instrument, emitted
-// whenever its hedged_exposure changes or its epoch is bumped.
+// HedgedExposureUpdate: New state of a single instrument.
 message HedgedExposureUpdate {
-  // exposure: The new HedgedExposure for the affected instrument. required
+  // exposure: The instrument's new HedgedExposure. required
   HedgedExposure exposure = 1;
 }
 
-// HedgedExposure: The value the feeder posts as the instrument's on-chain
-// hedgedExposure.
-//
-// The value is absolute, not a delta: each frame replaces the previous one,
-// so a repeated or late frame is harmless once frames are ordered by
-// (epoch, sequence). The chain counts swaps itself (live exposure =
-// swapExposure + hedgedExposure, positive when long); this value supplies
-// the part the chain cannot see.
-//
-// The feeder posts with base = instrument.base and quote = instrument.quote
-// and never inverts, so the on-chain entry takes the ledger's orientation.
+// HedgedExposure: Absolute cumulative hedged exposure of one instrument; each
+// frame replaces the previous one.
 message HedgedExposure {
-  // instrument: Market this total is keyed by, in the ledger's orientation;
-  // hedged_exposure is denominated in its base leg. required
+  // instrument: Instrument in ledger orientation; base = pair base. required
   bolt.assets.v1.Pair instrument = 1;
 
-  // hedged_exposure: Carry at the start of the current epoch plus the
-  // cumulative hedged quantity since, in instrument base-asset tokens, not
-  // raw units (e.g. 1.5 SUI). Signed: positive when the hedges net bought
-  // base, which offsets a short (negative) swap exposure. The hedged quantity
-  // is the sum of the amounts assigned to hedge rows minus the unfilled
-  // remainder that close_hedging restored to the running ledger; a hedge
-  // still open counts at its full assigned amount until it is closed. Always
-  // a whole number of the base asset's raw units that fits in int128; a
-  // consumer must reject a value that is not, never round or clamp it.
-  // required
+  // hedged_exposure: Cumulative hedged quantity, signed, in base tokens (e.g.
+  // 1.5 SUI); includes the live exposure carried over a relist. required
   bolt.common.numeric.v3.Fraction256 hedged_exposure = 2;
 
-  // epoch: Generation of the total, strictly increasing per instrument and
-  // never going back, including across server restarts. Bumped when the
-  // total restarts: when the instrument's on-chain exposure entry is removed
-  // and relisted, the new epoch's carry is the live exposure the
-  // ExposureRemoved event reported (swapExposure + hedgedExposure), and
-  // hedges after the removal add to it. Example: swaps -1000, hedged +600
-  // (live -400), remove, one more hedge of +100: the new epoch carries -400
-  // and the next frame is -300. Also bumped whenever the server cannot
-  // continue the previous sequence (e.g. state rebuilt), with the carry
-  // unchanged. A higher epoch supersedes every frame of a lower one,
-  // regardless of sequence.
+  // epoch: Bumped when the total restarts (relist); never decreases, also
+  // across server restarts.
   uint64 epoch = 3;
 
-  // sequence: Strictly increasing per instrument within an epoch, including
-  // across reconnects and server restarts; restarts at 1 when epoch is
-  // bumped. Consumers keep their (epoch, sequence) high-water mark across
-  // reconnects and discard a frame whose (epoch, sequence) is not greater
-  // than the last one they applied; a Snapshot entry equal to it is
-  // already applied.
+  // sequence: Strictly increasing per instrument within an epoch; consumers
+  // drop frames whose (epoch, sequence) is not newer.
   uint64 sequence = 4;
 
-  // updated_at: Server time at which hedged_exposure or epoch last changed.
-  // Informational only; never used for ordering. required
+  // updated_at: Server time of the last change; not used for ordering. required
   google.protobuf.Timestamp updated_at = 5;
 }
