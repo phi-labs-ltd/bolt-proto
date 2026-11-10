@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package bolt.outpost.inventory_feeder.v1;
+
+import "bolt/assets/v1/assets.proto";
+import "bolt/common/numeric/v3/numeric.proto";
+
+// InventoryFeederService: Receives hedged exposure from the pricefeeder and
+// posts it on-chain.
+service InventoryFeederService {
+  // Endpoint to post hedged exposure, called by the pricefeeder on every change.
+  rpc PostHedgedExposure(PostHedgedExposureRequest) returns (PostHedgedExposureResponse);
+}
+
+// PostHedgedExposureRequest: Batch of hedged exposures to post; the pricefeeder
+// sends every instrument on startup, then only the changed ones.
+message PostHedgedExposureRequest {
+  // exposures: One entry per instrument whose hedged exposure changed.
+  repeated HedgedExposure exposures = 1;
+  // memo: Metadata for the batch, used for logging/tracing.
+  // e.g. pricefeeder run_id used to correlate client requests with server logs.
+  map<string, string> memo = 2;
+}
+
+// PostHedgedExposureResponse: Response to PostHedgedExposureRequest.
+message PostHedgedExposureResponse {
+  // memo: Metadata for the batch, used for logging/tracing.
+  // e.g. tx_digest, useful for logging, but not needed for logic.
+  map<string, string> memo = 1;
+}
+
+// HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
+// latest post wins, so the pricefeeder posts sequentially.
+message HedgedExposure {
+  // instrument: Instrument in ledger orientation; base = pair base. required
+  bolt.assets.v1.Pair instrument = 1;
+
+  // hedged_exposure: Cumulative hedged quantity, signed, in base tokens (e.g.
+  // 1.5 SUI); includes the live exposure carried over a relist. required
+  bolt.common.numeric.v3.Fraction256 hedged_exposure = 2;
+}
