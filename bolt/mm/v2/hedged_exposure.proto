@@ -4,7 +4,6 @@ package bolt.mm.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
-import "google/protobuf/timestamp.proto";
 
 // HedgedExposureService: Receives the ledger's cumulative hedged exposure per
 // instrument; implemented by the pricefeeder, which posts it on-chain.
@@ -24,8 +23,8 @@ message PostHedgedExposureRequest {
 // success.
 message PostHedgedExposureResponse {}
 
-// HedgedExposure: Absolute cumulative hedged exposure of one instrument; each
-// post replaces the previous one.
+// HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
+// latest post wins, so the ledger posts sequentially.
 message HedgedExposure {
   // instrument: Instrument in ledger orientation; base = pair base. required
   bolt.assets.v1.Pair instrument = 1;
@@ -33,15 +32,4 @@ message HedgedExposure {
   // hedged_exposure: Cumulative hedged quantity, signed, in base tokens (e.g.
   // 1.5 SUI); includes the live exposure carried over a relist. required
   bolt.common.numeric.v3.Fraction256 hedged_exposure = 2;
-
-  // epoch: Bumped when the total restarts (relist); never decreases, also
-  // across ledger restarts.
-  uint64 epoch = 3;
-
-  // sequence: Strictly increasing per instrument within an epoch; the
-  // receiver drops posts whose (epoch, sequence) is not newer.
-  uint64 sequence = 4;
-
-  // updated_at: Ledger time of the last change; not used for ordering. required
-  google.protobuf.Timestamp updated_at = 5;
 }
