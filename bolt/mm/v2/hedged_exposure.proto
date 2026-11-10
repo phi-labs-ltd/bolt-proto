@@ -6,45 +6,26 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
 import "google/protobuf/timestamp.proto";
 
-// HedgedExposureService: Streams the ledger's cumulative hedged exposure per
-// instrument, posted on-chain by the inventory feeder.
+// HedgedExposureService: Receives the ledger's cumulative hedged exposure per
+// instrument; implemented by the pricefeeder, which posts it on-chain.
 service HedgedExposureService {
-  // One Snapshot on connect, then one Update per instrument change.
-  rpc SubscribeHedgedExposure(SubscribeHedgedExposureRequest) returns (stream SubscribeHedgedExposureResponse);
+  // Endpoint to post hedged exposure, called by the ledger on every change.
+  rpc PostHedgedExposure(PostHedgedExposureRequest) returns (PostHedgedExposureResponse);
 }
 
-// SubscribeHedgedExposureRequest: Request for subscribing to hedged exposure.
-message SubscribeHedgedExposureRequest {
-  // instruments: Instruments to stream, in ledger orientation (e.g. [{SUI, USDC}]).
-  // Empty = all.
-  repeated bolt.assets.v1.Pair instruments = 1;
-}
-
-// SubscribeHedgedExposureResponse: One frame of the hedged exposure stream.
-message SubscribeHedgedExposureResponse {
-  // payload: Snapshot on connect, Update thereafter.
-  oneof payload {
-    // snapshot: Initial state of every matched instrument, sent once.
-    HedgedExposureSnapshot snapshot = 1;
-    // update: New state of a single instrument.
-    HedgedExposureUpdate update = 2;
-  }
-}
-
-// HedgedExposureSnapshot: Initial state delivered at the start of the stream.
-message HedgedExposureSnapshot {
-  // exposures: One entry per matched instrument; zero if never hedged.
+// PostHedgedExposureRequest: Batch of hedged exposures to post; the ledger
+// sends every instrument on startup, then only the changed ones.
+message PostHedgedExposureRequest {
+  // exposures: One entry per instrument whose hedged exposure changed.
   repeated HedgedExposure exposures = 1;
 }
 
-// HedgedExposureUpdate: New state of a single instrument.
-message HedgedExposureUpdate {
-  // exposure: The instrument's new HedgedExposure. required
-  HedgedExposure exposure = 1;
-}
+// PostHedgedExposureResponse: Response to PostHedgedExposureRequest. Empty on
+// success.
+message PostHedgedExposureResponse {}
 
 // HedgedExposure: Absolute cumulative hedged exposure of one instrument; each
-// frame replaces the previous one.
+// post replaces the previous one.
 message HedgedExposure {
   // instrument: Instrument in ledger orientation; base = pair base. required
   bolt.assets.v1.Pair instrument = 1;
@@ -54,13 +35,13 @@ message HedgedExposure {
   bolt.common.numeric.v3.Fraction256 hedged_exposure = 2;
 
   // epoch: Bumped when the total restarts (relist); never decreases, also
-  // across server restarts.
+  // across ledger restarts.
   uint64 epoch = 3;
 
-  // sequence: Strictly increasing per instrument within an epoch; consumers
-  // drop frames whose (epoch, sequence) is not newer.
+  // sequence: Strictly increasing per instrument within an epoch; the
+  // receiver drops posts whose (epoch, sequence) is not newer.
   uint64 sequence = 4;
 
-  // updated_at: Server time of the last change; not used for ordering. required
+  // updated_at: Ledger time of the last change; not used for ordering. required
   google.protobuf.Timestamp updated_at = 5;
 }
