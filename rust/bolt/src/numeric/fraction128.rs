@@ -4,8 +4,8 @@ use std::cmp::Ordering;
 impl Fraction128 {
     /// Compares the rational values, so 1/2 and 2/4 are `Equal`.
     ///
-    /// This is a method, not `Ord`/`PartialOrd`: prost derives `PartialEq` structurally
-    /// (1/2 != 2/4), and an ordering that disagrees with `==` would break the trait contracts.
+    /// Unlike `Ord`, this ignores representation, so it is not consistent with `==`
+    /// (prost derives `PartialEq` structurally, so 1/2 != 2/4).
     ///
     /// A missing numerator is zero, and zero is never negative whatever `is_negative` says.
     /// Returns `None` if either denominator is missing or zero.
@@ -24,6 +24,30 @@ impl Fraction128 {
         } else {
             magnitude
         })
+    }
+}
+
+/// Orders by rational value, so 1/3 < 1/2. Fractions of equal value (1/2 and 2/4) are
+/// then ordered by their fields, which keeps `cmp` consistent with the derived `==`.
+/// Fractions with a missing or zero denominator are invalid and sort before every valid one.
+/// Use `cmp_value` to compare values alone.
+impl Ord for Fraction128 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.cmp_value(other)
+            .unwrap_or_else(|| parts(self).is_some().cmp(&parts(other).is_some()))
+            .then_with(|| {
+                (self.numerator, self.denominator, self.is_negative).cmp(&(
+                    other.numerator,
+                    other.denominator,
+                    other.is_negative,
+                ))
+            })
+    }
+}
+
+impl PartialOrd for Fraction128 {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -136,5 +160,34 @@ mod tests {
             cmp(&frac(max, max, false), &frac(max - 1, max - 1, false)),
             Some(Ordering::Equal)
         );
+    }
+
+    #[test]
+    fn ord_is_consistent_with_eq() {
+        let half = frac(1, 2, false);
+        let two_fourths = frac(2, 4, false);
+        assert_ne!(half, two_fourths);
+        assert_ne!(half.cmp(&two_fourths), Ordering::Equal);
+        assert_eq!(half.cmp(&two_fourths), two_fourths.cmp(&half).reverse());
+        assert_eq!(half.cmp(&half), Ordering::Equal);
+        // Value dominates the field tie-break.
+        assert!(frac(1, 3, false) < half && half < frac(2, 3, false));
+        assert!(frac(5, 1, true) < frac(0, 1, false));
+    }
+
+    #[test]
+    fn ord_puts_invalid_denominators_first() {
+        let zero_den = frac(1, 0, false);
+        let unset_den = Fraction128 {
+            numerator: Some(UInt128::from(1u128)),
+            denominator: None,
+            is_negative: false,
+        };
+        let negative = frac(9, 1, true);
+        assert!(zero_den < negative && unset_den < negative);
+        assert!(unset_den < zero_den);
+        let mut all = vec![frac(1, 2, false), zero_den, negative, unset_den];
+        all.sort();
+        assert_eq!(all, vec![unset_den, zero_den, negative, frac(1, 2, false)]);
     }
 }

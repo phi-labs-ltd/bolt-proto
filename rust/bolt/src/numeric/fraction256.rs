@@ -5,8 +5,8 @@ use std::cmp::Ordering;
 impl Fraction256 {
     /// Compares the rational values, so 1/2 and 2/4 are `Equal`.
     ///
-    /// This is a method, not `Ord`/`PartialOrd`: prost derives `PartialEq` structurally
-    /// (1/2 != 2/4), and an ordering that disagrees with `==` would break the trait contracts.
+    /// Unlike `Ord`, this ignores representation, so it is not consistent with `==`
+    /// (prost derives `PartialEq` structurally, so 1/2 != 2/4).
     ///
     /// A missing numerator is zero, and zero is never negative whatever `is_negative` says.
     /// Returns `None` if either denominator is missing or zero.
@@ -25,6 +25,30 @@ impl Fraction256 {
         } else {
             magnitude
         })
+    }
+}
+
+/// Orders by rational value, so 1/3 < 1/2. Fractions of equal value (1/2 and 2/4) are
+/// then ordered by their fields, which keeps `cmp` consistent with the derived `==`.
+/// Fractions with a missing or zero denominator are invalid and sort before every valid one.
+/// Use `cmp_value` to compare values alone.
+impl Ord for Fraction256 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.cmp_value(other)
+            .unwrap_or_else(|| parts(self).is_some().cmp(&parts(other).is_some()))
+            .then_with(|| {
+                (self.numerator, self.denominator, self.is_negative).cmp(&(
+                    other.numerator,
+                    other.denominator,
+                    other.is_negative,
+                ))
+            })
+    }
+}
+
+impl PartialOrd for Fraction256 {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -105,5 +129,27 @@ mod tests {
             frac(max - one, max, false).cmp_value(&frac(max, max - one, false)),
             Some(Ordering::Less)
         );
+    }
+
+    #[test]
+    fn ord_is_consistent_with_eq() {
+        let half = small(1, 2, false);
+        let two_fourths = small(2, 4, false);
+        assert_ne!(half, two_fourths);
+        assert_ne!(half.cmp(&two_fourths), Ordering::Equal);
+        assert_eq!(half.cmp(&two_fourths), two_fourths.cmp(&half).reverse());
+        assert_eq!(half.cmp(&half), Ordering::Equal);
+        assert!(small(1, 3, false) < half && half < small(2, 3, false));
+        assert!(small(5, 1, true) < small(0, 1, false));
+    }
+
+    #[test]
+    fn ord_puts_invalid_denominators_first() {
+        let zero_den = small(1, 0, false);
+        let negative = small(9, 1, true);
+        assert!(zero_den < negative);
+        let mut all = vec![small(1, 2, false), zero_den, negative];
+        all.sort();
+        assert_eq!(all, vec![zero_den, negative, small(1, 2, false)]);
     }
 }
