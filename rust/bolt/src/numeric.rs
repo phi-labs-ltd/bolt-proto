@@ -23,7 +23,7 @@ impl From<u128> for UInt128 {
 // not the field-declaration order a derive would use.
 impl Ord for UInt128 {
     fn cmp(&self, other: &Self) -> Ordering {
-        (self.hi, self.lo).cmp(&(other.hi, other.lo))
+        u128::from(self.clone()).cmp(&u128::from(other.clone()))
     }
 }
 
