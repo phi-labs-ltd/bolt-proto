@@ -1,8 +1,8 @@
 use crate::bolt::common::numeric::v3::UInt128;
-#[cfg(feature = "num")]
 use crate::bolt::common::numeric::v3::UInt256;
 #[cfg(feature = "num")]
 use ruint::aliases::U256;
+use std::cmp::Ordering;
 
 impl From<UInt128> for u128 {
     fn from(value: UInt128) -> Self {
@@ -16,6 +16,37 @@ impl From<u128> for UInt128 {
             hi: (value >> 64) as u64,
             lo: value as u64,
         }
+    }
+}
+
+// Eq/PartialEq are derived by prost; ordering is numeric (most significant limb first),
+// not the field-declaration order a derive would use.
+impl Ord for UInt128 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.hi, self.lo).cmp(&(other.hi, other.lo))
+    }
+}
+
+impl PartialOrd for UInt128 {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for UInt256 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.limb3, self.limb2, self.limb1, self.limb0).cmp(&(
+            other.limb3,
+            other.limb2,
+            other.limb1,
+            other.limb0,
+        ))
+    }
+}
+
+impl PartialOrd for UInt256 {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -66,5 +97,34 @@ mod tests {
         let converted: U256 = proto.into();
         assert_eq!(converted, value);
         assert_eq!(UInt256::from(value), proto);
+    }
+
+    #[test]
+    fn uint128_orders_numerically() {
+        let small = UInt128 {
+            hi: 0,
+            lo: u64::MAX,
+        };
+        let big = UInt128 { hi: 1, lo: 0 };
+        assert!(small < big && big > small && small <= small);
+        assert_eq!(small.cmp(&small), Ordering::Equal);
+    }
+
+    #[test]
+    fn uint256_orders_numerically() {
+        let small = UInt256 {
+            limb3: 0,
+            limb2: u64::MAX,
+            limb1: u64::MAX,
+            limb0: u64::MAX,
+        };
+        let big = UInt256 {
+            limb3: 1,
+            limb2: 0,
+            limb1: 0,
+            limb0: 0,
+        };
+        assert!(small < big && big > small && small <= small);
+        assert_eq!(small.cmp(&small), Ordering::Equal);
     }
 }
