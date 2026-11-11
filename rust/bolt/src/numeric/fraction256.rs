@@ -29,8 +29,8 @@ impl Fraction256 {
 }
 
 fn parts(fraction: &Fraction256) -> Option<(U256, U256)> {
-    let numerator = fraction.numerator.clone().map_or(U256::ZERO, Into::into);
-    let denominator: U256 = fraction.denominator.clone()?.into();
+    let numerator = fraction.numerator.map_or(U256::ZERO, Into::into);
+    let denominator: U256 = fraction.denominator?.into();
     (!denominator.is_zero()).then_some((numerator, denominator))
 }
 

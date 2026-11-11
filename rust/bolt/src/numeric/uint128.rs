@@ -20,7 +20,7 @@ impl From<u128> for UInt128 {
 // not the field-declaration order a derive would use.
 impl Ord for UInt128 {
     fn cmp(&self, other: &Self) -> Ordering {
-        u128::from(self.clone()).cmp(&u128::from(other.clone()))
+        u128::from(*self).cmp(&u128::from(*other))
     }
 }
 
@@ -38,7 +38,7 @@ mod tests {
     fn keeps_hi_before_lo() {
         let proto = UInt128 { hi: 2, lo: 1 };
         let value: u128 = (2 << 64) + 1;
-        assert_eq!(u128::from(proto.clone()), value);
+        assert_eq!(u128::from(proto), value);
         assert_eq!(UInt128::from(value), proto);
     }
 

@@ -28,8 +28,8 @@ impl Fraction128 {
 }
 
 fn parts(fraction: &Fraction128) -> Option<(u128, u128)> {
-    let numerator = fraction.numerator.clone().map_or(0, u128::from);
-    let denominator = u128::from(fraction.denominator.clone()?);
+    let numerator = fraction.numerator.map_or(0, u128::from);
+    let denominator = u128::from(fraction.denominator?);
     (denominator != 0).then_some((numerator, denominator))
 }
 

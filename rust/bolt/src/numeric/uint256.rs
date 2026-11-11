@@ -54,7 +54,7 @@ mod tests {
         };
         let value =
             (U256::from(4) << 192) + (U256::from(3) << 128) + (U256::from(2) << 64) + U256::from(1);
-        let converted: U256 = proto.clone().into();
+        let converted: U256 = proto.into();
         assert_eq!(converted, value);
         assert_eq!(UInt256::from(value), proto);
     }
