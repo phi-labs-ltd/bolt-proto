@@ -39,6 +39,7 @@ message SubscribeMarketLedgerRequest {
 // SubscribeMarketLedgerResponse: One frame of the ledger stream.
 message SubscribeMarketLedgerResponse {
   // events: Ledger events for each instrument, one per active ledger.
+  // The stream sends events of all networks. Use ledger.network_id to tell them apart.
   repeated MarketLedgerEvent events = 1;
 }
 
@@ -48,11 +49,14 @@ message SubscribeMarketLedgerResponse {
 message GetEngineConfigsForInstrumentRequest {
   // instrument: Market to look up (e.g. {SUI, USDC}). required
   bolt.assets.v1.Pair instrument = 1;
+  // network_id: Network to look up, as the public settlement reports it (e.g. "84532" for Base Sepolia). required
+  // The service answers INVALID_ARGUMENT when it is empty or not configured.
+  string network_id = 2;
 }
 
 // GetEngineConfigsForInstrumentResponse: Engine configs for the requested instrument.
 message GetEngineConfigsForInstrumentResponse {
-  // configs: Up to two configs (one per direction) for the instrument.
+  // configs: Up to two configs (one per direction) for the instrument on network_id.
   repeated EngineConfig configs = 1;
 }
 
@@ -61,7 +65,7 @@ message GetEngineConfigsRequest {}
 
 // GetEngineConfigsResponse: All engine configs across all instruments.
 message GetEngineConfigsResponse {
-  // configs: All persisted engine configs.
+  // configs: All persisted engine configs. Rows of all networks are returned. Use network_id to tell them apart.
   repeated EngineConfig configs = 1;
 }
 
@@ -71,6 +75,9 @@ message GetEngineConfigsResponse {
 message GetAssetConfigRequest {
   // asset: Base asset symbol to look up (e.g. "SUI").
   string asset = 1;
+  // network_id: Network to look up, as the public settlement reports it (e.g. "84532" for Base Sepolia). required
+  // The service answers INVALID_ARGUMENT when it is empty or not configured.
+  string network_id = 2;
 }
 
 // GetAssetConfigResponse: The asset config for the requested asset.
@@ -84,7 +91,7 @@ message GetAssetConfigsRequest {}
 
 // GetAssetConfigsResponse: All asset configs across all assets.
 message GetAssetConfigsResponse {
-  // configs: All persisted asset configs.
+  // configs: All persisted asset configs. Rows of all networks are returned. Use network_id to tell them apart.
   repeated AssetConfig configs = 1;
 }
 
@@ -94,6 +101,9 @@ message GetAssetConfigsResponse {
 message GetOpenMarketLedgerRequest {
   // instrument: Market to look up (e.g. {SUI, USDC}). required
   bolt.assets.v1.Pair instrument = 1;
+  // network_id: Network to look up, as the public settlement reports it (e.g. "84532" for Base Sepolia). required
+  // The service answers INVALID_ARGUMENT when it is empty or not configured.
+  string network_id = 2;
 }
 
 // GetOpenMarketLedgerResponse: The running ledger for the requested instrument.
@@ -108,6 +118,7 @@ message GetOpenMarketLedgersRequest {}
 // GetOpenMarketLedgersResponse: All running ledgers across every instrument.
 message GetOpenMarketLedgersResponse {
   // ledgers: Running ledgers ordered by instrument.
+  // Rows of all networks are returned. Use network_id to tell them apart.
   repeated MarketLedger ledgers = 1;
 }
 
