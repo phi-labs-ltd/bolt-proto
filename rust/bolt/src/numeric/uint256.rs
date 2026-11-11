@@ -1,9 +1,7 @@
 use crate::bolt::common::numeric::v3::UInt256;
-#[cfg(feature = "num")]
 use ruint::aliases::U256;
 use std::cmp::Ordering;
 
-#[cfg(feature = "num")]
 /// Convert with `.into()`: `U256::from` here is ruint's own function and doesn't compile.
 impl From<UInt256> for U256 {
     fn from(value: UInt256) -> Self {
@@ -11,7 +9,6 @@ impl From<UInt256> for U256 {
     }
 }
 
-#[cfg(feature = "num")]
 impl From<U256> for UInt256 {
     fn from(value: U256) -> Self {
         let [limb0, limb1, limb2, limb3] = value.into_limbs();
@@ -47,7 +44,6 @@ impl PartialOrd for UInt256 {
 mod tests {
     use super::*;
 
-    #[cfg(feature = "num")]
     #[test]
     fn keeps_limb3_most_significant() {
         let proto = UInt256 {
