@@ -73,6 +73,9 @@ message EngineConfig {
   // gap_threshold_bps: |gap| in bps between gate mid and residual VWAP at
   // which neutral flips to favorable / adverse. Zero = always non-neutral.
   bolt.common.numeric.v2.Fraction gap_threshold_bps = 5;
+  // network_id: Network this config governs, as the public settlement reports it (e.g. "84532" for Base Sepolia).
+  // required on upsert. The service answers INVALID_ARGUMENT when it is empty or not configured.
+  string network_id = 6;
 }
 
 // AssetConfig: Per-asset, sign-agnostic policy. Inventory-at-risk duration and
@@ -82,7 +85,7 @@ message EngineConfig {
 // PublicMarketLedgerService. Not carried on MarketLedgerEvent and not required by
 // MM (MM is a pure executor; it does not act on these values).
 message AssetConfig {
-  // asset: Base asset symbol (e.g. "SUI"). Primary key.
+  // asset: Base asset symbol (e.g. "SUI"). Unique per network_id.
   string asset = 1;
   // time_threshold: How long unhedged delta may sit before a TIME trigger fires.
   // Uses google.protobuf.Duration for unit safety and consistency with TimeoutStep.delay.
@@ -93,6 +96,9 @@ message AssetConfig {
   // in_progress_expiry: How long an in_progress ledger may live before being marked
   // abandoned at subscribe time. Must be > 0.
   google.protobuf.Duration in_progress_expiry = 4;
+  // network_id: Network this config governs, as the public settlement reports it (e.g. "84532" for Base Sepolia).
+  // required on upsert. The service answers INVALID_ARGUMENT when it is empty or not configured.
+  string network_id = 5;
 }
 
 // HedgeOrder: Tracks a hedge from service-side trigger evaluation through CloseHedging.
@@ -134,6 +140,9 @@ message HedgeOrder {
   google.protobuf.Timestamp created_at = 13;
   // updated_at: When this order row was last modified.
   google.protobuf.Timestamp updated_at = 14;
+  // network_id: Network of the swaps that this hedge order offsets, as the public settlement reports it (e.g. "84532" for Base Sepolia).
+  // It is always set, whatever the field_mask of SubscribeMarketLedgerRequest says.
+  string network_id = 15;
 }
 
 // MarketLedger: A market ledger row, keyed by instrument.
@@ -149,14 +158,17 @@ message MarketLedger {
   bolt.common.numeric.v2.Fraction vwap = 4;
   // status: Current lifecycle state of this ledger row.
   bolt.outpost.market_ledger.v2.LedgerStatus status = 5;
-  // initial_height: Sui checkpoint height of the first swap in this ledger.
+  // initial_height: Block height (Sui: checkpoint) of the first swap in this ledger.
   uint64 initial_height = 6;
-  // last_height: Sui checkpoint height of the most recent swap in this ledger.
+  // last_height: Block height (Sui: checkpoint) of the most recent swap in this ledger.
   uint64 last_height = 7;
   // created_at: When this ledger row was first created.
   google.protobuf.Timestamp created_at = 8;
   // updated_at: When this ledger row was last modified.
   google.protobuf.Timestamp updated_at = 9;
+  // network_id: Network of the swaps in this ledger, as the public settlement reports it (e.g. "84532" for Base Sepolia).
+  // It is always set, whatever the field_mask of SubscribeMarketLedgerRequest says.
+  string network_id = 10;
 }
 
 // MarketLedgerEvent: Live ledger state for one instrument, emitted after processing a block

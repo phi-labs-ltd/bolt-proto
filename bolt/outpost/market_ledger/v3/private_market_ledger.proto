@@ -114,7 +114,7 @@ message CloseHedgingResponse {
 
 // UpsertEngineConfigRequest: Request to insert or replace an engine config.
 message UpsertEngineConfigRequest {
-  // config: The engine config to upsert.
+  // config: The engine config to upsert. config.network_id is required.
   EngineConfig config = 1;
 }
 
@@ -128,7 +128,7 @@ message UpsertEngineConfigResponse {
 
 // UpsertAssetConfigRequest: Request to insert or replace an asset config.
 message UpsertAssetConfigRequest {
-  // config: The asset config to upsert.
+  // config: The asset config to upsert. config.network_id is required.
   AssetConfig config = 1;
 }
 
