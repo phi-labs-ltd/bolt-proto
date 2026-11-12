@@ -3,9 +3,9 @@
 use crate::bolt::common::domain_types::v1::Bps;
 use crate::google::r#type::Decimal as ProtoDecimal;
 use core::fmt;
-use core::ops::Mul;
+use core::ops::{Add, Mul};
 use core::str::FromStr;
-use num_traits::CheckedMul;
+use num_traits::{CheckedMul, One, Zero};
 use rust_decimal::Decimal;
 
 const RATIO_SHIFT: u32 = 4;
@@ -75,6 +75,39 @@ impl TryFrom<Bps> for Decimal {
     }
 }
 
+impl Add for Bps {
+    type Output = Self;
+
+    /// Panics if either value is missing or malformed, or on overflow.
+    fn add(self, rhs: Self) -> Self {
+        let sum = self.to_bps().and_then(|a| {
+            let b = rhs.to_bps()?;
+            a.checked_add(b).ok_or(BpsConversionError::Overflow)
+        });
+        Self::from_bps(sum.expect("Bps add failed"))
+    }
+}
+
+impl Zero for Bps {
+    fn zero() -> Self {
+        Self::from_bps(Decimal::ZERO)
+    }
+
+    fn is_zero(&self) -> bool {
+        self.to_bps().is_ok_and(|v| v.is_zero())
+    }
+}
+
+impl One for Bps {
+    fn one() -> Self {
+        Self::from_bps(Decimal::ONE)
+    }
+
+    fn is_one(&self) -> bool {
+        self.to_bps().is_ok_and(|v| v.is_one())
+    }
+}
+
 impl Mul for Bps {
     type Output = Self;
 
@@ -141,5 +174,19 @@ mod tests {
         assert_eq!(bps("1.5").checked_mul(&bps("2")), Some(bps("3")));
         assert_eq!(bps("x").checked_mul(&bps("2")), None);
         assert_eq!(Bps::default().checked_mul(&bps("2")), None);
+    }
+
+    #[test]
+    fn zero_and_one() {
+        assert!(Bps::zero().is_zero());
+        assert!(bps("0.00").is_zero());
+        assert!(!Bps::default().is_zero());
+        assert!(Bps::one().is_one());
+        assert!(bps("1.0").is_one());
+        assert!(!bps("x").is_one());
+        let x = bps("1.2");
+        assert_eq!(x.clone() * Bps::one(), x);
+        assert_eq!(x.clone() + Bps::zero(), x);
+        assert_eq!(bps("1.5") + bps("2"), bps("3.5"));
     }
 }
