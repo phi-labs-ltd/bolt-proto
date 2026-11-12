@@ -1,10 +1,5 @@
-//! Conversions and `num_traits` impls for [`Bps`].
-//!
-//! `Bps.value` is a `google.type.Decimal` string in basis points (`"1.2"` is 1.2 bps).
-//! A ratio is `bps / 10_000`, so `0.0001` is 1 bps and `1` is 100%.
-//!
-//! `Bps` is a `String` wrapper, so it can't be `Copy` or build non-empty consts. That rules
-//! out `AsPrimitive`, `ConstZero` and `ConstOne`; `FromPrimitive` and `CheckedMul` are here.
+//! `Bps.value` is a decimal string in basis points. A ratio is `bps / 10_000` (`0.0001` is 1 bps).
+//! `Bps` isn't `Copy` or const-constructible, so `AsPrimitive`, `ConstZero` and `ConstOne` can't be implemented.
 
 use crate::bolt::common::domain_types::v1::Bps;
 use crate::google::r#type::Decimal as ProtoDecimal;
@@ -14,19 +9,13 @@ use core::str::FromStr;
 use num_traits::{CheckedMul, FromPrimitive};
 use rust_decimal::Decimal;
 
-/// Decimal places between bps and a ratio (1 bps = 1e-4).
 const RATIO_SHIFT: u32 = 4;
 
-/// Why a [`Bps`] and a [`Decimal`] could not be converted.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BpsConversionError {
-    /// `Bps.value` is not set.
     Missing,
-    /// `Bps.value` is not a valid decimal.
     Invalid(String),
-    /// The value is too large for a [`Decimal`].
     Overflow,
-    /// The value has too many decimal places for a [`Decimal`] to hold exactly.
     Inexact,
 }
 
@@ -44,7 +33,6 @@ impl fmt::Display for BpsConversionError {
 impl std::error::Error for BpsConversionError {}
 
 impl Bps {
-    /// A `Bps` from a decimal number of basis points.
     pub fn from_bps(bps: Decimal) -> Self {
         Self {
             value: Some(ProtoDecimal {
@@ -53,7 +41,6 @@ impl Bps {
         }
     }
 
-    /// The value as a [`Decimal`] number of basis points.
     pub fn to_bps(&self) -> Result<Decimal, BpsConversionError> {
         let s = &self
             .value
@@ -66,7 +53,6 @@ impl Bps {
     }
 }
 
-/// Converts a ratio (`0.0001` is 1 bps, `1` is 100%).
 impl TryFrom<Decimal> for Bps {
     type Error = BpsConversionError;
 
@@ -78,8 +64,6 @@ impl TryFrom<Decimal> for Bps {
     }
 }
 
-/// Converts to a ratio (`0.0001` is 1 bps, `1` is 100%). Fallible because the wire value is
-/// a string that may be missing or malformed.
 impl TryFrom<Bps> for Decimal {
     type Error = BpsConversionError;
 
@@ -95,15 +79,13 @@ impl TryFrom<Bps> for Decimal {
 impl Mul for Bps {
     type Output = Self;
 
-    /// Multiplies as numbers of basis points (`2 bps * 3 bps = 6 bps`). Panics if either
-    /// value is missing or malformed, or on overflow; use [`CheckedMul`] to avoid that.
+    /// Panics if either value is missing or malformed, or on overflow; use `checked_mul` instead.
     fn mul(self, rhs: Self) -> Self {
         self.checked_mul(&rhs).expect("Bps mul failed")
     }
 }
 
 impl CheckedMul for Bps {
-    /// `None` if either value is missing or malformed, or on overflow.
     fn checked_mul(&self, v: &Self) -> Option<Self> {
         let product = self.to_bps().ok()?.checked_mul(v.to_bps().ok()?)?;
         Some(Self::from_bps(product))
@@ -111,7 +93,6 @@ impl CheckedMul for Bps {
 }
 
 impl FromPrimitive for Bps {
-    /// `n` whole basis points.
     fn from_i64(n: i64) -> Option<Self> {
         Some(Self::from_bps(Decimal::from(n)))
     }
@@ -120,7 +101,6 @@ impl FromPrimitive for Bps {
         Some(Self::from_bps(Decimal::from(n)))
     }
 
-    /// `None` for NaN, infinity or out of range.
     fn from_f64(n: f64) -> Option<Self> {
         Decimal::from_f64(n).map(Self::from_bps)
     }
