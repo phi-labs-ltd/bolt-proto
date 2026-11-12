@@ -5,6 +5,7 @@ use crate::google::r#type::Decimal as ProtoDecimal;
 use core::fmt;
 use core::str::FromStr;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 
 const RATIO_SHIFT: u32 = 4;
 
@@ -31,11 +32,11 @@ impl std::error::Error for BpsConversionError {}
 
 impl Bps {
     pub fn zero() -> Self {
-        Self::from_bps(Decimal::ZERO)
+        Self::from_bps(dec!(0))
     }
 
     pub fn one() -> Self {
-        Self::from_bps(Decimal::ONE)
+        Self::from_bps(dec!(1))
     }
 
     fn from_bps(bps: Decimal) -> Self {
