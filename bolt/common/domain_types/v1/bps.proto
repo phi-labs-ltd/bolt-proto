@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package bolt.common.domain_types.v1;
 
-import "bolt/common/numeric/v3/numeric.proto";
+import "google/type/decimal.proto";
 
 // Bps: Basis points, where 1 bps = 0.01% (e.g. 50 bps = 0.5%).
 message Bps {
-  // value: Exact number of basis points, may be fractional or negative (e.g. 6/5 for 1.2 bps). 10000 = 100%. Required.
-  bolt.common.numeric.v3.Fraction128 value = 1;
+  // value: Number of basis points as a decimal, may be fractional or negative (e.g. "1.2" for 1.2 bps). 10000 = 100%. Required.
+  google.type.Decimal value = 1;
 }
