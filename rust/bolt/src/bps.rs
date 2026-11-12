@@ -32,7 +32,7 @@ impl fmt::Display for BpsConversionError {
 impl std::error::Error for BpsConversionError {}
 
 impl Bps {
-    pub fn from_bps(bps: Decimal) -> Self {
+    fn from_bps(bps: Decimal) -> Self {
         Self {
             value: Some(ProtoDecimal {
                 value: bps.normalize().to_string(),
@@ -40,7 +40,7 @@ impl Bps {
         }
     }
 
-    pub fn to_bps(&self) -> Result<Decimal, BpsConversionError> {
+    fn to_bps(&self) -> Result<Decimal, BpsConversionError> {
         let s = &self
             .value
             .as_ref()
