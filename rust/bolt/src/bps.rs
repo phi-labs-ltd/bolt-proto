@@ -1,5 +1,4 @@
 //! `Bps.value` is a decimal string in basis points. A ratio is `bps / 10_000` (`0.0001` is 1 bps).
-//! `Bps` isn't `Copy` or const-constructible, so `AsPrimitive`, `ConstZero` and `ConstOne` can't be implemented.
 
 use crate::bolt::common::domain_types::v1::Bps;
 use crate::google::r#type::Decimal as ProtoDecimal;
