@@ -6,3 +6,4 @@
 /rust/target
 /rust/Cargo.lock
 /go
+/rust/bolt/src/google.*.rs
