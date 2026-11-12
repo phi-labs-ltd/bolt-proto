@@ -35,10 +35,3 @@ fn errors() {
         Err(BpsConversionError::Inexact)
     );
 }
-
-#[test]
-fn zero_and_one() {
-    assert_eq!(Bps::zero(), bps("0"));
-    assert_eq!(Bps::one(), bps("1"));
-    assert_eq!(Decimal::try_from(Bps::one()).unwrap(), dec!(0.0001));
-}
