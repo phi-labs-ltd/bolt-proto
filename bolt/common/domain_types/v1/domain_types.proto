@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package bolt.common.domain_types.v1;
+
+// Bps: Basis points, where 1 bps = 0.01% (e.g. 50 bps = 0.5%).
+message Bps {
+  // value: Number of basis points as an integer (e.g. 25 for 0.25%). 10000 = 100%.
+  uint32 value = 1;
+}
