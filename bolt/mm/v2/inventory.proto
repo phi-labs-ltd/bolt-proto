@@ -14,6 +14,8 @@ service InventoryService {
   rpc SubscribeInventory(SubscribeInventoryRequest) returns (stream SubscribeInventoryResponse);
   // Get the latest inventory for all requested instruments on the running ledger.
   rpc GetLatestInventory(GetLatestInventoryRequest) returns (GetLatestInventoryResponse);
+  // Endpoint to query the inventory service info.
+  rpc Info(InfoRequest) returns (InfoResponse);
 }
 
 // SubscribeInventoryRequest: Request for subscribing to the running ledger
@@ -54,6 +56,16 @@ message GetLatestInventoryResponse {
   // inventories: One Inventory per running ledger the request matches.
   // Rows of all networks are returned. Use Inventory.network_id to tell them apart.
   repeated Inventory inventories = 1;
+}
+
+// InfoRequest: Queries for inventory service info.
+message InfoRequest {}
+
+// InfoResponse: Response for InfoRequest.
+message InfoResponse {
+  // network_ids: Identifiers of the networks whose inventory rows this service serves (e.g. "84532" for Base Sepolia).
+  // They match Inventory.network_id.
+  repeated string network_ids = 1;
 }
 
 // Snapshot: Initial bulk state delivered at the start of the stream.
