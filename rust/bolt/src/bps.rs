@@ -3,9 +3,7 @@
 use crate::bolt::common::domain_types::v1::Bps;
 use crate::google::r#type::Decimal as ProtoDecimal;
 use core::fmt;
-use core::ops::{Add, Mul};
 use core::str::FromStr;
-use num_traits::{CheckedMul, One, Zero};
 use rust_decimal::Decimal;
 
 const RATIO_SHIFT: u32 = 4;
@@ -32,6 +30,14 @@ impl fmt::Display for BpsConversionError {
 impl std::error::Error for BpsConversionError {}
 
 impl Bps {
+    pub fn zero() -> Self {
+        Self::from_bps(Decimal::ZERO)
+    }
+
+    pub fn one() -> Self {
+        Self::from_bps(Decimal::ONE)
+    }
+
     fn from_bps(bps: Decimal) -> Self {
         Self {
             value: Some(ProtoDecimal {
@@ -72,55 +78,6 @@ impl TryFrom<Bps> for Decimal {
             .set_scale(ratio.scale() + RATIO_SHIFT)
             .map_err(|_| BpsConversionError::Inexact)?;
         Ok(ratio)
-    }
-}
-
-impl Add for Bps {
-    type Output = Self;
-
-    /// Panics if either value is missing or malformed, or on overflow.
-    fn add(self, rhs: Self) -> Self {
-        let sum = self.to_bps().and_then(|a| {
-            let b = rhs.to_bps()?;
-            a.checked_add(b).ok_or(BpsConversionError::Overflow)
-        });
-        Self::from_bps(sum.expect("Bps add failed"))
-    }
-}
-
-impl Zero for Bps {
-    fn zero() -> Self {
-        Self::from_bps(Decimal::ZERO)
-    }
-
-    fn is_zero(&self) -> bool {
-        self.to_bps().is_ok_and(|v| v.is_zero())
-    }
-}
-
-impl One for Bps {
-    fn one() -> Self {
-        Self::from_bps(Decimal::ONE)
-    }
-
-    fn is_one(&self) -> bool {
-        self.to_bps().is_ok_and(|v| v.is_one())
-    }
-}
-
-impl Mul for Bps {
-    type Output = Self;
-
-    /// Panics if either value is missing or malformed, or on overflow; use `checked_mul` instead.
-    fn mul(self, rhs: Self) -> Self {
-        self.checked_mul(&rhs).expect("Bps mul failed")
-    }
-}
-
-impl CheckedMul for Bps {
-    fn checked_mul(&self, v: &Self) -> Option<Self> {
-        let product = self.to_bps().ok()?.checked_mul(v.to_bps().ok()?)?;
-        Some(Self::from_bps(product))
     }
 }
 

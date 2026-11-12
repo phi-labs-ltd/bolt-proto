@@ -41,23 +41,8 @@ fn errors() {
 }
 
 #[test]
-fn mul() {
-    assert_eq!(bps("2") * bps("3"), bps("6"));
-    assert_eq!(bps("1.5").checked_mul(&bps("2")), Some(bps("3")));
-    assert_eq!(bps("x").checked_mul(&bps("2")), None);
-    assert_eq!(Bps::default().checked_mul(&bps("2")), None);
-}
-
-#[test]
 fn zero_and_one() {
-    assert!(Bps::zero().is_zero());
-    assert!(bps("0.00").is_zero());
-    assert!(!Bps::default().is_zero());
-    assert!(Bps::one().is_one());
-    assert!(bps("1.0").is_one());
-    assert!(!bps("x").is_one());
-    let x = bps("1.2");
-    assert_eq!(x.clone() * Bps::one(), x);
-    assert_eq!(x.clone() + Bps::zero(), x);
-    assert_eq!(bps("1.5") + bps("2"), bps("3.5"));
+    assert_eq!(Bps::zero(), bps("0"));
+    assert_eq!(Bps::one(), bps("1"));
+    assert_eq!(Decimal::try_from(Bps::one()).unwrap(), dec("0.0001"));
 }
