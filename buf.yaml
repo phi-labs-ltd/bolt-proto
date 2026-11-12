@@ -1,5 +1,8 @@
 version: v2
 name: buf.build/philabs/bolt-proto
 
+deps:
+  - buf.build/googleapis/googleapis
+
 policies:
   - policy: buf.policy.yaml
