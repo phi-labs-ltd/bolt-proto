@@ -32,11 +32,11 @@ impl std::error::Error for BpsConversionError {}
 
 impl Bps {
     pub fn zero() -> Self {
-        Self::from_bps(dec!(0))
+        Self::try_from(dec!(0)).expect("zero fits in Bps")
     }
 
     pub fn one() -> Self {
-        Self::from_bps(dec!(1))
+        Self::try_from(dec!(0.0001)).expect("one bps fits in Bps")
     }
 
     fn from_bps(bps: Decimal) -> Self {
