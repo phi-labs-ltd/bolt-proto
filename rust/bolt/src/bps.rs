@@ -5,7 +5,7 @@ use crate::google::r#type::Decimal as ProtoDecimal;
 use core::fmt;
 use core::ops::Mul;
 use core::str::FromStr;
-use num_traits::{CheckedMul, FromPrimitive};
+use num_traits::CheckedMul;
 use rust_decimal::Decimal;
 
 const RATIO_SHIFT: u32 = 4;
@@ -91,20 +91,6 @@ impl CheckedMul for Bps {
     }
 }
 
-impl FromPrimitive for Bps {
-    fn from_i64(n: i64) -> Option<Self> {
-        Some(Self::from_bps(Decimal::from(n)))
-    }
-
-    fn from_u64(n: u64) -> Option<Self> {
-        Some(Self::from_bps(Decimal::from(n)))
-    }
-
-    fn from_f64(n: f64) -> Option<Self> {
-        Decimal::from_f64(n).map(Self::from_bps)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,13 +141,5 @@ mod tests {
         assert_eq!(bps("1.5").checked_mul(&bps("2")), Some(bps("3")));
         assert_eq!(bps("x").checked_mul(&bps("2")), None);
         assert_eq!(Bps::default().checked_mul(&bps("2")), None);
-    }
-
-    #[test]
-    fn primitives() {
-        assert_eq!(Bps::from_i64(5), Some(bps("5")));
-        assert_eq!(Bps::from_u64(7), Some(bps("7")));
-        assert_eq!(Bps::from_f64(1.2), Some(bps("1.2")));
-        assert_eq!(Bps::from_f64(f64::NAN), None);
     }
 }
