@@ -63,9 +63,8 @@ message InfoRequest {}
 
 // InfoResponse: Response for InfoRequest.
 message InfoResponse {
-  // network_ids: Identifiers of the networks whose inventory rows this service serves (e.g. "84532" for Base Sepolia).
-  // They match Inventory.network_id.
-  repeated string network_ids = 1;
+  // network_id: Network identifier where the inventory service is deployed (e.g. "84532" for Base Sepolia).
+  string network_id = 1;
 }
 
 // Snapshot: Initial bulk state delivered at the start of the stream.
