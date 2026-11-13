@@ -22,8 +22,8 @@ message SubscribeInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
   repeated bolt.assets.v1.Pair instruments = 1;
-  // network_id: Filter the stream by inventory on the specified networks.
-  repeated string network_id = 2;
+  // network_ids: Filter the stream by inventory on the specified networks.
+  repeated string network_ids = 2;
 }
 
 // SubscribeInventoryResponse: One frame of the inventory stream.
@@ -48,8 +48,8 @@ message GetLatestInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
   repeated bolt.assets.v1.Pair instruments = 1;
-  // network_id: Filter the response by inventory on the specified networks.
-  repeated string network_id = 2;
+  // network_ids: Filter the response by inventory on the specified networks.
+  repeated string network_ids = 2;
 }
 
 // GetLatestInventoryResponse: Response for the latest inventory for all requested instruments on the running ledger.
