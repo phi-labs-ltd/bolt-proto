@@ -21,8 +21,12 @@ service InventoryService {
 message SubscribeInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
-  // The stream sends rows of all networks. Use Inventory.network_id to tell them apart.
   repeated bolt.assets.v1.Pair instruments = 1;
+  // network_id: Optional network filter, compared exactly against
+  // Inventory.network_id (e.g. "84532" for Base Sepolia). Applies to the
+  // snapshot and every update. Empty = rows of all networks. A network the
+  // server does not serve fails the call with INVALID_ARGUMENT.
+  string network_id = 2;
 }
 
 // SubscribeInventoryResponse: One frame of the inventory stream.
@@ -47,19 +51,26 @@ message GetLatestInventoryRequest {
   // instruments: Optional whitelist of instruments (e.g. [{SUI, USDC}]).
   // Empty = every instrument the server tracks for this client.
   repeated bolt.assets.v1.Pair instruments = 1;
+  // network_id: Optional network filter, compared exactly against
+  // Inventory.network_id (e.g. "84532" for Base Sepolia). Empty = rows of all
+  // networks. A network the server does not serve fails the call with
+  // INVALID_ARGUMENT.
+  string network_id = 2;
 }
 
 // GetLatestInventoryResponse: Response for the latest inventory for all requested instruments on the running ledger.
 message GetLatestInventoryResponse {
   // inventories: One Inventory per running ledger the request matches.
-  // Rows of all networks are returned. Use Inventory.network_id to tell them apart.
+  // Only rows of the requested network_id when set; otherwise rows of all
+  // networks, told apart by Inventory.network_id.
   repeated Inventory inventories = 1;
 }
 
 // Snapshot: Initial bulk state delivered at the start of the stream.
 message Snapshot {
   // inventories: One Inventory per running ledger the subscription matches.
-  // Rows of all networks are returned. Use Inventory.network_id to tell them apart.
+  // Only rows of the requested network_id when set; otherwise rows of all
+  // networks, told apart by Inventory.network_id.
   repeated Inventory inventories = 1;
 }
 
