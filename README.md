@@ -22,11 +22,6 @@ just rust
 
 Needs podman or docker: the `fn pair()` accessors in `bolt_ext.rs` come from `plugins/bolt-proto-extensions`, which buf runs from `ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest` (`scripts/bolt-proto-extensions`).
 
-- If the ghcr package is private, log in once with a GitHub PAT that has `read:packages`: `podman login ghcr.io`.
-- `latest` is cached after the first pull; after a plugin release, refresh it with `podman pull ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest`.
-- To run a local build instead: `docker build -t bolt-proto-extensions:dev plugins/bolt-proto-extensions`, then `BOLT_PROTO_EXTENSIONS_IMAGE=bolt-proto-extensions:dev just rust`. `BOLT_PROTO_EXTENSIONS_RUNTIME` picks podman or docker explicitly.
-- The `podman-claude` dev container has no container runtime inside, so `just rust` doesn't work there.
-
 This produces two crates in the `rust/` workspace, ready to publish to kellnr:
 
 - `rust/bolt` is `bolt-proto`, generated from `bolt/`.
