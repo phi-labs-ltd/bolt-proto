@@ -1,15 +1,15 @@
-name: Publish protoc-gen-bolt image
+name: Publish bolt-proto-extensions image
 on:
   push:
     branches: [main]
     paths:
-      - plugins/protoc-gen-bolt/**
+      - plugins/bolt-proto-extensions/**
 permissions:
   contents: read
   packages: write
 jobs:
   publish:
-    name: Build and push ghcr.io/phi-labs-ltd/protoc-gen-bolt
+    name: Build and push ghcr.io/phi-labs-ltd/bolt-proto-extensions
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v7
@@ -28,16 +28,16 @@ jobs:
         id: tag
         shell: bash
         run: |
-          image="ghcr.io/phi-labs-ltd/protoc-gen-bolt:v$(cat plugins/protoc-gen-bolt/VERSION)"
+          image="ghcr.io/phi-labs-ltd/bolt-proto-extensions:v$(cat plugins/bolt-proto-extensions/VERSION)"
           if docker manifest inspect "$image" >/dev/null 2>&1; then
-            echo "::error::$image already exists; bump plugins/protoc-gen-bolt/VERSION and the tag in scripts/protoc-gen-bolt"
+            echo "::error::$image already exists; bump plugins/bolt-proto-extensions/VERSION and the tag in scripts/bolt-proto-extensions"
             exit 1
           fi
           echo "image=$image" >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
         with:
-          context: plugins/protoc-gen-bolt
+          context: plugins/bolt-proto-extensions
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tag.outputs.image }}

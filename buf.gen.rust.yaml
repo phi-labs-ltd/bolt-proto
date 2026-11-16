@@ -41,9 +41,9 @@ plugins:
       - only_include=.google
 
   # bolt-proto: impls driven by bolt.options.v1 custom options, e.g. `fn pair()`
-  # from (bolt.options.v1.pair). Source in plugins/protoc-gen-bolt; runs from its
-  # container image, see scripts/protoc-gen-bolt.
-  - local: ["scripts/protoc-gen-bolt"]
+  # from (bolt.options.v1.pair). Source in plugins/bolt-proto-extensions; runs from its
+  # container image, see scripts/bolt-proto-extensions.
+  - local: ["scripts/bolt-proto-extensions"]
     out: ./rust/bolt/src
     strategy: all
     types:

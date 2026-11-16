@@ -14,7 +14,7 @@ message PairSpec {
 
 // Extension numbers 51000-51099 are reserved for bolt options.
 extend google.protobuf.MessageOptions {
-  // pair: Base and quote of the message; protoc-gen-bolt generates `fn pair()`
+  // pair: Base and quote of the message; bolt-proto-extensions generates `fn pair()`
   // on the Rust type, returning (base, quote).
   PairSpec pair = 51000;
 }

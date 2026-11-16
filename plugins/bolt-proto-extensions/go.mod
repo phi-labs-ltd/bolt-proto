@@ -1,4 +1,4 @@
-module github.com/phi-labs-ltd/bolt-proto/plugins/protoc-gen-bolt
+module github.com/phi-labs-ltd/bolt-proto/plugins/bolt-proto-extensions
 
 go 1.24
 

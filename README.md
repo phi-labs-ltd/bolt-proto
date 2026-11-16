@@ -20,7 +20,7 @@ To build the proto files into generated types, use the examples folder.
 just rust
 ```
 
-Needs podman or docker: the `fn pair()` accessors in `bolt_ext.rs` come from `plugins/protoc-gen-bolt`, which buf runs from its container image (`scripts/protoc-gen-bolt`).
+Needs podman or docker: the `fn pair()` accessors in `bolt_ext.rs` come from `plugins/bolt-proto-extensions`, which buf runs from its container image (`scripts/bolt-proto-extensions`).
 
 This produces two crates in the `rust/` workspace, ready to publish to kellnr:
 
