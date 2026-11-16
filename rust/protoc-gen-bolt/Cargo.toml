@@ -1,0 +1,12 @@
+[package]
+name        = "protoc-gen-bolt"
+version     = "0.1.0"
+edition     = "2021"
+description = "protoc plugin that turns bolt.options.v1 custom options into Rust impls for the bolt-proto crate."
+publish     = false
+
+[dependencies]
+heck          = "0.5"
+prost         = "0.14.4"
+prost-reflect = "0.16"
+prost-types   = "0.14.4"

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package bolt.options.v1;
+
+import "google/protobuf/descriptor.proto";
+
+// IdSpec: Field paths that together identify a message, in tuple order.
+message IdSpec {
+  // fields: Dotted paths to scalar fields of the annotated message, e.g.
+  // ["instrument.base", "instrument.quote"]. required
+  repeated string fields = 1;
+}
+
+// Extension numbers 51000-51099 are reserved for bolt options.
+extend google.protobuf.MessageOptions {
+  // id: Composite id of the message; protoc-gen-bolt generates `fn id()` on
+  // the Rust type, returning the fields as a tuple.
+  IdSpec id = 51000;
+}

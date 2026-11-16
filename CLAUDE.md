@@ -75,6 +75,12 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 - Enum values: `// {VALUE}: {description}.`
 - Include units and examples where useful: `// amount: Amount in tokens, not raw units (e.g. 1.5 SUI).`
 
+### Custom options (`bolt/options/v1/options.proto`)
+
+- `option (bolt.options.v1.id) = {fields: ["instrument.base", "instrument.quote"]};` on a message makes `rust/protoc-gen-bolt` generate `fn id()` returning those fields as a tuple (`Option<..>` when a path goes through a message field or an `optional` scalar)
+- Paths are dotted, relative to the annotated message, and must end at a scalar (string, bytes, integer, bool, float); repeated, map, oneof and enum fields are rejected at generation time
+- Extension numbers 51000-51099 are reserved for bolt options; new options go in `options.proto` and get handled in `rust/protoc-gen-bolt`
+
 ### Imports
 
 - Use fully qualified paths: `"bolt/assets/v1/assets.proto"`

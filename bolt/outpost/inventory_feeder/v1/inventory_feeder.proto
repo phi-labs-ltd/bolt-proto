@@ -4,6 +4,7 @@ package bolt.outpost.inventory_feeder.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
+import "bolt/options/v1/options.proto";
 
 // InventoryFeederService: Receives hedged exposure from the pricefeeder and
 // posts it on-chain.
@@ -32,6 +33,13 @@ message PostHedgedExposureResponse {
 // HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
 // latest post wins, so the pricefeeder posts sequentially.
 message HedgedExposure {
+  option (bolt.options.v1.id) = {
+    fields: [
+      "instrument.base",
+      "instrument.quote"
+    ]
+  };
+
   // instrument: Instrument in ledger orientation; base = pair base. required
   bolt.assets.v1.Pair instrument = 1;
 
