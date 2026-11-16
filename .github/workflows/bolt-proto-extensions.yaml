@@ -1,9 +1,7 @@
 name: Publish bolt-proto-extensions image
 on:
-  push:
-    branches: [main]
-    paths:
-      - plugins/bolt-proto-extensions/**
+  release:
+    types: [published]
 permissions:
   contents: read
   packages: write
@@ -25,15 +23,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve the image tag and refuse to overwrite it
+      - name: Resolve the image tag from the release title and refuse to overwrite it
         id: tag
         shell: bash
+        env:
+          RELEASE_TITLE: ${{ github.event.release.name }}
         run: |
+          if [[ ! "$RELEASE_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Release title '$RELEASE_TITLE' is not in the expected v<major>.<minor>.<patch>[-<pre>] format"
+            exit 1
+          fi
           repo="ghcr.io/phi-labs-ltd/bolt-proto-extensions"
-          image="$repo:v$(cat plugins/bolt-proto-extensions/VERSION)"
+          image="$repo:$RELEASE_TITLE"
           scripts/ghcr-tag-exists "$image" && status=0 || status=$?
           case $status in
-            0) echo "::error::$image already exists; bump plugins/bolt-proto-extensions/VERSION"; exit 1 ;;
+            0) echo "::error::$image already exists"; exit 1 ;;
             1) ;;
             *) echo "::error::could not check whether $image exists"; exit 1 ;;
           esac
