@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Exit 0 if the image tag exists, 1 if the registry says it doesn't, 2 on any
+# other error, so a failed lookup is never mistaken for a free tag.
+set -uo pipefail
+if out=$(docker manifest inspect "$1" 2>&1); then
+  exit 0
+fi
+if grep -qiE 'manifest unknown|no such manifest|not found' <<<"$out"; then
+  exit 1
+fi
+echo "$out" >&2
+exit 2

@@ -6,6 +6,14 @@ import (
 	"unicode/utf8"
 )
 
+type wordMode int
+
+const (
+	boundary wordMode = iota
+	lowercase
+	uppercase
+)
+
 // words splits a name the way heck 0.5 does, so toSnakeCase and toUpperCamelCase
 // match the names prost generates.
 func words(s string) []string {
@@ -15,7 +23,7 @@ func words(s string) []string {
 	}) {
 		runes := []rune(word)
 		start := 0
-		mode := 0 // 0 boundary, 1 lowercase, 2 uppercase
+		mode := boundary
 		for i, c := range runes {
 			if i+1 == len(runes) {
 				out = append(out, string(runes[start:]))
@@ -24,17 +32,17 @@ func words(s string) []string {
 			next := runes[i+1]
 			nextMode := mode
 			if unicode.IsLower(c) {
-				nextMode = 1
+				nextMode = lowercase
 			} else if unicode.IsUpper(c) {
-				nextMode = 2
+				nextMode = uppercase
 			}
 			switch {
-			case nextMode == 1 && unicode.IsUpper(next):
+			case nextMode == lowercase && unicode.IsUpper(next):
 				out = append(out, string(runes[start:i+1]))
-				start, mode = i+1, 0
-			case mode == 2 && unicode.IsUpper(c) && unicode.IsLower(next):
+				start, mode = i+1, boundary
+			case mode == uppercase && unicode.IsUpper(c) && unicode.IsLower(next):
 				out = append(out, string(runes[start:i]))
-				start, mode = i, 0
+				start, mode = i, boundary
 			default:
 				mode = nextMode
 			}

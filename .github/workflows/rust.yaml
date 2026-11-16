@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, reopened]
 permissions:
   contents: read
+  packages: read
 jobs:
   rust:
     name: Generate crates, lint and test
@@ -22,8 +23,26 @@ jobs:
         with:
           workspaces: rust
 
-      - name: Check bolt-proto-extensions image tag matches its VERSION
-        run: grep -q "bolt-proto-extensions:v$(cat plugins/bolt-proto-extensions/VERSION)}" scripts/bolt-proto-extensions
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Require a VERSION bump when bolt-proto-extensions changes
+        shell: bash
+        run: |
+          git fetch --depth=1 origin "${{ github.base_ref }}"
+          if git diff --quiet FETCH_HEAD HEAD -- plugins/bolt-proto-extensions; then
+            exit 0
+          fi
+          image="ghcr.io/phi-labs-ltd/bolt-proto-extensions:v$(cat plugins/bolt-proto-extensions/VERSION)"
+          scripts/ghcr-tag-exists "$image" && status=0 || status=$?
+          case $status in
+            0) echo "::error::plugins/bolt-proto-extensions changed but $image is already published; bump plugins/bolt-proto-extensions/VERSION"; exit 1 ;;
+            1) ;;
+            *) echo "::error::could not check whether $image exists"; exit 1 ;;
+          esac
 
       - name: Build bolt-proto-extensions from this checkout
         run: docker build -t bolt-proto-extensions:ci plugins/bolt-proto-extensions
@@ -32,6 +51,7 @@ jobs:
         run: just rust
         env:
           BOLT_PROTO_EXTENSIONS_IMAGE: bolt-proto-extensions:ci
+          BOLT_PROTO_EXTENSIONS_RUNTIME: docker
 
       - name: Clippy
         working-directory: rust

@@ -1,11 +1,9 @@
 #!/usr/bin/env sh
-# Runs plugins/bolt-proto-extensions from its published image; buf pipes the
-# CodeGeneratorRequest through stdin/stdout. Keep the tag equal to
-# plugins/bolt-proto-extensions/VERSION.
 set -eu
-image="${BOLT_PROTO_EXTENSIONS_IMAGE:-ghcr.io/phi-labs-ltd/bolt-proto-extensions:v0.1.0}"
-runtime="$(command -v podman || command -v docker)" || {
+image="${BOLT_PROTO_EXTENSIONS_IMAGE:-ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest}"
+runtime="${BOLT_PROTO_EXTENSIONS_RUNTIME:-$(command -v podman || command -v docker || true)}"
+if [ -z "$runtime" ]; then
   echo "bolt-proto-extensions runs in a container: install podman or docker" >&2
   exit 1
-}
-exec "$runtime" run --rm -i "$image"
+fi
+exec "$runtime" run --rm -i --network=none "$image"

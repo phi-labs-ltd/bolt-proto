@@ -29,6 +29,7 @@ jobs:
         run: just rust
         env:
           BOLT_PROTO_EXTENSIONS_IMAGE: bolt-proto-extensions:ci
+          BOLT_PROTO_EXTENSIONS_RUNTIME: docker
 
       - name: Set crate version from release title
         shell: bash

@@ -1,9 +1,8 @@
-// Command bolt-proto-extensions turns bolt.options.v1 custom options into Rust impls
-// over the prost types of the bolt-proto crate, written to bolt_ext.rs.
 package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -36,38 +35,42 @@ func handle(_ context.Context, _ protoplugin.PluginEnv, w protoplugin.ResponseWr
 		return err
 	}
 
-	out := header
+	var out strings.Builder
+	out.WriteString(header)
 	desc, err := files.FindDescriptorByName(pairExtension)
 	if err != nil {
-		w.AddFile(outputFile, out)
+		w.AddFile(outputFile, out.String())
 		return nil
 	}
-	ext := desc.(protoreflect.ExtensionDescriptor)
+	ext, ok := desc.(protoreflect.ExtensionDescriptor)
+	if !ok {
+		return fmt.Errorf("%s is a %T, not an extension", pairExtension, desc)
+	}
 
-	var errs []string
+	var errs []error
 	for _, file := range targets {
 		for _, message := range allMessages(file.Messages()) {
 			spec, err := pairSpec(message, ext)
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %s: %w", file.Path(), message.FullName(), err)
 			}
 			if spec == nil {
 				continue
 			}
 			code, err := renderPair(message, spec)
 			if err != nil {
-				errs = append(errs, fmt.Sprintf("%s: %s: %v", file.Path(), message.FullName(), err))
+				errs = append(errs, fmt.Errorf("%s: %s: %w", file.Path(), message.FullName(), err))
 				continue
 			}
-			out += code
+			out.WriteString(code)
 		}
 	}
 
-	if len(errs) > 0 {
-		w.AddError(strings.Join(errs, "\n"))
+	if err := errors.Join(errs...); err != nil {
+		w.AddError(err.Error())
 		return nil
 	}
-	w.AddFile(outputFile, out)
+	w.AddFile(outputFile, out.String())
 	return nil
 }
 

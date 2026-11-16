@@ -61,8 +61,7 @@ func renderPair(message protoreflect.MessageDescriptor, spec protoreflect.Messag
 	return code.String(), nil
 }
 
-// body accumulates the `let` bindings shared by both paths of a pair, so a message
-// field used by both (`instrument.base`, `instrument.quote`) is unwrapped once.
+// body shares `let` bindings across both paths, so `instrument` is unwrapped once.
 type body struct {
 	lets     []string
 	bindings map[string]string

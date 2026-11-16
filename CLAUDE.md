@@ -79,7 +79,8 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 
 - `option (bolt.options.v1.pair) = {base: "instrument.base" quote: "instrument.quote"};` on a message makes `plugins/bolt-proto-extensions` (Go) generate `fn pair()` returning `(base, quote)` (`Option<..>` when a path goes through a message field or an `optional` scalar)
 - Both `base` and `quote` are required; paths are dotted, relative to the annotated message, and must end at a scalar (string, bytes, integer, bool, float); repeated, map, oneof and enum fields are rejected at generation time
-- `just rust` runs the plugin from `ghcr.io/phi-labs-ltd/bolt-proto-extensions` via podman or docker; no Go or Rust toolchain needed. A plugin change means bumping `plugins/bolt-proto-extensions/VERSION` and the tag in `scripts/bolt-proto-extensions` together
+- Only `bolt.*` messages are handled (`buf.gen.rust.yaml` limits the plugin to `bolt.**`); the option on a `cex.*` message is ignored
+- `just rust` runs the plugin from `ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest` via podman or docker; no Go or Rust toolchain needed. A plugin change needs a `plugins/bolt-proto-extensions/VERSION` bump (CI enforces it); merging to main publishes `v<VERSION>` and `latest`
 - Extension numbers 51000-51099 are reserved for bolt options; new options go in `options.proto` and get handled in `plugins/bolt-proto-extensions`
 
 ### Imports
