@@ -22,8 +22,13 @@ jobs:
         with:
           workspaces: rust
 
+      - name: Build protoc-gen-bolt from this checkout
+        run: docker build -t protoc-gen-bolt:ci plugins/protoc-gen-bolt
+
       - name: Generate the bolt-proto and cex-proto crates
         run: just rust
+        env:
+          PROTOC_GEN_BOLT_IMAGE: protoc-gen-bolt:ci
 
       - name: Set crate version from release title
         shell: bash

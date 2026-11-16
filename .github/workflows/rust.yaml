@@ -20,20 +20,22 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: |
-            rust
-            rust/protoc-gen-bolt
+          workspaces: rust
+
+      - name: Check protoc-gen-bolt image tag matches its VERSION
+        run: grep -q "protoc-gen-bolt:v$(cat plugins/protoc-gen-bolt/VERSION)}" scripts/protoc-gen-bolt
+
+      - name: Build protoc-gen-bolt from this checkout
+        run: docker build -t protoc-gen-bolt:ci plugins/protoc-gen-bolt
 
       - name: Generate the bolt-proto and cex-proto crates
         run: just rust
+        env:
+          PROTOC_GEN_BOLT_IMAGE: protoc-gen-bolt:ci
 
       - name: Clippy
         working-directory: rust
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-
-      - name: Clippy (protoc-gen-bolt)
-        working-directory: rust/protoc-gen-bolt
-        run: cargo clippy --all-targets -- -D warnings
 
       - name: Test
         working-directory: rust

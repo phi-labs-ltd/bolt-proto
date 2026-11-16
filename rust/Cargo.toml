@@ -1,5 +1,3 @@
 [workspace]
 resolver = "2"
 members  = ["bolt", "cex"]
-# Built by `buf generate` before the cex crate exists, so it must not load this workspace.
-exclude  = ["protoc-gen-bolt"]

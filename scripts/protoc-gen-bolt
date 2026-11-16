@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Runs plugins/protoc-gen-bolt from its published image; buf pipes the
+# CodeGeneratorRequest through stdin/stdout. Keep the tag equal to
+# plugins/protoc-gen-bolt/VERSION.
+set -eu
+image="${PROTOC_GEN_BOLT_IMAGE:-ghcr.io/phi-labs-ltd/protoc-gen-bolt:v0.1.0}"
+runtime="$(command -v podman || command -v docker)" || {
+  echo "protoc-gen-bolt runs in a container: install podman or docker" >&2
+  exit 1
+}
+exec "$runtime" run --rm -i "$image"

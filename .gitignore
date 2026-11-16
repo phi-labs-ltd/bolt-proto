@@ -5,8 +5,6 @@
 /rust/bolt/src/bolt_ext.rs
 /rust/cex/*
 /rust/target
-/rust/protoc-gen-bolt/target
-/rust/protoc-gen-bolt/Cargo.lock
 /rust/Cargo.lock
 /go
 /rust/bolt/src/google.*.rs
