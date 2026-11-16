@@ -4,16 +4,17 @@ package bolt.options.v1;
 
 import "google/protobuf/descriptor.proto";
 
-// IdSpec: Field paths that together identify a message, in tuple order.
-message IdSpec {
-  // fields: Dotted paths to scalar fields of the annotated message, e.g.
-  // ["instrument.base", "instrument.quote"]. required
-  repeated string fields = 1;
+// PairSpec: Field paths of the two halves of a pair carried by a message.
+message PairSpec {
+  // base: Dotted path to the base field, e.g. "instrument.base". required
+  string base = 1;
+  // quote: Dotted path to the quote field, e.g. "instrument.quote". required
+  string quote = 2;
 }
 
 // Extension numbers 51000-51099 are reserved for bolt options.
 extend google.protobuf.MessageOptions {
-  // id: Composite id of the message; protoc-gen-bolt generates `fn id()` on
-  // the Rust type, returning the fields as a tuple.
-  IdSpec id = 51000;
+  // pair: Base and quote of the message; protoc-gen-bolt generates `fn pair()`
+  // on the Rust type, returning (base, quote).
+  PairSpec pair = 51000;
 }

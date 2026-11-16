@@ -33,11 +33,9 @@ message PostHedgedExposureResponse {
 // HedgedExposure: Absolute cumulative hedged exposure of one instrument; the
 // latest post wins, so the pricefeeder posts sequentially.
 message HedgedExposure {
-  option (bolt.options.v1.id) = {
-    fields: [
-      "instrument.base",
-      "instrument.quote"
-    ]
+  option (bolt.options.v1.pair) = {
+    base: "instrument.base"
+    quote: "instrument.quote"
   };
 
   // instrument: Instrument in ledger orientation; base = pair base. required

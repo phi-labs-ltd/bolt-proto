@@ -2,7 +2,7 @@ use bolt_proto::bolt::assets::v1::Pair;
 use bolt_proto::bolt::outpost::inventory_feeder::v1::HedgedExposure;
 
 #[test]
-fn hedged_exposure_id_is_instrument_base_and_quote() {
+fn hedged_exposure_pair_is_instrument_base_and_quote() {
     let exposure = HedgedExposure {
         instrument: Some(Pair {
             base: "SUI".into(),
@@ -10,10 +10,10 @@ fn hedged_exposure_id_is_instrument_base_and_quote() {
         }),
         hedged_exposure: None,
     };
-    assert_eq!(exposure.id(), Some(("SUI", "USDC")));
+    assert_eq!(exposure.pair(), Some(("SUI", "USDC")));
 }
 
 #[test]
-fn hedged_exposure_id_is_none_without_instrument() {
-    assert_eq!(HedgedExposure::default().id(), None);
+fn hedged_exposure_pair_is_none_without_instrument() {
+    assert_eq!(HedgedExposure::default().pair(), None);
 }

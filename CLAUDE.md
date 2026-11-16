@@ -77,8 +77,8 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 
 ### Custom options (`bolt/options/v1/options.proto`)
 
-- `option (bolt.options.v1.id) = {fields: ["instrument.base", "instrument.quote"]};` on a message makes `rust/protoc-gen-bolt` generate `fn id()` returning those fields as a tuple (`Option<..>` when a path goes through a message field or an `optional` scalar)
-- Paths are dotted, relative to the annotated message, and must end at a scalar (string, bytes, integer, bool, float); repeated, map, oneof and enum fields are rejected at generation time
+- `option (bolt.options.v1.pair) = {base: "instrument.base" quote: "instrument.quote"};` on a message makes `rust/protoc-gen-bolt` generate `fn pair()` returning `(base, quote)` (`Option<..>` when a path goes through a message field or an `optional` scalar)
+- Both `base` and `quote` are required; paths are dotted, relative to the annotated message, and must end at a scalar (string, bytes, integer, bool, float); repeated, map, oneof and enum fields are rejected at generation time
 - Extension numbers 51000-51099 are reserved for bolt options; new options go in `options.proto` and get handled in `rust/protoc-gen-bolt`
 
 ### Imports

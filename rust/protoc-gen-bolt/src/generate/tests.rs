@@ -43,13 +43,16 @@ fn message(name: &str, fields: Vec<FieldDescriptorProto>) -> DescriptorProto {
     }
 }
 
-/// `DescriptorProto` bytes with `option (bolt.options.v1.id) = {fields: [..]}` appended;
-/// `prost_types::MessageOptions` has no slot for extensions, so they go on as raw bytes.
-fn with_id(message: DescriptorProto, paths: &[&str]) -> Vec<u8> {
-    let spec: Vec<u8> = paths
-        .iter()
-        .flat_map(|p| len_field(1, p.as_bytes()))
-        .collect();
+/// `DescriptorProto` bytes with `option (bolt.options.v1.pair) = {base: .., quote: ..}`
+/// appended; `prost_types::MessageOptions` has no slot for extensions, so they go on as raw bytes.
+fn with_pair(message: DescriptorProto, base: &str, quote: &str) -> Vec<u8> {
+    let mut spec = Vec::new();
+    if !base.is_empty() {
+        spec.extend(len_field(1, base.as_bytes()));
+    }
+    if !quote.is_empty() {
+        spec.extend(len_field(2, quote.as_bytes()));
+    }
     let options = len_field(51000, &spec);
     let mut bytes = message.encode_to_vec();
     bytes.extend(len_field(7, &options));
@@ -62,15 +65,15 @@ fn options_file() -> FileDescriptorProto {
         package: Some("bolt.options.v1".to_owned()),
         dependency: vec!["google/protobuf/descriptor.proto".to_owned()],
         message_type: vec![message(
-            "IdSpec",
-            vec![FieldDescriptorProto {
-                label: Some(Label::Repeated as i32),
-                ..field("fields", 1, Type::String)
-            }],
+            "PairSpec",
+            vec![
+                field("base", 1, Type::String),
+                field("quote", 2, Type::String),
+            ],
         )],
         extension: vec![FieldDescriptorProto {
             extendee: Some(".google.protobuf.MessageOptions".to_owned()),
-            ..message_field("id", 51000, ".bolt.options.v1.IdSpec")
+            ..message_field("pair", 51000, ".bolt.options.v1.PairSpec")
         }],
         syntax: Some("proto3".to_owned()),
         ..Default::default()
@@ -93,9 +96,16 @@ fn assets_file() -> FileDescriptorProto {
     }
 }
 
+fn descriptor_proto() -> Vec<u8> {
+    DescriptorPool::global()
+        .get_file_by_name("google/protobuf/descriptor.proto")
+        .expect("global pool has descriptor.proto")
+        .encode_to_vec()
+}
+
 /// Builds a pool of descriptor.proto, options.proto, assets.proto (`Pair`) and a
-/// test file holding `plain` messages plus `with_ids` messages (already encoded).
-fn pool(plain: Vec<DescriptorProto>, with_ids: Vec<Vec<u8>>) -> DescriptorPool {
+/// test file holding `plain` messages plus `with_pairs` messages (already encoded).
+fn pool(plain: Vec<DescriptorProto>, with_pairs: Vec<Vec<u8>>) -> DescriptorPool {
     let test_file = FileDescriptorProto {
         name: Some(TEST_FILE.to_owned()),
         package: Some("bolt.test.v1".to_owned()),
@@ -108,16 +118,12 @@ fn pool(plain: Vec<DescriptorProto>, with_ids: Vec<Vec<u8>>) -> DescriptorPool {
         ..Default::default()
     };
     let mut test_bytes = test_file.encode_to_vec();
-    for m in &with_ids {
+    for m in &with_pairs {
         test_bytes.extend(len_field(4, m));
     }
 
-    let descriptor_proto = DescriptorPool::global()
-        .get_file_by_name("google/protobuf/descriptor.proto")
-        .expect("global pool has descriptor.proto")
-        .encode_to_vec();
     let files = [
-        descriptor_proto,
+        descriptor_proto(),
         options_file().encode_to_vec(),
         assets_file().encode_to_vec(),
         test_bytes,
@@ -126,8 +132,8 @@ fn pool(plain: Vec<DescriptorProto>, with_ids: Vec<Vec<u8>>) -> DescriptorPool {
     DescriptorPool::decode(set.as_slice()).expect("valid descriptor set")
 }
 
-fn run(plain: Vec<DescriptorProto>, with_ids: Vec<Vec<u8>>) -> Result<String, String> {
-    generate(&pool(plain, with_ids), &[TEST_FILE.to_owned()])
+fn run(plain: Vec<DescriptorProto>, with_pairs: Vec<Vec<u8>>) -> Result<String, String> {
+    generate(&pool(plain, with_pairs), &[TEST_FILE.to_owned()])
 }
 
 #[test]
@@ -138,7 +144,7 @@ fn nested_paths_unwrap_the_message_field_once() {
     );
     let out = run(
         vec![],
-        vec![with_id(hedged, &["instrument.base", "instrument.quote"])],
+        vec![with_pair(hedged, "instrument.base", "instrument.quote")],
     )
     .unwrap();
     assert!(
@@ -146,7 +152,7 @@ fn nested_paths_unwrap_the_message_field_once() {
         "{out}"
     );
     assert!(
-        out.contains("pub fn id(&self) -> ::core::option::Option<(&str, &str)> {"),
+        out.contains("pub fn pair(&self) -> ::core::option::Option<(&str, &str)> {"),
         "{out}"
     );
     assert!(out.contains("let m0 = self.instrument.as_ref()?;"), "{out}");
@@ -158,7 +164,7 @@ fn nested_paths_unwrap_the_message_field_once() {
 }
 
 #[test]
-fn id_picks_one_of_several_pairs() {
+fn pair_picks_one_of_several_pairs() {
     let legs = message(
         "Legs",
         vec![
@@ -166,13 +172,13 @@ fn id_picks_one_of_several_pairs() {
             message_field("leg_b", 2, ".bolt.assets.v1.Pair"),
         ],
     );
-    let out = run(vec![], vec![with_id(legs, &["leg_b.base", "leg_b.quote"])]).unwrap();
+    let out = run(vec![], vec![with_pair(legs, "leg_b.base", "leg_b.quote")]).unwrap();
     assert!(out.contains("let m0 = self.leg_b.as_ref()?;"), "{out}");
     assert!(!out.contains("leg_a"), "{out}");
 }
 
 #[test]
-fn top_level_scalars_return_a_bare_value() {
+fn top_level_scalars_return_a_bare_tuple() {
     let venue = message(
         "Venue",
         vec![
@@ -180,38 +186,40 @@ fn top_level_scalars_return_a_bare_value() {
             field("block_height", 2, Type::Uint64),
         ],
     );
-    let out = run(
-        vec![],
-        vec![with_id(venue.clone(), &["name", "block_height"])],
-    )
-    .unwrap();
-    assert!(out.contains("pub fn id(&self) -> (&str, u64) {"), "{out}");
+    let out = run(vec![], vec![with_pair(venue, "name", "block_height")]).unwrap();
+    assert!(out.contains("pub fn pair(&self) -> (&str, u64) {"), "{out}");
     assert!(
         out.contains("(self.name.as_str(), self.block_height)"),
         "{out}"
     );
-
-    let out = run(vec![], vec![with_id(venue, &["block_height"])]).unwrap();
-    assert!(out.contains("pub fn id(&self) -> u64 {"), "{out}");
 }
 
 #[test]
-fn proto3_optional_leaf_makes_id_fallible() {
+fn proto3_optional_leaf_makes_pair_fallible() {
     let msg = DescriptorProto {
-        field: vec![FieldDescriptorProto {
-            proto3_optional: Some(true),
-            oneof_index: Some(0),
-            ..field("venue", 1, Type::String)
-        }],
+        field: vec![
+            FieldDescriptorProto {
+                proto3_optional: Some(true),
+                oneof_index: Some(0),
+                ..field("base", 1, Type::String)
+            },
+            field("quote", 2, Type::String),
+        ],
         oneof_decl: vec![OneofDescriptorProto {
-            name: Some("_venue".to_owned()),
+            name: Some("_base".to_owned()),
             ..Default::default()
         }],
         ..message("Quote", vec![])
     };
-    let out = run(vec![], vec![with_id(msg, &["venue"])]).unwrap();
-    assert!(out.contains("-> ::core::option::Option<&str>"), "{out}");
-    assert!(out.contains("Some(self.venue.as_deref()?)"), "{out}");
+    let out = run(vec![], vec![with_pair(msg, "base", "quote")]).unwrap();
+    assert!(
+        out.contains("-> ::core::option::Option<(&str, &str)>"),
+        "{out}"
+    );
+    assert!(
+        out.contains("Some((self.base.as_deref()?, self.quote.as_str()))"),
+        "{out}"
+    );
 }
 
 #[test]
@@ -239,16 +247,19 @@ fn rejects_bad_paths() {
             ],
         )
     };
-    let cases: [(&[&str], &str); 5] = [
-        (&[], "at least one field path"),
-        (&["instrument.nope"], "has no field `nope`"),
-        (&["note.base"], "not a message field"),
-        (&["instrument"], "must be a scalar field"),
-        (&["tags"], "repeated or a map"),
+    let cases = [
+        ("", "needs both base and quote"),
+        (
+            "instrument.nope",
+            "quote path `instrument.nope`: `bolt.assets.v1.Pair` has no field `nope`",
+        ),
+        ("note.base", "not a message field"),
+        ("instrument", "must be a scalar field"),
+        ("tags", "repeated or a map"),
     ];
-    for (paths, expected) in cases {
-        let err = run(vec![], vec![with_id(hedged(), paths)]).unwrap_err();
-        assert!(err.contains(expected), "{paths:?}: {err}");
+    for (quote, expected) in cases {
+        let err = run(vec![], vec![with_pair(hedged(), "instrument.base", quote)]).unwrap_err();
+        assert!(err.contains(expected), "{quote:?}: {err}");
         assert!(
             err.starts_with("bolt/test/v1/test.proto: bolt.test.v1.HedgedExposure: "),
             "{err}"
@@ -263,9 +274,10 @@ fn rejects_collision_with_prost_getter() {
         vec![
             FieldDescriptorProto {
                 type_name: Some(".bolt.test.v1.Status".to_owned()),
-                ..field("id", 1, Type::Enum)
+                ..field("pair", 1, Type::Enum)
             },
-            field("name", 2, Type::String),
+            field("base", 2, Type::String),
+            field("quote", 3, Type::String),
         ],
     );
     let file = FileDescriptorProto {
@@ -285,18 +297,21 @@ fn rejects_collision_with_prost_getter() {
         ..Default::default()
     };
     let mut file_bytes = file.encode_to_vec();
-    file_bytes.extend(len_field(4, &with_id(msg, &["name"])));
-    let descriptor_proto = DescriptorPool::global()
-        .get_file_by_name("google/protobuf/descriptor.proto")
-        .unwrap()
-        .encode_to_vec();
-    let set: Vec<u8> = [descriptor_proto, options_file().encode_to_vec(), file_bytes]
-        .iter()
-        .flat_map(|f| len_field(1, f))
-        .collect();
+    file_bytes.extend(len_field(4, &with_pair(msg, "base", "quote")));
+    let set: Vec<u8> = [
+        descriptor_proto(),
+        options_file().encode_to_vec(),
+        file_bytes,
+    ]
+    .iter()
+    .flat_map(|f| len_field(1, f))
+    .collect();
     let pool = DescriptorPool::decode(set.as_slice()).unwrap();
     let err = generate(&pool, &[TEST_FILE.to_owned()]).unwrap_err();
-    assert!(err.contains("collides with the generated `id()`"), "{err}");
+    assert!(
+        err.contains("collides with the generated `pair()`"),
+        "{err}"
+    );
 }
 
 #[test]
