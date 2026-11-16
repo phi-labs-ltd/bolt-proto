@@ -23,7 +23,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve the image tag from the release title and refuse to overwrite it
+      - name: Resolve the image tag from the release title
         id: tag
         shell: bash
         env:
@@ -34,14 +34,7 @@ jobs:
             exit 1
           fi
           repo="ghcr.io/phi-labs-ltd/bolt-proto-extensions"
-          image="$repo:$RELEASE_TITLE"
-          scripts/ghcr-tag-exists "$image" && status=0 || status=$?
-          case $status in
-            0) echo "::error::$image already exists"; exit 1 ;;
-            1) ;;
-            *) echo "::error::could not check whether $image exists"; exit 1 ;;
-          esac
-          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "image=$repo:$RELEASE_TITLE" >> "$GITHUB_OUTPUT"
           echo "latest=$repo:latest" >> "$GITHUB_OUTPUT"
 
       - uses: docker/build-push-action@v6
