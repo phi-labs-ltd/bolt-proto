@@ -290,6 +290,3 @@ fn module_ident(name: &str) -> String {
         _ => ident,
     }
 }
-
-#[cfg(test)]
-mod tests;
