@@ -1,6 +1,3 @@
-//! protoc plugin: reads `bolt.options.v1` custom options and emits `bolt_ext.rs`,
-//! a module of `impl` blocks over the prost-generated types of the bolt-proto crate.
-
 mod generate;
 
 use std::io::{Read, Write};
@@ -16,13 +13,6 @@ struct CodeGeneratorRequest {
     file_to_generate: Vec<String>,
     #[prost(bytes = "vec", repeated, tag = "15")]
     proto_file: Vec<Vec<u8>>,
-}
-
-/// Wire-compatible with `google.protobuf.FileDescriptorSet`.
-#[derive(Clone, PartialEq, Message)]
-struct FileDescriptorSet {
-    #[prost(bytes = "vec", repeated, tag = "1")]
-    file: Vec<Vec<u8>>,
 }
 
 const OUTPUT_FILE: &str = "bolt_ext.rs";
@@ -56,10 +46,10 @@ fn main() {
 
 fn run(input: &[u8]) -> Result<String, String> {
     let request = CodeGeneratorRequest::decode(input).map_err(|e| e.to_string())?;
-    let set = FileDescriptorSet {
-        file: request.proto_file,
-    };
-    let pool = prost_reflect::DescriptorPool::decode(set.encode_to_vec().as_slice())
-        .map_err(|e| e.to_string())?;
+    let mut pool = prost_reflect::DescriptorPool::new();
+    for file in &request.proto_file {
+        pool.decode_file_descriptor_proto(file.as_slice())
+            .map_err(|e| e.to_string())?;
+    }
     generate::generate(&pool, &request.file_to_generate)
 }

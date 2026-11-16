@@ -20,7 +20,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: rust
+          workspaces: |
+            rust
+            rust/protoc-gen-bolt
 
       - name: Generate the bolt-proto and cex-proto crates
         run: just rust
@@ -28,6 +30,10 @@ jobs:
       - name: Clippy
         working-directory: rust
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Clippy (protoc-gen-bolt)
+        working-directory: rust/protoc-gen-bolt
+        run: cargo clippy --all-targets -- -D warnings
 
       - name: Test
         working-directory: rust

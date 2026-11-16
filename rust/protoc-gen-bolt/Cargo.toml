@@ -10,3 +10,5 @@ heck          = "0.5"
 prost         = "0.14.4"
 prost-reflect = "0.16"
 prost-types   = "0.14.4"
+
+[workspace]

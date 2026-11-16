@@ -42,7 +42,7 @@ plugins:
 
   # bolt-proto: impls driven by bolt.options.v1 custom options, e.g. `fn pair()`
   # from (bolt.options.v1.pair). Built from this repo, see rust/protoc-gen-bolt.
-  - local: ["cargo", "run", "--quiet", "--manifest-path", "rust/Cargo.toml", "-p", "protoc-gen-bolt", "--"]
+  - local: ["cargo", "run", "--quiet", "--manifest-path", "rust/protoc-gen-bolt/Cargo.toml", "--"]
     out: ./rust/bolt/src
     strategy: all
     types:
