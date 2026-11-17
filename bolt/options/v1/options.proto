@@ -18,3 +18,13 @@ extend google.protobuf.MessageOptions {
   // on the Rust type, returning (base, quote).
   PairSpec pair = 51000;
 }
+
+extend google.protobuf.FieldOptions {
+  // validate: Rust boolean expression that must hold for the field, e.g.
+  // "!base.is_empty()"; bolt-proto-extensions generates `fn validate()` on the
+  // Rust type, which checks every rule in field order and returns the first
+  // failure as Err. The field is bound under its Rust name (e.g. `r#type`): by
+  // value for non-optional numeric, bool and enum fields, by reference otherwise.
+  // Repeat the option for several rules on one field.
+  repeated string validate = 51001;
+}

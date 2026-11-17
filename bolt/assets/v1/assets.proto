@@ -2,12 +2,14 @@ syntax = "proto3";
 
 package bolt.assets.v1;
 
+import "bolt/options/v1/options.proto";
+
 // Pair: The pair for which the price is being updated. e.g. ATOM/USDT
 message Pair {
   // base: The base asset of the pair. e.g. ATOM
-  string base = 1;
+  string base = 1 [(bolt.options.v1.validate) = "!base.is_empty()"];
   // quote: The quote asset of the pair. e.g. USDT
-  string quote = 2;
+  string quote = 2 [(bolt.options.v1.validate) = "!quote.is_empty()"];
 }
 
 // Balance: Specific asset balance.
