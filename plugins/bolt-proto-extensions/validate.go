@@ -39,35 +39,30 @@ func validateRules(message protoreflect.MessageDescriptor, ext protoreflect.Exte
 
 func renderValidate(message protoreflect.MessageDescriptor, rules []fieldRules) (string, error) {
 	var code strings.Builder
-	fmt.Fprintf(&code, "\nimpl %s {\n", rustPath(message))
-	code.WriteString("    /// Checks the `(bolt.options.v1.validate)` rules on each field, in field order,\n")
-	code.WriteString("    /// and returns the first that fails.\n")
-	code.WriteString("    pub fn validate(&self) -> ::core::result::Result<(), ::prost::alloc::string::String> {\n")
+	fmt.Fprintf(&code, "\ncrate::ext::impl_validate! {\n    %s, %s, self;\n", rustPath(message), rustStr(string(message.FullName())))
 	for _, r := range rules {
 		field := r.field
 		if oneof := field.ContainingOneof(); oneof != nil && !oneof.IsSynthetic() {
 			return "", fmt.Errorf("field `%s` is in a oneof, which prost models as an enum, so it can't carry (bolt.options.v1.validate)", field.Name())
 		}
-		ident := fieldIdent(field)
-		binding := "&self." + ident
+		bind := "ref"
 		if byValue(field) {
-			binding = "self." + ident
+			bind = "val"
 		}
-		code.WriteString("        {\n")
-		fmt.Fprintf(&code, "            let %s = %s;\n", ident, binding)
+		fmt.Fprintf(&code, "    %s %s %s {\n", fieldIdent(field), bind, rustStr(string(field.Name())))
 		for _, expr := range r.exprs {
 			expr = strings.TrimSpace(expr)
 			if expr == "" {
 				return "", fmt.Errorf("field `%s` has an empty (bolt.options.v1.validate) rule", field.Name())
 			}
-			msg := fmt.Sprintf("%s.%s: failed `%s`; self = ", message.FullName(), field.Name(), expr)
-			fmt.Fprintf(&code, "            if !(%s) {\n", expr)
-			fmt.Fprintf(&code, "                return Err(::prost::alloc::format!(\"%s{:?}\", self));\n", rustFmtStr(msg))
-			code.WriteString("            }\n")
+			if strings.ContainsRune(expr, '\r') {
+				return "", fmt.Errorf("field `%s`: (bolt.options.v1.validate) rule contains a carriage return", field.Name())
+			}
+			fmt.Fprintf(&code, "        %s => %s,\n", rustStr(expr), expr)
 		}
-		code.WriteString("        }\n")
+		code.WriteString("    }\n")
 	}
-	code.WriteString("        Ok(())\n    }\n}\n")
+	code.WriteString("}\n")
 	return code.String(), nil
 }
 
@@ -82,34 +77,4 @@ func byValue(field protoreflect.FieldDescriptor) bool {
 		return false
 	}
 	return true
-}
-
-// rustFmtStr escapes s for the body of a Rust `format!` string literal.
-func rustFmtStr(s string) string {
-	var b strings.Builder
-	for _, r := range s {
-		switch r {
-		case '\\':
-			b.WriteString(`\\`)
-		case '"':
-			b.WriteString(`\"`)
-		case '\n':
-			b.WriteString(`\n`)
-		case '\r':
-			b.WriteString(`\r`)
-		case '\t':
-			b.WriteString(`\t`)
-		case '{':
-			b.WriteString("{{")
-		case '}':
-			b.WriteString("}}")
-		default:
-			if r < 0x20 || r == 0x7f {
-				fmt.Fprintf(&b, `\u{%x}`, r)
-			} else {
-				b.WriteRune(r)
-			}
-		}
-	}
-	return b.String()
 }
