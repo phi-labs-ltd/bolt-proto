@@ -4,6 +4,7 @@ package bolt.prices.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
 // PricesService defines the gRPC service for fetching and streaming prices of trading pairs from chain.
@@ -64,6 +65,7 @@ message GetPricePairsResponse {
 
 // Request message for querying price venue information.
 message InfoRequest {}
+
 // Response message containing price venue information.
 message InfoResponse {
   // network_id: The network identifier of the price venue.
@@ -72,6 +74,11 @@ message InfoResponse {
 
 // Price represents the price information for a specific trading pair.
 message Price {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair associated with the price. e.g. ATOM/USDT
   bolt.assets.v1.Pair pair = 1;
   // bid: The bid price of the pair, in rational values. e.g. 1250/13

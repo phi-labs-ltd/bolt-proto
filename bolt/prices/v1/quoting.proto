@@ -4,6 +4,7 @@ package bolt.prices.v1;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
 // QuotingService: QuotingService for subscribing to prices being posted by Pricefeeder.
@@ -20,6 +21,11 @@ message SubscribePriceQuotesRequest {
 
 // SubscribePriceQuotesResponse: Response for subscribing to price changes.
 message SubscribePriceQuotesResponse {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair for which the price is being updated.
   bolt.assets.v1.Pair pair = 1;
   // generated_at: The timestamp of the price generation.
@@ -37,6 +43,11 @@ message SubscribePriceQuotesResponse {
 
 // AVOMetadata: Metadata specific to AVOMetadata price calculation.
 message AVOMetadata {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair for which the price is being updated.
   bolt.assets.v1.Pair pair = 1;
   // bid: The bid price for the asset pair.

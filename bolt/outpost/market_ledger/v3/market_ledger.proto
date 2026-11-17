@@ -5,6 +5,7 @@ package bolt.outpost.market_ledger.v3;
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "bolt/outpost/market_ledger/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
@@ -59,6 +60,11 @@ message Bucket {
 
 // EngineConfig: Hedging parameters for a single (instrument, direction) pair.
 message EngineConfig {
+  option (bolt.options.v1.pair) = {
+    base: "instrument.base"
+    quote: "instrument.quote"
+  };
+
   // instrument: Market this config governs. The quote leg is a hedge-policy
   // choice and may differ from the pool's on-chain quote leg. required
   bolt.assets.v1.Pair instrument = 1;
@@ -109,6 +115,11 @@ message AssetConfig {
 //   Quote/base ratio: avg_price
 //   Currency-tagged:  fee (see fee_currency)
 message HedgeOrder {
+  option (bolt.options.v1.pair) = {
+    base: "instrument.base"
+    quote: "instrument.quote"
+  };
+
   // hedge_id: DB primary key. Distinct from cex_order_id.
   int64 hedge_id = 1;
   // ledger_id: FK to the in_progress bolt_market_ledgers row.
@@ -147,6 +158,11 @@ message HedgeOrder {
 
 // MarketLedger: A market ledger row, keyed by instrument.
 message MarketLedger {
+  option (bolt.options.v1.pair) = {
+    base: "instrument.base"
+    quote: "instrument.quote"
+  };
+
   // id: DB primary key for the ledger row.
   int64 id = 1;
   // instrument: Market this ledger row is keyed by; delta and vwap are
@@ -178,6 +194,11 @@ message MarketLedger {
 // In-flight hedges (cex_order_status: created/open) are visible via the hedge_orders field.
 // Terminal orders (filled/partially_filled/cancelled/partially_filled_cancelled/closed/error) are excluded.
 message MarketLedgerEvent {
+  option (bolt.options.v1.pair) = {
+    base: "ledger.instrument.base"
+    quote: "ledger.instrument.quote"
+  };
+
   // ledger: Always the running ledger row.
   MarketLedger ledger = 1;
   // ledger_event_id: Persistent ID from bolt_market_ledger_events.

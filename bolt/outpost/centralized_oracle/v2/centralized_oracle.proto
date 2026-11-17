@@ -4,6 +4,7 @@ package bolt.outpost.centralized_oracle.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -60,6 +61,11 @@ message HaltPricesResponse {
 
 // HaltPriceUpdate: A two-sided price at which a pair is to be halted on-chain.
 message HaltPriceUpdate {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair to be halted. e.g. ATOM/USDT.
   bolt.assets.v1.Pair pair = 1;
   // bid: The bid price at which the pair is halted.
@@ -92,6 +98,11 @@ message InfoResponse {
 // PriceUpdate: A two-sided price update for a given pair, with a
 // producer-supplied validity window.
 message PriceUpdate {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair for which the price is being updated. e.g. ATOM/USDT.
   bolt.assets.v1.Pair pair = 1;
   // bid: The bid price for the pair.

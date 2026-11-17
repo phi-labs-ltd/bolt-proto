@@ -6,6 +6,7 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/cex/adapter/v1/cex.proto";
 import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v1/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
 // Service adapting the CEX communication for Market Maker
@@ -78,6 +79,11 @@ message GetPricesResponse {
 
 // Price response for a specific asset pair.
 message PriceResponse {
+  option (bolt.options.v1.pair) = {
+    base: "asset_pair.base"
+    quote: "asset_pair.quote"
+  };
+
   // asset_pair: The pair associated with the price. e.g. ATOM/USDT
   bolt.assets.v1.Pair asset_pair = 1;
   // price: The price of the pair, in rational values. e.g. 1250/13
