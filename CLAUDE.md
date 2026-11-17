@@ -79,6 +79,8 @@ Every service, RPC, message, enum, enum value, and field **must** have a comment
 
 - `option (bolt.options.v1.pair) = {base: "instrument.base" quote: "instrument.quote"};` on a message makes `plugins/bolt-proto-extensions` (Go) generate `fn pair()` returning `(base, quote)` (`Option<..>` when a path goes through a message field or an `optional` scalar)
 - Both `base` and `quote` are required; paths are dotted, relative to the annotated message, and must end at a scalar (string, bytes, integer, bool, float); repeated, map, oneof and enum fields are rejected at generation time
+- `string base = 1 [(bolt.options.v1.validate) = "!base.is_empty()"];` on a field makes the plugin generate `fn validate(&self) -> Result<(), String>`; the value is a raw Rust bool expression, pasted verbatim, with the field bound under its Rust name (`r#type` for `type`): by value for non-optional numeric, bool and enum fields, by reference otherwise
+- Repeat the option for several rules on one field; rules run in field order and the first failure returns `Err("{message}.{field}: failed `{expr}`; self = {self:?}")`. Nested messages are not validated recursively; oneof fields and empty rules are rejected at generation time
 - Only `bolt.*` messages are handled (`buf.gen.rust.yaml` limits the plugin to `bolt.**`); the option on a `cex.*` message is ignored
 - `just rust` runs the plugin from `ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest` via podman or docker; no Go or Rust toolchain needed. Publishing a GitHub release pushes the image as `<release title>` (e.g. `v1.4.0`) and `latest`
 - Extension numbers 51000-51099 are reserved for bolt options; new options go in `options.proto` and get handled in `plugins/bolt-proto-extensions`
