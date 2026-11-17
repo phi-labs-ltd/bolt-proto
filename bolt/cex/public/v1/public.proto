@@ -6,6 +6,7 @@ import "bolt/assets/v1/assets.proto";
 import "bolt/cex/public/v1/types.proto";
 import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
 // Unauthenticated CEX market data. Every request names the exchange, so a caller
@@ -102,6 +103,11 @@ message GetPricesResponse {
 
 // PriceResult: Mid price for one pair, or why it could not be priced.
 message PriceResult {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair this result is for.
   bolt.assets.v1.Pair pair = 1;
   // result: The price, or the failure reason for this pair alone.
@@ -135,6 +141,11 @@ message GetInstrumentsResponse {
 
 // Instrument: A tradable pair and the constraints an order on it must satisfy.
 message Instrument {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair in Bolt terms. Use this to address the instrument on every other RPC.
   bolt.assets.v1.Pair pair = 1;
   // native_name: The exchange's own name for the instrument (e.g. "ATOM_USDT").
@@ -164,6 +175,11 @@ message SubscribeBookTickerRequest {
 
 // SubscribeBookTickerResponse: A single best bid/ask update for one instrument.
 message SubscribeBookTickerResponse {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair this update is for.
   bolt.assets.v1.Pair pair = 1;
   // best_bid_price: Best bid price in quote asset units.
