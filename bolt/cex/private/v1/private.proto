@@ -5,6 +5,7 @@ package bolt.cex.private.v1;
 import "bolt/assets/v1/assets.proto";
 import "bolt/cex/types/v1/types.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -63,6 +64,11 @@ message MarketOrder {}
 
 // Order: An order to place on the exchange.
 message Order {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // pair: The pair to trade. required
   bolt.assets.v1.Pair pair = 1;
   // side: Whether the base asset is bought or sold. required
@@ -85,6 +91,11 @@ message Order {
 // WireOrder: The order as actually submitted, after server-side quantization to
 // the instrument's tick size and minimum size.
 message WireOrder {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // amount: Size submitted, denominated in `denom`, after quantization.
   bolt.common.numeric.v2.Fraction amount = 1;
   // pair: The pair the order was submitted on.

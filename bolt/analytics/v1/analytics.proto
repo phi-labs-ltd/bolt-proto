@@ -3,6 +3,7 @@ syntax = "proto3";
 package bolt.analytics.v1;
 
 import "bolt/assets/v1/assets.proto";
+import "bolt/options/v1/options.proto";
 
 // Service collecting derived metrics for analytics
 service AnalyticsService {
@@ -43,6 +44,11 @@ message PoolAnalytics {
 
 // Analytics for a trading pair in a pool. Each pool can have 1 to many, base:quote pairs.
 message TradingPairAnalytics {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // Pair this metrics adhere to
   bolt.assets.v1.Pair pair = 1;
   // Total volume of the BASE asset traded in this pair. Repeated, as it might
@@ -77,6 +83,11 @@ message GetWalletAnalyticsResponse {
 
 // Analytics for wallets.
 message WalletAnalytics {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // Pool contract id this metrics adhere to
   string pool_id = 1;
   // count of wallets
@@ -101,6 +112,11 @@ message GetTradeAnalyticsResponse {
 
 // Analytics for trades.
 message TradeAnalytics {
+  option (bolt.options.v1.pair) = {
+    base: "pair.base"
+    quote: "pair.quote"
+  };
+
   // Pool contract id this metrics adhere to
   string pool_id = 1;
   // count of trades

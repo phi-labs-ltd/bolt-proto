@@ -4,6 +4,7 @@ package bolt.mm.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -75,6 +76,11 @@ message Update {
 
 // Inventory: Represents the current inventory of the running ledger.
 message Inventory {
+  option (bolt.options.v1.pair) = {
+    base: "instrument.base"
+    quote: "instrument.quote"
+  };
+
   // instrument: Market this inventory row is keyed by; running_delta and
   // running_vwap are denominated in its base leg. required
   bolt.assets.v1.Pair instrument = 1;

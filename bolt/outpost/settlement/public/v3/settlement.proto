@@ -5,6 +5,7 @@ package bolt.outpost.settlement.public.v3;
 import "bolt/assets/v2/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
 import "bolt/common/partners/v1/partners.proto";
+import "bolt/options/v1/options.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -134,6 +135,11 @@ message Pool {
 
 // Trade: A swap in which a trader paid quote tokens and received base tokens.
 message Trade {
+  option (bolt.options.v1.pair) = {
+    base: "base_out.asset"
+    quote: "quote_in.asset"
+  };
+
   // tx_hash: Hash/digest of the transaction.
   // The service sends the same string for the same transaction in every response, also after a reorg. Compare it as an exact string.
   string tx_hash = 1;
