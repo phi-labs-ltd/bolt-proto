@@ -223,8 +223,9 @@ message GetOpenOrdersRequest {
 message OpenOrder {
   // order_id: The exchange-assigned order id, opaque to the caller.
   string order_id = 1;
-  // client_order_id: The order's client id as the caller set it on Order, without
-  // any prefix the exchange requires. Unset when the order has none.
+  // client_order_id: The order's client id without any prefix the exchange
+  // requires. Some exchanges create one when the caller set none, so match on
+  // ids you set rather than assuming every value is yours. Unset when the order has none.
   optional string client_order_id = 2;
 }
 
