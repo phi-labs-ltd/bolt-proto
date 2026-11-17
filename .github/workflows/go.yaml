@@ -11,28 +11,20 @@ jobs:
   go:
     name: Format, vet and tidy bolt-proto-extensions
     runs-on: self-hosted
-    defaults:
-      run:
-        working-directory: plugins/bolt-proto-extensions
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: plugins/bolt-proto-extensions/go.mod
-          cache-dependency-path: plugins/bolt-proto-extensions/go.sum
-
-      - name: gofmt
+      # Same toolchain image as plugins/bolt-proto-extensions/Dockerfile, so the
+      # runner's own Go install never mixes in.
+      - name: gofmt, go vet, go mod tidy
         run: |
-          unformatted="$(gofmt -l .)"
-          if [ -n "$unformatted" ]; then
-            echo "::error::not gofmt-formatted:"
-            echo "$unformatted"
-            exit 1
-          fi
-
-      - name: go vet
-        run: go vet ./...
-
-      - name: go mod tidy
-        run: go mod tidy -diff
+          docker run --rm -v "$PWD/plugins/bolt-proto-extensions:/src" -w /src golang:1.27-bookworm sh -ec '
+            unformatted="$(gofmt -l .)"
+            if [ -n "$unformatted" ]; then
+              echo "::error::not gofmt-formatted:"
+              echo "$unformatted"
+              exit 1
+            fi
+            go vet ./...
+            go mod tidy -diff
+          '
