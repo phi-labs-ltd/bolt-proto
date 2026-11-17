@@ -1,13 +1,25 @@
-//! Expansions for the `crate::ext::impl_*!` calls that bolt-proto-extensions writes
-//! into `bolt_ext.rs`, one per message carrying a `bolt.options.v1` option. The plugin
-//! resolves descriptors (paths, kinds, presence, prost names); these macros own the Rust.
-
-/// `fn pair()` from `(bolt.options.v1.pair)`.
-///
-/// Each side is `[hops] leaf: kind req|opt`: the message fields to unwrap, the scalar
-/// at the end, its proto kind, and whether it has presence. `fallible` returns
-/// `Option<(..)>`; `infallible` only accepts sides with no hops and no presence.
 macro_rules! impl_pair {
+    (@ty string) => { &str };
+    (@ty bytes) => { &[u8] };
+    (@ty double) => { f64 };
+    (@ty float) => { f32 };
+    (@ty int32) => { i32 };
+    (@ty sint32) => { i32 };
+    (@ty sfixed32) => { i32 };
+    (@ty int64) => { i64 };
+    (@ty sint64) => { i64 };
+    (@ty sfixed64) => { i64 };
+    (@ty uint32) => { u32 };
+    (@ty fixed32) => { u32 };
+    (@ty uint64) => { u64 };
+    (@ty fixed64) => { u64 };
+    (@ty bool) => { bool };
+    (@get string req, $e:expr) => { &*$e };
+    (@get string opt, $e:expr) => { $e.as_deref()? };
+    (@get bytes req, $e:expr) => { &*$e };
+    (@get bytes opt, $e:expr) => { $e.as_deref()? };
+    (@get $k:ident req, $e:expr) => { $e };
+    (@get $k:ident opt, $e:expr) => { $e? };
     (
         $ty:path;
         paths = $base_path:literal, $quote_path:literal;
@@ -18,10 +30,13 @@ macro_rules! impl_pair {
         impl $ty {
             #[doc = concat!(" (base, quote) from `(bolt.options.v1.pair)`: `", $base_path, "`, `", $quote_path, "`.")]
             /// `None` when a message field or `optional` field on either path is unset.
-            pub fn pair(&self) -> ::core::option::Option<($crate::ext::pair_ty!($bk), $crate::ext::pair_ty!($qk))> {
+            pub fn pair(&self) -> ::core::option::Option<(
+                $crate::ext::impl_pair!(@ty $bk),
+                $crate::ext::impl_pair!(@ty $qk),
+            )> {
                 ::core::option::Option::Some((
-                    $crate::ext::pair_get!($bk $bp, self$(.$bh.as_ref()?)*.$bl),
-                    $crate::ext::pair_get!($qk $qp, self$(.$qh.as_ref()?)*.$ql),
+                    $crate::ext::impl_pair!(@get $bk $bp, self$(.$bh.as_ref()?)*.$bl),
+                    $crate::ext::impl_pair!(@get $qk $qp, self$(.$qh.as_ref()?)*.$ql),
                 ))
             }
         }
@@ -35,94 +50,21 @@ macro_rules! impl_pair {
     ) => {
         impl $ty {
             #[doc = concat!(" (base, quote) from `(bolt.options.v1.pair)`: `", $base_path, "`, `", $quote_path, "`.")]
-            pub fn pair(&self) -> ($crate::ext::pair_ty!($bk), $crate::ext::pair_ty!($qk)) {
+            pub fn pair(&self) -> ($crate::ext::impl_pair!(@ty $bk), $crate::ext::impl_pair!(@ty $qk)) {
                 (
-                    $crate::ext::pair_get!($bk req, self.$bl),
-                    $crate::ext::pair_get!($qk req, self.$ql),
+                    $crate::ext::impl_pair!(@get $bk req, self.$bl),
+                    $crate::ext::impl_pair!(@get $qk req, self.$ql),
                 )
             }
         }
     };
 }
 
-/// Rust type `pair()` returns for a scalar of the given proto kind.
-macro_rules! pair_ty {
-    (string) => {
-        &str
-    };
-    (bytes) => {
-        &[u8]
-    };
-    (double) => {
-        f64
-    };
-    (float) => {
-        f32
-    };
-    (int32) => {
-        i32
-    };
-    (sint32) => {
-        i32
-    };
-    (sfixed32) => {
-        i32
-    };
-    (int64) => {
-        i64
-    };
-    (sint64) => {
-        i64
-    };
-    (sfixed64) => {
-        i64
-    };
-    (uint32) => {
-        u32
-    };
-    (fixed32) => {
-        u32
-    };
-    (uint64) => {
-        u64
-    };
-    (fixed64) => {
-        u64
-    };
-    (bool) => {
-        bool
-    };
-}
-
-/// Reads a `pair()` side: strings and bytes by reference, the rest by value; `opt`
-/// returns early with `None` when the field is unset.
-macro_rules! pair_get {
-    (string req, $e:expr) => {
-        &*$e
-    };
-    (string opt, $e:expr) => {
-        $e.as_deref()?
-    };
-    (bytes req, $e:expr) => {
-        &*$e
-    };
-    (bytes opt, $e:expr) => {
-        $e.as_deref()?
-    };
-    ($k:ident req, $e:expr) => {
-        $e
-    };
-    ($k:ident opt, $e:expr) => {
-        $e?
-    };
-}
-
-/// `fn validate()` from `(bolt.options.v1.validate)`.
-///
-/// Each field is `ident ref|val "proto_name" { "rule source" => rule, .. }`. The rule
-/// runs with the field bound under its Rust name; the source string goes into the error
-/// verbatim. `self` is passed in so rules that mention it resolve against the receiver.
+// `self` comes in from the caller: macro_rules hygiene would otherwise keep rules that
+// mention `self` from resolving against the receiver declared here.
 macro_rules! impl_validate {
+    (@bind val, $e:expr) => { $e };
+    (@bind ref, $e:expr) => { &$e };
     (
         $ty:path, $name:literal, $self:tt;
         $($field:ident $bind:ident $proto:literal { $($src:literal => $rule:expr),+ $(,)? })*
@@ -132,7 +74,7 @@ macro_rules! impl_validate {
             /// and returns the first that fails.
             pub fn validate(&$self) -> ::core::result::Result<(), ::prost::alloc::string::String> {
                 $({
-                    let $field = $crate::ext::validate_bind!($bind, $self.$field);
+                    let $field = $crate::ext::impl_validate!(@bind $bind, $self.$field);
                     $(
                         if !($rule) {
                             return ::core::result::Result::Err(::prost::alloc::format!(
@@ -149,17 +91,7 @@ macro_rules! impl_validate {
     };
 }
 
-/// Binds a field for its `validate` rules: Copy scalars by value, the rest by reference.
-macro_rules! validate_bind {
-    (val, $e:expr) => {
-        $e
-    };
-    (ref, $e:expr) => {
-        &$e
-    };
-}
-
-pub(crate) use {impl_pair, impl_validate, pair_get, pair_ty, validate_bind};
+pub(crate) use {impl_pair, impl_validate};
 
 #[cfg(test)]
 mod tests {
@@ -221,7 +153,7 @@ mod tests {
 
     impl_validate! {
         Optionals, "test.Optionals", self;
-        r#type ref "type" { r#"r#type.as_deref() != Some("")"# => r#type.as_deref() != Some("") }
+        r#type ref "type" { "r#type.as_deref() != Some(\"\")" => r#type.as_deref() != Some("") }
         count val "count" {
             "count > 0" => count > 0,
             "count >= self.min" => count >= self.min,

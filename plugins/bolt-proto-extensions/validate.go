@@ -39,7 +39,7 @@ func validateRules(message protoreflect.MessageDescriptor, ext protoreflect.Exte
 
 func renderValidate(message protoreflect.MessageDescriptor, rules []fieldRules) (string, error) {
 	var code strings.Builder
-	fmt.Fprintf(&code, "\ncrate::ext::impl_validate! {\n    %s, %s, self;\n", rustPath(message), rustStr(string(message.FullName())))
+	fmt.Fprintf(&code, "\ncrate::ext::impl_validate! {\n    %s, \"%s\", self;\n", rustPath(message), message.FullName())
 	for _, r := range rules {
 		field := r.field
 		if oneof := field.ContainingOneof(); oneof != nil && !oneof.IsSynthetic() {
@@ -49,14 +49,11 @@ func renderValidate(message protoreflect.MessageDescriptor, rules []fieldRules) 
 		if byValue(field) {
 			bind = "val"
 		}
-		fmt.Fprintf(&code, "    %s %s %s {\n", fieldIdent(field), bind, rustStr(string(field.Name())))
+		fmt.Fprintf(&code, "    %s %s \"%s\" {\n", fieldIdent(field), bind, field.Name())
 		for _, expr := range r.exprs {
 			expr = strings.TrimSpace(expr)
 			if expr == "" {
 				return "", fmt.Errorf("field `%s` has an empty (bolt.options.v1.validate) rule", field.Name())
-			}
-			if strings.ContainsRune(expr, '\r') {
-				return "", fmt.Errorf("field `%s`: (bolt.options.v1.validate) rule contains a carriage return", field.Name())
 			}
 			fmt.Fprintf(&code, "        %s => %s,\n", rustStr(expr), expr)
 		}
@@ -77,4 +74,31 @@ func byValue(field protoreflect.FieldDescriptor) bool {
 		return false
 	}
 	return true
+}
+
+func rustStr(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString(`\\`)
+		case '"':
+			b.WriteString(`\"`)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\r':
+			b.WriteString(`\r`)
+		case '\t':
+			b.WriteString(`\t`)
+		default:
+			if r < 0x20 || r == 0x7f {
+				fmt.Fprintf(&b, `\u{%x}`, r)
+			} else {
+				b.WriteRune(r)
+			}
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
 }

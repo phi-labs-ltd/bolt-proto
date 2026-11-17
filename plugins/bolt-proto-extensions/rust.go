@@ -44,7 +44,7 @@ func renderPair(message protoreflect.MessageDescriptor, spec protoreflect.Messag
 
 	var code strings.Builder
 	fmt.Fprintf(&code, "\ncrate::ext::impl_pair! {\n    %s;\n", rustPath(message))
-	fmt.Fprintf(&code, "    paths = %s, %s;\n", rustStr(base), rustStr(quote))
+	fmt.Fprintf(&code, "    paths = \"%s\", \"%s\";\n", base, quote)
 	fmt.Fprintf(&code, "    %s;\n", mode)
 	fmt.Fprintf(&code, "    base: %s;\n", baseSide)
 	fmt.Fprintf(&code, "    quote: %s;\n", quoteSide)
@@ -52,9 +52,7 @@ func renderPair(message protoreflect.MessageDescriptor, spec protoreflect.Messag
 	return code.String(), nil
 }
 
-// resolve walks a dotted path and returns it as an impl_pair! side,
-// `[hops] leaf: kind req|opt`, and whether reading it can come back empty.
-func resolve(root protoreflect.MessageDescriptor, path string) (string, bool, error) {
+func resolve(root protoreflect.MessageDescriptor, path string) (side string, fallible bool, err error) {
 	segments := strings.Split(path, ".")
 	hops, leaf := segments[:len(segments)-1], segments[len(segments)-1]
 
@@ -88,7 +86,7 @@ func resolve(root protoreflect.MessageDescriptor, path string) (string, bool, er
 	if field.HasPresence() {
 		presence = "opt"
 	}
-	side := fmt.Sprintf("[%s] %s: %s %s", strings.Join(idents, " "), fieldIdent(field), field.Kind(), presence)
+	side = fmt.Sprintf("[%s] %s: %s %s", strings.Join(idents, " "), fieldIdent(field), field.Kind(), presence)
 	return side, len(hops) > 0 || field.HasPresence(), nil
 }
 
@@ -143,22 +141,4 @@ func sanitizeIdentifier(ident string) string {
 		return "_" + ident
 	}
 	return ident
-}
-
-// rustStr renders s as a Rust raw string literal, with enough `#`s that nothing in s
-// ends it early. Raw strings can't hold a bare carriage return.
-func rustStr(s string) string {
-	hashes := 0
-	for i := range len(s) {
-		if s[i] != '"' {
-			continue
-		}
-		run := 1
-		for i+run < len(s) && s[i+run] == '#' {
-			run++
-		}
-		hashes = max(hashes, run)
-	}
-	h := strings.Repeat("#", hashes)
-	return "r" + h + "\"" + s + "\"" + h
 }
