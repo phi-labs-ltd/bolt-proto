@@ -1,0 +1,30 @@
+name: Go CI
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - plugins/bolt-proto-extensions/**
+      - .github/workflows/go.yaml
+permissions:
+  contents: read
+jobs:
+  go:
+    name: Format, vet and tidy bolt-proto-extensions
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same toolchain image as plugins/bolt-proto-extensions/Dockerfile, so the
+      # runner's own Go install never mixes in.
+      - name: gofmt, go vet, go mod tidy
+        run: |
+          docker run --rm -v "$PWD/plugins/bolt-proto-extensions:/src" -w /src golang:1.27-bookworm sh -ec '
+            unformatted="$(gofmt -l .)"
+            if [ -n "$unformatted" ]; then
+              echo "::error::not gofmt-formatted:"
+              echo "$unformatted"
+              exit 1
+            fi
+            go vet ./...
+            go mod tidy -diff
+          '

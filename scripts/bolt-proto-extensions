@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+image="${BOLT_PROTO_EXTENSIONS_IMAGE:-ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest}"
+runtime="${BOLT_PROTO_EXTENSIONS_RUNTIME:-$(command -v podman || command -v docker || true)}"
+if [ -z "$runtime" ]; then
+  echo "bolt-proto-extensions runs in a container: install podman or docker" >&2
+  exit 1
+fi
+exec "$runtime" run --rm -i --network=none "$image"

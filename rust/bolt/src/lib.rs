@@ -1,3 +1,4 @@
+mod bolt_ext;
 mod generated;
 pub use generated::*;
 

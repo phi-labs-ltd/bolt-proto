@@ -40,6 +40,15 @@ plugins:
       - only_include=.bolt
       - only_include=.google
 
+  # bolt-proto: impls driven by bolt.options.v1 custom options, e.g. `fn pair()`
+  # from (bolt.options.v1.pair). Source in plugins/bolt-proto-extensions; runs from its
+  # container image, see scripts/bolt-proto-extensions.
+  - local: ["scripts/bolt-proto-extensions"]
+    out: ./rust/bolt/src
+    strategy: all
+    types:
+      - bolt.**
+
   # cex-proto: message types. The shared bolt.* types come from bolt-proto.
   - remote: buf.build/community/neoeinstein-prost:v0.5.0
     out: ./rust/cex/src
