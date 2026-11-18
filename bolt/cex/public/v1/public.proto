@@ -43,6 +43,8 @@ message GetOrderBookRequest {
   bolt.assets.v1.Pair pair = 2;
   // depth: Levels to return per side. Defaults to 50 when unset.
   optional uint32 depth = 3;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 4;
 }
 
 // GetOrderBookResponse: Response to GetOrderBookRequest.
@@ -59,6 +61,8 @@ message GetPriceDetailedRequest {
   bolt.cex.types.v1.Exchange exchange = 1;
   // pair: The pair to query. required
   bolt.assets.v1.Pair pair = 2;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 3;
 }
 
 // GetPriceDetailedResponse: Response to GetPriceDetailedRequest.
@@ -79,6 +83,8 @@ message GetPriceRequest {
   bolt.cex.types.v1.Exchange exchange = 1;
   // pair: The pair to query. required
   bolt.assets.v1.Pair pair = 2;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 3;
 }
 
 // GetPriceResponse: Response to GetPriceRequest.
@@ -93,6 +99,8 @@ message GetPricesRequest {
   bolt.cex.types.v1.Exchange exchange = 1;
   // pairs: The pairs to price. required, must be non-empty
   repeated bolt.assets.v1.Pair pairs = 2;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 3;
 }
 
 // GetPricesResponse: Response to GetPricesRequest.
@@ -131,6 +139,8 @@ message PriceError {
 message GetInstrumentsRequest {
   // exchange: The exchange to query. required
   bolt.cex.types.v1.Exchange exchange = 1;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 2;
 }
 
 // GetInstrumentsResponse: Response to GetInstrumentsRequest.
@@ -171,6 +181,8 @@ message SubscribeBookTickerRequest {
   bolt.cex.types.v1.Exchange exchange = 1;
   // pairs: The pairs to stream. required, must be non-empty
   repeated bolt.assets.v1.Pair pairs = 2;
+  // market_type: The market to query. Defaults to spot when unset.
+  optional bolt.cex.types.v1.MarketType market_type = 3;
 }
 
 // SubscribeBookTickerResponse: A single best bid/ask update for one instrument.
