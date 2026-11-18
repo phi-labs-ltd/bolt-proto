@@ -25,7 +25,7 @@ service PrivateCexService {
   rpc ExecuteOrder(ExecuteOrderRequest) returns (ExecuteOrderResponse);
   // Endpoint to get the current state of one order.
   rpc GetOrderStatus(GetOrderStatusRequest) returns (GetOrderStatusResponse);
-  // Endpoint to list the ids of orders currently resting on an instrument.
+  // Endpoint to list the orders currently resting on an instrument, by id and client id.
   rpc GetOpenOrders(GetOpenOrdersRequest) returns (GetOpenOrdersResponse);
   // Endpoint to cancel one order.
   rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
@@ -219,10 +219,24 @@ message GetOpenOrdersRequest {
   bolt.assets.v1.Pair pair = 2;
 }
 
+// OpenOrder: One order resting on an instrument.
+message OpenOrder {
+  // order_id: The exchange-assigned order id, opaque to the caller.
+  string order_id = 1;
+  // client_order_id: The order's client id without any prefix the exchange
+  // requires. Some exchanges create one when the caller set none, so match on
+  // ids you set rather than assuming every value is yours. Unset when the order has none.
+  optional string client_order_id = 2;
+}
+
 // GetOpenOrdersResponse: Response to GetOpenOrdersRequest.
 message GetOpenOrdersResponse {
-  // order_ids: Ids of the orders currently resting on the instrument.
+  // order_ids: Ids of the orders currently resting on the instrument. Kept for
+  // clients that do not read `orders`; holds the same orders.
   repeated string order_ids = 1;
+  // orders: The orders currently resting on the instrument. Empty from a server
+  // that predates this field, even when `order_ids` is not.
+  repeated OpenOrder orders = 2;
 }
 
 // CancelOrderRequest: Request to cancel one order.
