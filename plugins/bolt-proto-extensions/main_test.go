@@ -102,14 +102,14 @@ func fixture(t *testing.T) (protoreflect.FileDescriptor, protoreflect.ExtensionD
 			},
 			{
 				Name:    proto.String("Flat"),
-				Field:   []*descriptorpb.FieldDescriptorProto{field("base", 1, str), field("quote", 2, descriptorpb.FieldDescriptorProto_TYPE_UINT64)},
+				Field:   []*descriptorpb.FieldDescriptorProto{field("base", 1, str), field("quote", 2, str)},
 				Options: pairOption("base", "quote"),
 			},
 			{
 				Name: proto.String("Optionals"),
 				Field: []*descriptorpb.FieldDescriptorProto{
 					typ,
-					optional(field("quote", 2, descriptorpb.FieldDescriptorProto_TYPE_BYTES), 1),
+					optional(field("quote", 2, str), 1),
 					count,
 				},
 				OneofDecl: []*descriptorpb.OneofDescriptorProto{{Name: proto.String("_type")}, {Name: proto.String("_quote")}},
@@ -117,7 +117,7 @@ func fixture(t *testing.T) (protoreflect.FileDescriptor, protoreflect.ExtensionD
 			},
 			{
 				Name:    proto.String("Deep"),
-				Field:   []*descriptorpb.FieldDescriptorProto{leg, field("n", 2, descriptorpb.FieldDescriptorProto_TYPE_SINT64)},
+				Field:   []*descriptorpb.FieldDescriptorProto{leg, field("n", 2, str)},
 				Options: pairOption("leg.asset", "n"),
 			},
 		},
@@ -162,16 +162,16 @@ crate::ext::impl_pair! {
     crate::bolt::test::v1::Flat;
     paths = "base", "quote";
     infallible;
-    base: [] base: string req;
-    quote: [] quote: uint64 req;
+    base: [] base req;
+    quote: [] quote req;
 }
 
 crate::ext::impl_pair! {
     crate::bolt::test::v1::Optionals;
     paths = "type", "quote";
     fallible;
-    base: [] r#type: string opt;
-    quote: [] quote: bytes opt;
+    base: [] r#type opt;
+    quote: [] quote opt;
 }
 
 crate::ext::impl_validate! {
@@ -189,11 +189,18 @@ crate::ext::impl_pair! {
     crate::bolt::test::v1::Deep;
     paths = "leg.asset", "n";
     fallible;
-    base: [leg] asset: string req;
-    quote: [] n: sint64 req;
+    base: [leg] asset req;
+    quote: [] n req;
 }
 `
 	if got.String() != want {
 		t.Errorf("got:\n%s\nwant:\n%s", got.String(), want)
+	}
+}
+
+func TestRenderPairRejectsNonStringLeaf(t *testing.T) {
+	file, _, _ := fixture(t)
+	if _, _, err := resolve(file.Messages().ByName("Optionals"), "count"); err == nil {
+		t.Fatal("resolve accepted a uint32 leaf")
 	}
 }

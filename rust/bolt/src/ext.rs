@@ -1,42 +1,20 @@
 macro_rules! impl_pair {
-    (@ty string) => { &str };
-    (@ty bytes) => { &[u8] };
-    (@ty double) => { f64 };
-    (@ty float) => { f32 };
-    (@ty int32) => { i32 };
-    (@ty sint32) => { i32 };
-    (@ty sfixed32) => { i32 };
-    (@ty int64) => { i64 };
-    (@ty sint64) => { i64 };
-    (@ty sfixed64) => { i64 };
-    (@ty uint32) => { u32 };
-    (@ty fixed32) => { u32 };
-    (@ty uint64) => { u64 };
-    (@ty fixed64) => { u64 };
-    (@ty bool) => { bool };
-    (@get string req, $e:expr) => { &*$e };
-    (@get string opt, $e:expr) => { $e.as_deref()? };
-    (@get bytes req, $e:expr) => { &*$e };
-    (@get bytes opt, $e:expr) => { $e.as_deref()? };
-    (@get $k:ident req, $e:expr) => { $e };
-    (@get $k:ident opt, $e:expr) => { $e? };
+    (@get req, $e:expr) => { &*$e };
+    (@get opt, $e:expr) => { $e.as_deref()? };
     (
         $ty:path;
         paths = $base_path:literal, $quote_path:literal;
         fallible;
-        base: [$($bh:ident)*] $bl:ident: $bk:ident $bp:ident;
-        quote: [$($qh:ident)*] $ql:ident: $qk:ident $qp:ident;
+        base: [$($bh:ident)*] $bl:ident $bp:ident;
+        quote: [$($qh:ident)*] $ql:ident $qp:ident;
     ) => {
         impl $ty {
             #[doc = concat!(" (base, quote) from `(bolt.options.v1.pair)`: `", $base_path, "`, `", $quote_path, "`.")]
             /// `None` when a message field or `optional` field on either path is unset.
-            pub fn pair(&self) -> ::core::option::Option<(
-                $crate::ext::impl_pair!(@ty $bk),
-                $crate::ext::impl_pair!(@ty $qk),
-            )> {
+            pub fn pair(&self) -> ::core::option::Option<(&str, &str)> {
                 ::core::option::Option::Some((
-                    $crate::ext::impl_pair!(@get $bk $bp, self$(.$bh.as_ref()?)*.$bl),
-                    $crate::ext::impl_pair!(@get $qk $qp, self$(.$qh.as_ref()?)*.$ql),
+                    $crate::ext::impl_pair!(@get $bp, self$(.$bh.as_ref()?)*.$bl),
+                    $crate::ext::impl_pair!(@get $qp, self$(.$qh.as_ref()?)*.$ql),
                 ))
             }
         }
@@ -45,16 +23,13 @@ macro_rules! impl_pair {
         $ty:path;
         paths = $base_path:literal, $quote_path:literal;
         infallible;
-        base: [] $bl:ident: $bk:ident req;
-        quote: [] $ql:ident: $qk:ident req;
+        base: [] $bl:ident req;
+        quote: [] $ql:ident req;
     ) => {
         impl $ty {
             #[doc = concat!(" (base, quote) from `(bolt.options.v1.pair)`: `", $base_path, "`, `", $quote_path, "`.")]
-            pub fn pair(&self) -> ($crate::ext::impl_pair!(@ty $bk), $crate::ext::impl_pair!(@ty $qk)) {
-                (
-                    $crate::ext::impl_pair!(@get $bk req, self.$bl),
-                    $crate::ext::impl_pair!(@get $qk req, self.$ql),
-                )
+            pub fn pair(&self) -> (&str, &str) {
+                (&*self.$bl, &*self.$ql)
             }
         }
     };
@@ -95,8 +70,6 @@ pub(crate) use {impl_pair, impl_validate};
 
 #[cfg(test)]
 mod tests {
-    use prost::bytes::Bytes;
-
     #[derive(Debug, Default)]
     struct Leg {
         asset: String,
@@ -110,13 +83,13 @@ mod tests {
     #[derive(Debug, Default)]
     struct Flat {
         base: String,
-        quote: u64,
+        quote: String,
     }
 
     #[derive(Debug, Default)]
     struct Optionals {
         r#type: Option<String>,
-        quote: Option<Bytes>,
+        quote: Option<String>,
         count: u32,
         min: u32,
     }
@@ -124,31 +97,31 @@ mod tests {
     #[derive(Debug, Default)]
     struct Deep {
         outer: Option<Nested>,
-        quote: Option<i64>,
+        quote: Option<String>,
     }
 
     impl_pair! {
         Flat;
         paths = "base", "quote";
         infallible;
-        base: [] base: string req;
-        quote: [] quote: uint64 req;
+        base: [] base req;
+        quote: [] quote req;
     }
 
     impl_pair! {
         Optionals;
         paths = "type", "quote";
         fallible;
-        base: [] r#type: string opt;
-        quote: [] quote: bytes opt;
+        base: [] r#type opt;
+        quote: [] quote opt;
     }
 
     impl_pair! {
         Deep;
         paths = "outer.leg.asset", "quote";
         fallible;
-        base: [outer leg] asset: string req;
-        quote: [] quote: sfixed64 opt;
+        base: [outer leg] asset req;
+        quote: [] quote opt;
     }
 
     impl_validate! {
@@ -164,19 +137,19 @@ mod tests {
     fn infallible_pair() {
         let flat = Flat {
             base: "SUI".into(),
-            quote: 7,
+            quote: "USDC".into(),
         };
-        assert_eq!(flat.pair(), ("SUI", 7));
+        assert_eq!(flat.pair(), ("SUI", "USDC"));
     }
 
     #[test]
     fn optional_leaves() {
         let full = Optionals {
             r#type: Some("SUI".into()),
-            quote: Some(Bytes::from_static(b"USDC")),
+            quote: Some("USDC".into()),
             ..Default::default()
         };
-        assert_eq!(full.pair(), Some(("SUI", &b"USDC"[..])));
+        assert_eq!(full.pair(), Some(("SUI", "USDC")));
         assert_eq!(Optionals::default().pair(), None);
     }
 
@@ -188,12 +161,12 @@ mod tests {
                     asset: "SUI".into(),
                 }),
             }),
-            quote: Some(-1),
+            quote: Some("USDC".into()),
         };
-        assert_eq!(deep.pair(), Some(("SUI", -1)));
+        assert_eq!(deep.pair(), Some(("SUI", "USDC")));
         let no_leg = Deep {
             outer: Some(Nested::default()),
-            quote: Some(-1),
+            quote: Some("USDC".into()),
         };
         assert_eq!(no_leg.pair(), None);
     }

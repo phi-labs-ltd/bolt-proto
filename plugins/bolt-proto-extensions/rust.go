@@ -78,15 +78,14 @@ func resolve(root protoreflect.MessageDescriptor, path string) (side string, fal
 	if err != nil {
 		return "", false, err
 	}
-	switch field.Kind() {
-	case protoreflect.MessageKind, protoreflect.GroupKind, protoreflect.EnumKind:
-		return "", false, fmt.Errorf("`%s` must be a scalar field (string, bytes, integer, bool or float)", leaf)
+	if field.Kind() != protoreflect.StringKind {
+		return "", false, fmt.Errorf("`%s` must be a string field", leaf)
 	}
 	presence := "req"
 	if field.HasPresence() {
 		presence = "opt"
 	}
-	side = fmt.Sprintf("[%s] %s: %s %s", strings.Join(idents, " "), fieldIdent(field), field.Kind(), presence)
+	side = fmt.Sprintf("[%s] %s %s", strings.Join(idents, " "), fieldIdent(field), presence)
 	return side, len(hops) > 0 || field.HasPresence(), nil
 }
 
