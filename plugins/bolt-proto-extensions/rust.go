@@ -29,120 +29,64 @@ func renderPair(message protoreflect.MessageDescriptor, spec protoreflect.Messag
 		return "", fmt.Errorf("(bolt.options.v1.pair) needs both base and quote")
 	}
 
-	b := &body{bindings: map[string]string{}}
-	baseTy, baseExpr, err := b.resolve(message, base)
+	baseSide, baseFallible, err := resolve(message, base)
 	if err != nil {
 		return "", fmt.Errorf("base path `%s`: %w", base, err)
 	}
-	quoteTy, quoteExpr, err := b.resolve(message, quote)
+	quoteSide, quoteFallible, err := resolve(message, quote)
 	if err != nil {
 		return "", fmt.Errorf("quote path `%s`: %w", quote, err)
 	}
-
-	ty := fmt.Sprintf("(%s, %s)", baseTy, quoteTy)
-	expr := fmt.Sprintf("(%s, %s)", baseExpr, quoteExpr)
-	if b.fallible {
-		ty = fmt.Sprintf("::core::option::Option<%s>", ty)
-		expr = fmt.Sprintf("Some(%s)", expr)
+	mode := "infallible"
+	if baseFallible || quoteFallible {
+		mode = "fallible"
 	}
 
 	var code strings.Builder
-	fmt.Fprintf(&code, "\nimpl %s {\n", rustPath(message))
-	fmt.Fprintf(&code, "    /// (base, quote) from `(bolt.options.v1.pair)`: `%s`, `%s`.\n", base, quote)
-	if b.fallible {
-		code.WriteString("    /// `None` when a message field or `optional` field on either path is unset.\n")
-	}
-	fmt.Fprintf(&code, "    pub fn pair(&self) -> %s {\n", ty)
-	for _, line := range b.lets {
-		fmt.Fprintf(&code, "        %s\n", line)
-	}
-	fmt.Fprintf(&code, "        %s\n", expr)
-	code.WriteString("    }\n}\n")
+	fmt.Fprintf(&code, "\ncrate::ext::impl_pair! {\n    %s;\n", rustPath(message))
+	fmt.Fprintf(&code, "    paths = \"%s\", \"%s\";\n", base, quote)
+	fmt.Fprintf(&code, "    %s;\n", mode)
+	fmt.Fprintf(&code, "    base: %s;\n", baseSide)
+	fmt.Fprintf(&code, "    quote: %s;\n", quoteSide)
+	code.WriteString("}\n")
 	return code.String(), nil
 }
 
-// body shares `let` bindings across both paths, so `instrument` is unwrapped once.
-type body struct {
-	lets     []string
-	bindings map[string]string
-	fallible bool
-}
-
-func (b *body) resolve(root protoreflect.MessageDescriptor, path string) (string, string, error) {
+func resolve(root protoreflect.MessageDescriptor, path string) (side string, fallible bool, err error) {
 	segments := strings.Split(path, ".")
 	hops, leaf := segments[:len(segments)-1], segments[len(segments)-1]
 
 	message := root
-	expr := "self"
-	for depth, segment := range hops {
+	var idents []string
+	for _, segment := range hops {
 		field, err := lookup(message, segment)
 		if err != nil {
-			return "", "", err
+			return "", false, err
 		}
 		if field.Kind() != protoreflect.MessageKind {
-			return "", "", fmt.Errorf("`%s` is not a message field, so the path can't go through it", segment)
+			return "", false, fmt.Errorf("`%s` is not a message field, so the path can't go through it", segment)
 		}
 		next := field.Message()
 		if slices.Contains(wrappers, next.FullName()) {
-			return "", "", fmt.Errorf("`%s` is a `%s`, which prost maps to an `Option` of a scalar, not a struct", segment, next.FullName())
+			return "", false, fmt.Errorf("`%s` is a `%s`, which prost maps to an `Option` of a scalar, not a struct", segment, next.FullName())
 		}
-		prefix := strings.Join(segments[:depth+1], ".")
-		if v, ok := b.bindings[prefix]; ok {
-			expr = v
-		} else {
-			v := fmt.Sprintf("m%d", len(b.bindings))
-			b.lets = append(b.lets, fmt.Sprintf("let %s = %s.%s.as_ref()?;", v, expr, fieldIdent(field)))
-			b.bindings[prefix] = v
-			b.fallible = true
-			expr = v
-		}
+		idents = append(idents, fieldIdent(field))
 		message = next
 	}
 
 	field, err := lookup(message, leaf)
 	if err != nil {
-		return "", "", err
+		return "", false, err
 	}
-	access := fmt.Sprintf("%s.%s", expr, fieldIdent(field))
-	optional := field.HasPresence()
-
-	var ty string
-	byRef := false
-	switch field.Kind() {
-	case protoreflect.StringKind:
-		ty, byRef = "&str", true
-	case protoreflect.BytesKind:
-		ty, byRef = "&[u8]", true
-	case protoreflect.DoubleKind:
-		ty = "f64"
-	case protoreflect.FloatKind:
-		ty = "f32"
-	case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Sfixed32Kind:
-		ty = "i32"
-	case protoreflect.Int64Kind, protoreflect.Sint64Kind, protoreflect.Sfixed64Kind:
-		ty = "i64"
-	case protoreflect.Uint32Kind, protoreflect.Fixed32Kind:
-		ty = "u32"
-	case protoreflect.Uint64Kind, protoreflect.Fixed64Kind:
-		ty = "u64"
-	case protoreflect.BoolKind:
-		ty = "bool"
-	default:
-		return "", "", fmt.Errorf("`%s` must be a scalar field (string, bytes, integer, bool or float)", leaf)
+	if field.Kind() != protoreflect.StringKind {
+		return "", false, fmt.Errorf("`%s` must be a string field", leaf)
 	}
-
-	switch {
-	case byRef && optional:
-		expr = access + ".as_deref()?"
-	case byRef:
-		expr = "&*" + access
-	case optional:
-		expr = access + "?"
-	default:
-		expr = access
+	presence := "req"
+	if field.HasPresence() {
+		presence = "opt"
 	}
-	b.fallible = b.fallible || optional
-	return ty, expr, nil
+	side = fmt.Sprintf("[%s] %s %s", strings.Join(idents, " "), fieldIdent(field), presence)
+	return side, len(hops) > 0 || field.HasPresence(), nil
 }
 
 func lookup(message protoreflect.MessageDescriptor, name string) (protoreflect.FieldDescriptor, error) {
