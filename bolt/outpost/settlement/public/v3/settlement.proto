@@ -131,6 +131,8 @@ message Pool {
   string address = 4;
   // block_height: The pool's values are its state at this block.
   uint64 block_height = 5;
+  // protocol_fees_accrued: Protocol fees that the pool holds apart from base_liquidity, in the base asset.
+  bolt.assets.v2.Balance protocol_fees_accrued = 6;
 }
 
 // Trade: A swap in which a trader paid quote tokens and received base tokens.
