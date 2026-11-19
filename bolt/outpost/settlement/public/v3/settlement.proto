@@ -132,8 +132,6 @@ message Pool {
   // block_height: The pool's values are its state at this block.
   uint64 block_height = 5;
   // protocol_fees_accrued: Protocol fees that the pool holds apart from base_liquidity, in the base asset.
-  // Tokens sent to the pool outside its operations are not included. A protocol fee withdrawal sets this field to 0.
-  // Set only on EVM. Sui has no v3 service yet.
   bolt.assets.v2.Balance protocol_fees_accrued = 6;
 }
 
