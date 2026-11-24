@@ -16,8 +16,6 @@ message PostUrgency {
     PostUrgencyElevated elevated = 2;
     // high: Far enough off that traders are likely to race this update.
     PostUrgencyHigh high = 3;
-    // contested: Traders were recently seen trading against a stale price.
-    PostUrgencyContested contested = 4;
   }
 }
 
@@ -32,14 +30,3 @@ message PostUrgencyElevated {}
 // PostUrgencyHigh: The on-chain price is far enough off that traders are
 // likely to race this update.
 message PostUrgencyHigh {}
-
-// PostUrgencyContested: Traders were recently seen trading against a stale
-// price; the oracle should pay what it takes to land first, within its
-// configured limit.
-message PostUrgencyContested {
-  // competing_priority_fee: Highest priority fee per gas unit that competing
-  // transactions paid recently, in the chain's smallest unit (e.g. wei). The
-  // sender passes it on without interpreting it, and the oracle decides what
-  // to pay from it. Unset when the sender has no recent observation.
-  optional uint64 competing_priority_fee = 1;
-}
