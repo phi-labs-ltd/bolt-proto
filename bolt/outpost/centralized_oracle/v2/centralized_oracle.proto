@@ -30,6 +30,10 @@ message PostPricesRequest {
   // memo: Metadata for the batch, used for logging/tracing.
   // e.g. pricefeeder run_id used to correlate client requests with server logs.
   map<string, string> memo = 2;
+  // urgency: How much the batch needs to land ahead of other transactions.
+  // Applies to every update in it, so the sender batches updates of the same
+  // urgency together. Unset is treated as routine.
+  PostUrgency urgency = 3;
 }
 
 // PostPricesResponse: Response to PostPricesRequest. Empty on success.
@@ -123,8 +127,4 @@ message PriceUpdate {
     // expiry_timestamp: Validity expressed as an absolute expiry.
     google.protobuf.Timestamp expiry_timestamp = 6;
   }
-  // urgency: How much this update needs to land ahead of other transactions.
-  // Unset is treated as routine. When one transaction carries several updates,
-  // the oracle applies the highest urgency among them.
-  PostUrgency urgency = 7;
 }
