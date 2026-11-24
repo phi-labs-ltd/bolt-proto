@@ -4,24 +4,42 @@ package bolt.outpost.centralized_oracle.v2;
 
 // PostUrgency: How much a price update needs to land on-chain ahead of other
 // transactions. Chain-agnostic: each oracle maps it to its own fees, and an
-// oracle without priority fees ignores it. Values increase with urgency, so
-// new levels are only ever appended above the highest one. An oracle treats a
-// value it does not know as unset.
-enum PostUrgency {
-  // POST_URGENCY_UNSPECIFIED: Default zero value; must not be used explicitly.
-  // Senders leave the field unset instead, and an oracle treats it as unset.
-  POST_URGENCY_UNSPECIFIED = 0;
-  // POST_URGENCY_ROUTINE: The sender judged there is no race to win, e.g. a
-  // heartbeat post or a move too small to trade against; pay no priority fee.
-  POST_URGENCY_ROUTINE = 1;
-  // POST_URGENCY_ELEVATED: The on-chain price is stale enough for a trader to
-  // profit from it.
-  POST_URGENCY_ELEVATED = 2;
-  // POST_URGENCY_HIGH: The on-chain price is far enough off that traders are
-  // likely to race this update.
-  POST_URGENCY_HIGH = 3;
-  // POST_URGENCY_CONTESTED: Traders were recently seen trading against a stale
-  // price; the oracle should pay what it takes to land first, within its
-  // configured limit.
-  POST_URGENCY_CONTESTED = 4;
+// oracle without priority fees ignores it. The levels are ordered by
+// increasing urgency, and new ones are only ever appended above the highest.
+// An oracle treats an unset or unknown level as if the urgency were unset.
+message PostUrgency {
+  // level: The urgency of the update.
+  oneof level {
+    // routine: No race to win.
+    PostUrgencyRoutine routine = 1;
+    // elevated: Stale enough for a trader to profit from.
+    PostUrgencyElevated elevated = 2;
+    // high: Far enough off that traders are likely to race this update.
+    PostUrgencyHigh high = 3;
+    // contested: Traders were recently seen trading against a stale price.
+    PostUrgencyContested contested = 4;
+  }
+}
+
+// PostUrgencyRoutine: No race to win, e.g. a heartbeat post or a move too
+// small to trade against; pay no priority fee.
+message PostUrgencyRoutine {}
+
+// PostUrgencyElevated: The on-chain price is stale enough for a trader to
+// profit from it.
+message PostUrgencyElevated {}
+
+// PostUrgencyHigh: The on-chain price is far enough off that traders are
+// likely to race this update.
+message PostUrgencyHigh {}
+
+// PostUrgencyContested: Traders were recently seen trading against a stale
+// price; the oracle should pay what it takes to land first, within its
+// configured limit.
+message PostUrgencyContested {
+  // competing_priority_fee: Highest priority fee per gas unit that competing
+  // transactions paid recently, in the chain's smallest unit (e.g. wei). The
+  // sender passes it on without interpreting it, and the oracle decides what
+  // to pay from it. Unset when the sender has no recent observation.
+  optional uint64 competing_priority_fee = 1;
 }
