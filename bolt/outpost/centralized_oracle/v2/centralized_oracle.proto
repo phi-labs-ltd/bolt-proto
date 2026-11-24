@@ -5,6 +5,7 @@ package bolt.outpost.centralized_oracle.v2;
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/options/v1/options.proto";
+import "bolt/outpost/centralized_oracle/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -29,6 +30,10 @@ message PostPricesRequest {
   // memo: Metadata for the batch, used for logging/tracing.
   // e.g. pricefeeder run_id used to correlate client requests with server logs.
   map<string, string> memo = 2;
+  // urgency: How much the batch needs to land ahead of other transactions.
+  // Applies to every update in it, so the sender batches updates of the same
+  // urgency together. Unset is treated as normal.
+  PostUrgency urgency = 3;
 }
 
 // PostPricesResponse: Response to PostPricesRequest. Empty on success.

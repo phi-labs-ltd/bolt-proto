@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package bolt.outpost.centralized_oracle.v2;
+
+// PostUrgency: How much a batch of price updates needs to land on-chain ahead
+// of other transactions. Chain-agnostic: each oracle maps it to its own fees,
+// and an oracle without priority fees ignores it. The levels are ordered by
+// increasing urgency, and new ones are only ever appended above the highest.
+// An oracle treats an unset or unknown level as normal.
+message PostUrgency {
+  // level: The urgency of the update.
+  oneof level {
+    // normal: Post with the oracle's usual fees.
+    PostUrgencyNormal normal = 1;
+    // high: Pay extra to land ahead of other transactions.
+    PostUrgencyHigh high = 2;
+  }
+}
+
+// PostUrgencyNormal: Post with the oracle's usual fees, e.g. a heartbeat post
+// or a small move.
+message PostUrgencyNormal {}
+
+// PostUrgencyHigh: The on-chain price is far enough off that traders are
+// likely to race this update; the oracle pays an elevated fee to land first.
+message PostUrgencyHigh {}
