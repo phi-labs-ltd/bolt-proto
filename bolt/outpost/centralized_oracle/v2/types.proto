@@ -6,7 +6,7 @@ package bolt.outpost.centralized_oracle.v2;
 // transactions. Chain-agnostic: each oracle maps it to its own fees, and an
 // oracle without priority fees ignores it. The levels are ordered by
 // increasing urgency, and new ones are only ever appended above the highest.
-// An oracle treats an unset or unknown level as if the urgency were unset.
+// An oracle treats an unset or unknown level as routine.
 message PostUrgency {
   // level: The urgency of the update.
   oneof level {

@@ -124,9 +124,7 @@ message PriceUpdate {
     google.protobuf.Timestamp expiry_timestamp = 6;
   }
   // urgency: How much this update needs to land ahead of other transactions.
-  // Unset means the sender does not rate urgency, and the oracle uses its
-  // default fees. When one transaction carries several updates, the oracle
-  // applies the highest urgency among those that set it; if none do, it uses
-  // its default fees.
-  optional PostUrgency urgency = 7;
+  // Unset is treated as routine. When one transaction carries several updates,
+  // the oracle applies the highest urgency among them.
+  PostUrgency urgency = 7;
 }
