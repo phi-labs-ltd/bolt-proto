@@ -5,6 +5,7 @@ package bolt.outpost.centralized_oracle.v2;
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 import "bolt/options/v1/options.proto";
+import "bolt/outpost/centralized_oracle/v2/types.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -122,4 +123,10 @@ message PriceUpdate {
     // expiry_timestamp: Validity expressed as an absolute expiry.
     google.protobuf.Timestamp expiry_timestamp = 6;
   }
+  // urgency: How much this update needs to land ahead of other transactions.
+  // Unset means the sender does not rate urgency, and the oracle uses its
+  // default fees. When one transaction carries several updates, the oracle
+  // applies the highest urgency among those that set it; if none do, it uses
+  // its default fees.
+  optional PostUrgency urgency = 7;
 }
