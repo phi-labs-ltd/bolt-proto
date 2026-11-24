@@ -4,6 +4,7 @@ package bolt.prices.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/common/numeric/v3/numeric.proto";
 import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -52,6 +53,10 @@ message StreamPricesResponse {
     // removed: The id of the price that was removed (see Price.id).
     string removed = 3;
   }
+  // block_height: Block height at which this update was observed.
+  uint64 block_height = 4;
+  // gas_price: Gas price at block_height, in the chain's smallest gas unit (e.g. MIST on Sui).
+  bolt.common.numeric.v3.UInt128 gas_price = 5;
 }
 
 // Request message for querying available price pairs.

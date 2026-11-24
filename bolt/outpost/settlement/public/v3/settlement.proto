@@ -77,6 +77,8 @@ message SubscribeLiquidityUpdatesResponse {
   // It does not mean that all updates at or below it were sent.
   // It can decrease. A response with a removed update carries the height of the reverted block.
   uint64 block_height = 2;
+  // gas_price: Gas price at block_height, in the chain's smallest gas unit (e.g. MIST on Sui).
+  bolt.common.numeric.v3.UInt128 gas_price = 3;
 }
 
 // GetBalancesRequest: Request fetching the assets held by a wallet address.
