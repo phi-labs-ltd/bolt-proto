@@ -4,6 +4,7 @@ package bolt.prices.v2;
 
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
+import "bolt/common/numeric/v3/numeric.proto";
 import "bolt/options/v1/options.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -91,4 +92,8 @@ message Price {
   google.protobuf.Timestamp expiry = 5;
   // id: Unique identifier of the price.
   string id = 6;
+  // block_height: Block height at which the price was observed.
+  uint64 block_height = 7;
+  // gas_price: Gas price at block_height, in the chain's smallest gas unit (e.g. MIST on Sui).
+  bolt.common.numeric.v3.UInt128 gas_price = 8;
 }
