@@ -183,6 +183,8 @@ message Trade {
   // It can change after a reorg. Together with tx_hash it identifies the event in that block.
   // Not set when the chain has no such index.
   optional uint64 log_index = 19;
+  // gas_price: Gas price at block_height, in the chain's smallest gas unit (e.g. MIST on Sui).
+  bolt.common.numeric.v3.UInt128 gas_price = 24;
 }
 
 // Deposit: A deposit of base tokens into the pool by a liquidity provider.
