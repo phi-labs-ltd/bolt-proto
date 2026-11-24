@@ -6,27 +6,21 @@ package bolt.outpost.centralized_oracle.v2;
 // of other transactions. Chain-agnostic: each oracle maps it to its own fees,
 // and an oracle without priority fees ignores it. The levels are ordered by
 // increasing urgency, and new ones are only ever appended above the highest.
-// An oracle treats an unset or unknown level as routine.
+// An oracle treats an unset or unknown level as normal.
 message PostUrgency {
   // level: The urgency of the update.
   oneof level {
-    // routine: No race to win.
-    PostUrgencyRoutine routine = 1;
-    // elevated: Stale enough for a trader to profit from.
-    PostUrgencyElevated elevated = 2;
-    // high: Far enough off that traders are likely to race this update.
-    PostUrgencyHigh high = 3;
+    // normal: Post with the oracle's usual fees.
+    PostUrgencyNormal normal = 1;
+    // high: Pay extra to land ahead of other transactions.
+    PostUrgencyHigh high = 2;
   }
 }
 
-// PostUrgencyRoutine: No race to win, e.g. a heartbeat post or a move too
-// small to trade against; pay no priority fee.
-message PostUrgencyRoutine {}
-
-// PostUrgencyElevated: The on-chain price is stale enough for a trader to
-// profit from it.
-message PostUrgencyElevated {}
+// PostUrgencyNormal: Post with the oracle's usual fees, e.g. a heartbeat post
+// or a small move.
+message PostUrgencyNormal {}
 
 // PostUrgencyHigh: The on-chain price is far enough off that traders are
-// likely to race this update.
+// likely to race this update; the oracle pays an elevated fee to land first.
 message PostUrgencyHigh {}

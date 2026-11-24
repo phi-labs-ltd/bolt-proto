@@ -32,7 +32,7 @@ message PostPricesRequest {
   map<string, string> memo = 2;
   // urgency: How much the batch needs to land ahead of other transactions.
   // Applies to every update in it, so the sender batches updates of the same
-  // urgency together. Unset is treated as routine.
+  // urgency together. Unset is treated as normal.
   PostUrgency urgency = 3;
 }
 
