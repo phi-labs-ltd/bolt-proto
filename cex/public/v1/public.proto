@@ -8,6 +8,8 @@ import "google/protobuf/timestamp.proto";
 
 // Unauthenticated CEX market data.
 service PublicCexService {
+  // Get info about the exchange this server runs.
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse);
   // Get an order book.
   rpc GetOrderBook(GetOrderBookRequest) returns (GetOrderBookResponse);
   // Get mid prices.
@@ -18,10 +20,20 @@ service PublicCexService {
   rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
 }
 
+// GetInfoRequest: Info request.
+message GetInfoRequest {}
+
+// GetInfoResponse: Info response.
+message GetInfoResponse {
+  // exchange: The exchange this server runs.
+  cex.types.v1.Exchange exchange = 1;
+}
+
 // GetOrderBookRequest: Order book request.
 message GetOrderBookRequest {
-  // exchange: Exchange. required
-  cex.types.v1.Exchange exchange = 1;
+  // exchange: Deprecated and ignored. Each exchange is served on its own port, so the server
+  // already knows which one to use. Kept for wire compatibility.
+  cex.types.v1.Exchange exchange = 1 [deprecated = true];
   // pair: Pair. required
   bolt.assets.v1.Pair pair = 2;
   // depth: Levels per side.
@@ -36,8 +48,9 @@ message GetOrderBookResponse {
 
 // GetPricesRequest: Prices request.
 message GetPricesRequest {
-  // exchange: Exchange. required
-  cex.types.v1.Exchange exchange = 1;
+  // exchange: Deprecated and ignored. Each exchange is served on its own port, so the server
+  // already knows which one to use. Kept for wire compatibility.
+  cex.types.v1.Exchange exchange = 1 [deprecated = true];
   // pairs: Pairs. required
   repeated bolt.assets.v1.Pair pairs = 2;
 }
@@ -50,8 +63,9 @@ message GetPricesResponse {
 
 // ValidateAssetsRequest: Validation request.
 message ValidateAssetsRequest {
-  // exchange: Exchange. required
-  cex.types.v1.Exchange exchange = 1;
+  // exchange: Deprecated and ignored. Each exchange is served on its own port, so the server
+  // already knows which one to use. Kept for wire compatibility.
+  cex.types.v1.Exchange exchange = 1 [deprecated = true];
   // pairs: Pairs. required
   repeated bolt.assets.v1.Pair pairs = 2;
 }
@@ -61,14 +75,17 @@ message ValidateAssetsResponse {}
 
 // SubscribeBookTickerRequest: Subscription request.
 message SubscribeBookTickerRequest {
-  // exchange_pairs: Pairs per exchange. required
-  repeated cex.types.v1.ExchangePairs exchange_pairs = 1;
+  // exchange_pairs: Deprecated. Use pairs. If pairs is empty, the pairs of every entry are
+  // used and the exchange is ignored. Kept for wire compatibility.
+  repeated cex.types.v1.ExchangePairs exchange_pairs = 1 [deprecated = true];
+  // pairs: Pairs to subscribe to on this server's exchange. required
+  repeated bolt.assets.v1.Pair pairs = 2;
 }
 
 // SubscribeBookTickerResponse: Best bid/ask update.
 message SubscribeBookTickerResponse {
-  // exchange: Exchange.
-  cex.types.v1.Exchange exchange = 1;
+  // exchange: Deprecated. Always the exchange this server runs, so clients can ignore it.
+  cex.types.v1.Exchange exchange = 1 [deprecated = true];
   // pair: Pair.
   bolt.assets.v1.Pair pair = 2;
   // order_book: Order book.
