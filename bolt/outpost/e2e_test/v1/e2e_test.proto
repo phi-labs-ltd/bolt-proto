@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package bolt.outpost.test.v1;
+package bolt.outpost.e2e_test.v1;
 
 import "bolt/assets/v2/assets.proto";
 import "bolt/common/numeric/v3/numeric.proto";
 
-// TestService: Test service for the outpost.
-service TestService {
+// E2ETestService: End-to-end test service for the outpost.
+service E2ETestService {
   // Endpoint to swap an input asset for the wanted output asset.
   rpc Swap(SwapRequest) returns (SwapResponse);
 }
