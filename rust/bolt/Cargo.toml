@@ -28,6 +28,7 @@ stream-manager = ["grpc", "dep:tokio", "dep:tokio-stream"]
 num = ["dep:ruint", "dep:rust_decimal", "dep:rust_decimal_macros"]
 
 [dev-dependencies]
+prost-reflect = "0.16.5"
 tokio = { version = "1.54.1", features = ["rt", "rt-multi-thread", "sync", "time", "macros", "test-util"] }
 
 [[example]]

@@ -20,7 +20,7 @@ To build the proto files into generated types, use the examples folder.
 just rust
 ```
 
-Needs podman or docker: the `fn pair()` accessors in `bolt_ext.rs` come from `plugins/bolt-proto-extensions`, which buf runs from `ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest` (`scripts/bolt-proto-extensions`).
+Needs podman or docker: the `fn pair()` accessors and the `ReflectionFiles` impls in `bolt_ext.rs` come from `plugins/bolt-proto-extensions`, which buf runs from `ghcr.io/phi-labs-ltd/bolt-proto-extensions:latest` (`scripts/bolt-proto-extensions`).
 
 This produces two crates in the `rust/` workspace, ready to publish to kellnr:
 
@@ -38,6 +38,12 @@ For each crate:
 - `bolt-proto` ships `bolt_proto::stream_cache`: reorg-aware caches (Latest/Safe/Finalized/Removed,
   with pruning) for `prices.v2.StreamPrices` and `settlement.public.v3.SubscribeLiquidityUpdates`.
   The tokio-based `manager` module is behind the opt-in `stream-manager` feature.
+- Every generated gRPC server (`{Service}Server<T>`, behind the default `grpc` feature) implements
+  `bolt_proto::ReflectionFiles`: the encoded descriptor sets a gRPC reflection service needs to
+  resolve that service, i.e. its package and every package and `google.protobuf` file it imports,
+  transitively. Register each with tonic-reflection's `register_encoded_file_descriptor_set` so
+  clients like grpcurl can resolve the service, and name the served services with
+  `with_service_name`: the sets also define the other services in those packages.
 - `bolt-proto` implements `From` in both directions between numeric v3's `UInt128` and `u128`, and,
   behind the opt-in `num` feature, between `UInt256` and ruint's `U256`, which is also alloy's.
 
