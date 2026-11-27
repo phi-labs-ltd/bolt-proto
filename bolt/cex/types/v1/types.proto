@@ -36,6 +36,16 @@ enum Exchange {
   EXCHANGE_OKX = 5;
 }
 
+// Kind of market an instrument trades on.
+enum MarketType {
+  // Unspecified - treated as spot, so callers that predate this enum keep working
+  MARKET_TYPE_UNSPECIFIED = 0;
+  // Spot market
+  MARKET_TYPE_SPOT = 1;
+  // Perpetual futures market
+  MARKET_TYPE_PERP = 2;
+}
+
 // Side of an order - determines whether the base asset is bought or sold.
 // Numbering matches bolt.cex.adapter.v1.OrderSide.
 enum OrderSide {
