@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package bolt.outpost.test.v1;
+
+import "bolt/assets/v2/assets.proto";
+import "bolt/common/numeric/v3/numeric.proto";
+
+// TestService: Test service for the outpost.
+service TestService {
+  // Endpoint to swap an input asset for the wanted output asset.
+  rpc Swap(SwapRequest) returns (SwapResponse);
+}
+
+// SwapRequest: Request to swap an input asset for the wanted output asset.
+message SwapRequest {
+  // want_out: The asset the caller wants to receive (e.g. "USDT").
+  // required
+  string want_out = 1;
+  // input: The asset and amount to sell (e.g. 1000 ATOM).
+  // required
+  bolt.assets.v2.Balance input = 2;
+  // min_out: The minimum amount of want_out to receive after fees, in tokens, not raw units.
+  // The swap fails if the output would be lower.
+  // required
+  bolt.common.numeric.v3.Fraction256 min_out = 3;
+  // receiver: The address that receives the swapped asset (e.g. an EVM or Sui address).
+  // required
+  string receiver = 4;
+}
+
+// SwapResponse: Response to the SwapRequest.
+message SwapResponse {
+  // output: The asset and amount received, after fees.
+  bolt.assets.v2.Balance output = 1;
+  // spot_price: The oracle spot price at the time of the swap.
+  bolt.common.numeric.v3.Fraction256 spot_price = 2;
+  // fee: The fee charged for the swap, protocol and LP fees included.
+  bolt.assets.v2.Balance fee = 3;
+  // trade_id: The id of the trade (e.g. the tx hash).
+  string trade_id = 4;
+}
