@@ -104,10 +104,7 @@ func lookup(message protoreflect.MessageDescriptor, name string) (protoreflect.F
 }
 
 func rustPath(message protoreflect.MessageDescriptor) string {
-	var segments []string
-	for _, part := range strings.Split(string(message.ParentFile().Package()), ".") {
-		segments = append(segments, sanitizeIdentifier(toSnakeCase(part)))
-	}
+	segments := []string{packagePath(message.ParentFile().Package())}
 	var parents []string
 	for parent, ok := message.Parent().(protoreflect.MessageDescriptor); ok; parent, ok = parent.Parent().(protoreflect.MessageDescriptor) {
 		parents = append(parents, sanitizeIdentifier(toSnakeCase(string(parent.Name()))))

@@ -66,7 +66,49 @@ macro_rules! impl_validate {
     };
 }
 
-pub(crate) use {impl_pair, impl_validate};
+/// The encoded file descriptor sets a gRPC reflection service needs to resolve a generated
+/// server's service: its own package and every package and well-known type that package
+/// imports, transitively. Each entry is a `FileDescriptorSet`, as taken by
+/// `tonic_reflection::server::Builder::register_encoded_file_descriptor_set`.
+pub trait ReflectionFiles {
+    const FILE_DESCRIPTOR_SETS: &'static [&'static [u8]];
+}
+
+macro_rules! impl_reflection_files {
+    (
+        $test:ident, $service:literal;
+        $($server:ident)::+;
+        $($descriptor_set:path),+ $(,)?
+    ) => {
+        #[cfg(feature = "grpc")]
+        impl<T> $crate::ReflectionFiles for $crate::$($server)::+<T> {
+            const FILE_DESCRIPTOR_SETS: &'static [&'static [u8]] = &[$($descriptor_set),+];
+        }
+
+        #[cfg(all(test, feature = "grpc"))]
+        #[test]
+        fn $test() {
+            $crate::ext::assert_reflection_resolves::<$crate::$($server)::+<()>>($service);
+        }
+    };
+}
+
+#[cfg(all(test, feature = "grpc"))]
+pub(crate) fn assert_reflection_resolves<S>(service: &str)
+where
+    S: ReflectionFiles + tonic::server::NamedService,
+{
+    assert_eq!(S::NAME, service);
+    let mut pool = prost_reflect::DescriptorPool::new();
+    pool.decode_file_descriptor_set(S::FILE_DESCRIPTOR_SETS.concat().as_slice())
+        .unwrap();
+    assert!(
+        pool.get_service_by_name(service).is_some(),
+        "{service} is missing from its own reflection files"
+    );
+}
+
+pub(crate) use {impl_pair, impl_reflection_files, impl_validate};
 
 #[cfg(test)]
 mod tests {

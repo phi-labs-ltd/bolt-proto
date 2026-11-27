@@ -60,6 +60,12 @@ func handle(_ context.Context, _ protoplugin.PluginEnv, w protoplugin.ResponseWr
 		}
 	}
 
+	reflection, err := renderReflection(files, targets)
+	if err != nil {
+		errs = append(errs, err)
+	}
+	out.WriteString(reflection)
+
 	if err := errors.Join(errs...); err != nil {
 		w.AddError(err.Error())
 		return nil
