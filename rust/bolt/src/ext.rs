@@ -70,13 +70,16 @@ macro_rules! impl_validate {
 /// server's service: its own package and every package and well-known type that package
 /// imports, transitively. Each entry is a `FileDescriptorSet`, as taken by
 /// `tonic_reflection::server::Builder::register_encoded_file_descriptor_set`.
+///
+/// The sets also define the other services in those packages, so a server that registers
+/// them should name the services it serves with `Builder::with_service_name`, or reflection
+/// lists the others too.
 pub trait ReflectionFiles {
     const FILE_DESCRIPTOR_SETS: &'static [&'static [u8]];
 }
 
 macro_rules! impl_reflection_files {
     (
-        $test:ident, $service:literal;
         $($server:ident)::+;
         $($descriptor_set:path),+ $(,)?
     ) => {
@@ -84,31 +87,41 @@ macro_rules! impl_reflection_files {
         impl<T> $crate::ReflectionFiles for $crate::$($server)::+<T> {
             const FILE_DESCRIPTOR_SETS: &'static [&'static [u8]] = &[$($descriptor_set),+];
         }
+    };
+}
 
+macro_rules! test_reflection_files {
+    ($($($server:ident)::+),+ $(,)?) => {
         #[cfg(all(test, feature = "grpc"))]
         #[test]
-        fn $test() {
-            $crate::ext::assert_reflection_resolves::<$crate::$($server)::+<()>>($service);
+        fn every_server_resolves_its_service_from_its_reflection_files() {
+            let failures: ::std::vec::Vec<::std::string::String> = [
+                $($crate::ext::reflection_failure::<$crate::$($server)::+<()>>()),+
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
+            assert!(failures.is_empty(), "{failures:#?}");
         }
     };
 }
 
 #[cfg(all(test, feature = "grpc"))]
-pub(crate) fn assert_reflection_resolves<S>(service: &str)
+pub(crate) fn reflection_failure<S>() -> Option<String>
 where
     S: ReflectionFiles + tonic::server::NamedService,
 {
-    assert_eq!(S::NAME, service);
     let mut pool = prost_reflect::DescriptorPool::new();
-    pool.decode_file_descriptor_set(S::FILE_DESCRIPTOR_SETS.concat().as_slice())
-        .unwrap();
-    assert!(
-        pool.get_service_by_name(service).is_some(),
-        "{service} is missing from its own reflection files"
-    );
+    if let Err(error) = pool.decode_file_descriptor_set(S::FILE_DESCRIPTOR_SETS.concat().as_slice())
+    {
+        return Some(format!("{}: {error}", S::NAME));
+    }
+    pool.get_service_by_name(S::NAME)
+        .is_none()
+        .then(|| format!("{}: missing from its own reflection files", S::NAME))
 }
 
-pub(crate) use {impl_pair, impl_reflection_files, impl_validate};
+pub(crate) use {impl_pair, impl_reflection_files, impl_validate, test_reflection_files};
 
 #[cfg(test)]
 mod tests {

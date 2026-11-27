@@ -42,7 +42,8 @@ For each crate:
   `bolt_proto::ReflectionFiles`: the encoded descriptor sets a gRPC reflection service needs to
   resolve that service, i.e. its package and every package and `google.protobuf` file it imports,
   transitively. Register each with tonic-reflection's `register_encoded_file_descriptor_set` so
-  clients like grpcurl can resolve the service.
+  clients like grpcurl can resolve the service, and name the served services with
+  `with_service_name`: the sets also define the other services in those packages.
 - `bolt-proto` implements `From` in both directions between numeric v3's `UInt128` and `u128`, and,
   behind the opt-in `num` feature, between `UInt256` and ruint's `U256`, which is also alloy's.
 
