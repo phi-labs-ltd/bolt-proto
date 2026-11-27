@@ -29,8 +29,11 @@ message PriceLevel {
   bolt.common.numeric.v2.Fraction quantity = 2;
 }
 
-// ExchangePairs: Pairs on one exchange.
+// ExchangePairs: Deprecated. Use a plain list of pairs; the exchange is implied by the server.
+// Kept for wire compatibility.
 message ExchangePairs {
+  option deprecated = true;
+
   // exchange: Exchange. required
   Exchange exchange = 1;
   // pairs: Pairs. required
