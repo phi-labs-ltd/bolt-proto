@@ -8,6 +8,8 @@ import "google/protobuf/timestamp.proto";
 
 // Unauthenticated CEX market data.
 service PublicCexService {
+  // Get info about the exchange this server runs.
+  rpc GetInfo(GetInfoRequest) returns (GetInfoResponse);
   // Get an order book.
   rpc GetOrderBook(GetOrderBookRequest) returns (GetOrderBookResponse);
   // Get mid prices.
@@ -16,6 +18,15 @@ service PublicCexService {
   rpc ValidateAssets(ValidateAssetsRequest) returns (ValidateAssetsResponse);
   // Stream best bid/ask updates.
   rpc SubscribeBookTicker(SubscribeBookTickerRequest) returns (stream SubscribeBookTickerResponse);
+}
+
+// GetInfoRequest: Info request.
+message GetInfoRequest {}
+
+// GetInfoResponse: Info response.
+message GetInfoResponse {
+  // exchange: The exchange this server runs.
+  cex.types.v1.Exchange exchange = 1;
 }
 
 // GetOrderBookRequest: Order book request.

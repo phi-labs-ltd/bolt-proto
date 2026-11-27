@@ -5,11 +5,8 @@ package cex.types.v1;
 import "bolt/assets/v1/assets.proto";
 import "bolt/common/numeric/v2/numeric.proto";
 
-// Exchange: Deprecated. Each exchange is served on its own port, so callers no longer name one.
-// Kept for wire compatibility.
+// Exchange: Supported centralized exchanges.
 enum Exchange {
-  option deprecated = true;
-
   // EXCHANGE_UNSPECIFIED: Unspecified.
   EXCHANGE_UNSPECIFIED = 0;
   // EXCHANGE_CRYPTODOTCOM: Crypto.com.
