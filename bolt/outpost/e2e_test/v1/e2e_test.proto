@@ -26,6 +26,9 @@ message SwapRequest {
   // receiver: The address that receives the swapped asset (e.g. an EVM or Sui address).
   // required
   string receiver = 4;
+  // private_key: The private key used to sign the swap transaction. Secret, for e2e tests only, never log it.
+  // required
+  string private_key = 5;
 }
 
 // SwapResponse: Response to the SwapRequest.
